@@ -274,7 +274,7 @@ codeExt['.cpp']['build-func'] = build_c_cpp
 codeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
 
 opjoin = os.path.join
-logPrefix = '### '
+logPrefix = '# '
 
 ############################################
 # main routine
@@ -320,7 +320,9 @@ exitTypes = []
 stdoutStrs = []
 
 origAssignDir = gArgs.assignment_dir[0]
-for origFileName in os.listdir(origAssignDir):
+origFileNames = os.listdir(origAssignDir)
+for i in range(len(origFileNames)):
+    origFileName = origFileNames[i]
 
     origFilePath =  opjoin(origAssignDir, origFileName)
     if os.path.isdir(origFilePath):
@@ -331,14 +333,13 @@ for origFileName in os.listdir(origAssignDir):
 
     print
     print '%s'%logPrefix
-    print '%sStart processing %s'%(logPrefix, fileName)
+    print '%sSubmission %d / %d: %s'%(logPrefix, i+1, len(origFileNames), fileName)
 
     if gArgs.file_layout==0:
         # 0 - one source file (.c or .cpp) per each student.
 
         # prepare workDir
         workDir = prepare(origFilePath, gArgs.output_dir, gArgs.assignment_alias, projName, fileName)
-        print '%sWork directory: %s'%(logPrefix, workDir)
 
         # get origSrcFileNames, repSrcExt
         if ext=='.zip':
@@ -356,16 +357,15 @@ for origFileName in os.listdir(origAssignDir):
             srcFileNames.append(srcFileName)
 
         # build
-        print '%sStart build'%logPrefix
+        print '%sBuilding...'%logPrefix
         buildRetCode, buildLog = build(repSrcExt, workDir, projName, srcFileNames)
 
         if buildRetCode!=0:
-            print '%sBuild error. Go on a next file...'%logPrefix
+            print '%sBuild error. Go on a next file.'%logPrefix
         else:
-            print '%sEnd build'%logPrefix
-            print '%sStart running'%logPrefix
+            print '%sRunning...'%logPrefix
             exitType, stdoutStr = run(repSrcExt, workDir, projName, gArgs.user_input, gArgs.timeout)
-            print '%sEnd running'%logPrefix
+            print '%sDone.'%logPrefix
 
         # add report data
         submittedFileNames.append(origFileName)
@@ -379,6 +379,7 @@ for origFileName in os.listdir(origAssignDir):
             exitTypes.append(None)
             stdoutStrs.append(None)
 
+
     # elif fileLayout==1:
         # # 1 - multiple programs (zipped) per each student (one file per each program)
         # infileNames = unzip(fileName)
@@ -386,7 +387,9 @@ for origFileName in os.listdir(origAssignDir):
             # inprojName, ext = os.path.splitext(os.path.basename(infileName))
             # projName += inprojName
 
-    print '%sGenerating Report for %s...'%(logPrefix, gArgs.assignment_alias)
-    generateReport(gArgs, submittedFileNames, \
-                    srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
-    print 'Done.'
+print
+print '%s'%logPrefix
+print '%sGenerating Report for %s...'%(logPrefix, gArgs.assignment_alias)
+generateReport(gArgs, submittedFileNames, \
+                srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
+print '%sDone.'%logPrefix
