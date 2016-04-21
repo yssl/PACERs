@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 '''
 coassign-viewer.py
-    : Automatic building & launching & reporting system for a large number of programming assignment files
+    : Automatic building & launching & reporting system for a large number of coding assignment files.
 
 Requirements:
     python 2.x
@@ -12,11 +12,13 @@ Requirements:
 Tested language & platform:
     C - Microsoft Visual Studio 2010 on Windows 10
 
-* On MS Windows, please add these paths to the system path. XX.X means your version.
+* On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
     C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin\IDE
     C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 Usage:
+    $ coassign-viewer.py 
+
     assignmentDir: 
         root directory of each assignments
 
@@ -37,7 +39,7 @@ Usage:
         its absolute path should not have hangul characters
 '''
 
-import os, sys, shutil, subprocess, threading, time
+import os, sys, shutil, subprocess, threading, time, argparse
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
@@ -46,27 +48,27 @@ from unidecode import unidecode
 reload(sys)
 sys.setdefaultencoding('cp949')
 
-############################################
-# user settings
-assignmentDir = u'd:\\3-AssistantProf\\OneDrive\\Lecture\\2016-1\\C프로그래밍\\과제채점'
-# assignmentDir = u'.\\test-assignment'
+# ############################################
+# # user settings
+# assignmentDir = u'd:\\3-AssistantProf\\OneDrive\\Lecture\\2016-1\\C프로그래밍\\과제채점'
+# # assignmentDir = u'.\\test-assignment'
 
-assignmentParams = [{'subdir':'7-01', 'user-input':'', 'file-layout':0}]
-# assignmentParams = [{'subdir':'test-1', 'user-input':'', 'file-layout':0}]
+# assignmentParams = [{'subdir':'7-01', 'user-input':'', 'file-layout':0}]
+# # assignmentParams = [{'subdir':'test-1', 'user-input':'', 'file-layout':0}]
 
-runOnly = False
+# runOnly = False
 
-outputDir = '.\\output'
+# outputDir = '.\\output'
 
-timeOut = 2.
+# timeOut = 2.
 
 ############################################
 # main functions
 
 # return workDir
-def prepare(origFilePath, outputDir, subdir, projName, fileName):
+def prepare(origFilePath, outputDir, alias, projName, fileName):
     # make workspace directory for projName
-    workDir = opjoin(outputDir, opjoin(subdir, projName))
+    workDir = opjoin(outputDir, opjoin(alias, projName))
     try:
         os.makedirs(workDir)
     except OSError as e:
@@ -98,7 +100,7 @@ def build(repSrcExt, buildDir, projName, fileNames):
     if repSrcExt in codeExt:
         return codeExt[repSrcExt]['build-func'](buildDir, projName, fileNames)
     else:
-        print '%s%s is not a supported source file type. If extension is not correct, please add \'code-type\' to assignmentParam.'%(logPrefix, repSrcExt)
+        print '%s%s is not a supported source file type.'%(logPrefix, repSrcExt)
         return None, None 
 
 def onTimeOut(proc):
@@ -124,8 +126,7 @@ def run(repSrcExt, workDir, projName, userInput, timeOut):
 def viewOneProgram():
     pass
 
-def generateReport(outputDir, assignmentDir, assignmentParam, submittedFileNames,\
-                srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs):
     htmlCode = ''
 
     # header
@@ -136,15 +137,20 @@ def generateReport(outputDir, assignmentDir, assignmentParam, submittedFileNames
 %s
 </style>
 </head>
-<body>'''%(assignmentParam['subdir'], HtmlFormatter().get_style_defs())
+<body>'''%(args.assignment_alias, HtmlFormatter().get_style_defs())
 
     # beginning
     htmlCode += '''<pre>
     Assignment %s Report
 
-    source code directory: %s
-    assignmentParam: %s
-</pre>'''%(assignmentParam['subdir'], opjoin(os.path.abspath(assignmentDir), assignmentParam['subdir']), assignmentParam)
+    Assignment directory: %s
+    Output directory: %s
+    User input: %s
+    File layout: %d
+    Timeout: %f
+    Run only: %d
+</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir[0]), os.path.abspath(args.output_dir), 
+        args.user_input, args.file_layout, args.timeout, args.run_only)
 
     # main table
     htmlCode += '''<table border=1>
@@ -172,7 +178,7 @@ def generateReport(outputDir, assignmentDir, assignmentParam, submittedFileNames
 </html>'''
 
     # write html
-    with open(opjoin(opjoin(outputDir, assignmentParam['subdir']),'report-%s.html'%assignmentParam['subdir']), 'w') as f:
+    with open(opjoin(opjoin(args.output_dir, args.assignment_alias),'report-%s.html'%args.assignment_alias), 'w') as f:
         f.write(htmlCode.encode('utf-8'))
         # try:
             # f.write(htmlCode)
@@ -262,91 +268,114 @@ logPrefix = '### '
 ############################################
 # main routine
 
-for assignmentParam in assignmentParams:
-    submittedFileNames = []
-    srcFileLists = []
-    buildRetCodes = []
-    buildLogs = []
-    exitTypes = []
-    stdoutStrs = []
+parser = argparse.ArgumentParser(prog='coassign-viewer.py', description='Automatic building & launching & reporting system for a large number of coding assignment files.')
+parser.add_argument('assignment_dir', nargs=1,
+                    help='a direcory that has source files. avoid including hangul characters in its full path.')
+parser.add_argument('--user-input', default='',
+                    help='specify USER_INPUT to be sent to the stdin of the target programs. default is an empty string.')
+parser.add_argument('--file-layout', default=0, type=int,
+                    help='''indicates file layout in the assignment_dir. default: 0.
+0 means one source file (.c or .cpp) per each student.
+1 means one zip file for each individual. the zip file has multiple source files and each source file represents one program.''')
+parser.add_argument('--timeout', default=2., type=float,
+                    help='each target program is killed when TIMEOUT(seconds) is reached. useful for infinite loop cases. default: 2.0')
+parser.add_argument('--run-only',
+                    help='when specified, run each target program without build. you may use it when you want change USER_INPUT without build. \
+if target programming languages does not require build process, build is automatically skipped without specifying this option.')
+parser.add_argument('--assignment-alias',
+                    help='specify ASSIGNMENT_ALIAS for each assignment_dir. ASSIGNMENT_ALIAS is used when making a sub-directory in OUTPUT_DIR and the final report file. \
+default: "basename" of assignment_dir (bar if assignment_dir is /foo/bar/).')
+parser.add_argument('--output-dir', default='./output',
+                    help='specify OUTPUT_DIR in which the final report file and build output files to be generated. default: ./output')
 
-    origSubDirPath = opjoin(assignmentDir, assignmentParam['subdir'])
-    count = 0
-    for origFileName in os.listdir(origSubDirPath):
-        count += 1;
-        # if count>2:
-            # break
+gArgs = parser.parse_args()
 
-        origFilePath =  opjoin(origSubDirPath, origFileName)
-        if os.path.isdir(origFilePath):
-            continue
+# print gArgs
+# exit()
 
-        if 'file-layout' in assignmentParam:
-            fileLayout = assignmentParam['file-layout']
+if not gArgs.assignment_alias:
+    gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir[0]))
+
+if not gArgs.run_only:
+    gArgs.run_only = False
+else:
+    gArgs.run_only = True
+
+submittedFileNames = []
+srcFileLists = []
+buildRetCodes = []
+buildLogs = []
+exitTypes = []
+stdoutStrs = []
+
+origAssignDir = gArgs.assignment_dir[0]
+for origFileName in os.listdir(origAssignDir):
+
+    origFilePath =  opjoin(origAssignDir, origFileName)
+    if os.path.isdir(origFilePath):
+        continue
+
+    fileName = unidecode(origFileName)
+    projName, ext = os.path.splitext(os.path.basename(fileName))
+
+    print
+    print '%s'%logPrefix
+    print '%sStart processing %s'%(logPrefix, fileName)
+
+    if gArgs.file_layout==0:
+        # 0 - one source file (.c or .cpp) per each student.
+
+        # prepare workDir
+        workDir = prepare(origFilePath, gArgs.output_dir, gArgs.assignment_alias, projName, fileName)
+        print '%sWork directory: %s'%(logPrefix, workDir)
+
+        # get origSrcFileNames, repSrcExt
+        if ext=='.zip':
+            origSrcFileNames, srcExts = unzip(fileName)
         else:
-            fileLayout = 0
+            origSrcFileNames = [origFileName]
+            srcExts = [ext]
+        repSrcExt = srcExts[0]
 
-        fileName = unidecode(origFileName)
-        projName, ext = os.path.splitext(os.path.basename(fileName))
+        # unidecode srcFiles
+        srcFileNames = []
+        for i in range(len(origSrcFileNames)):
+            srcFileName = unidecode(origSrcFileNames[i]) 
+            shutil.move(opjoin(workDir, origSrcFileNames[i]), opjoin(workDir, srcFileName))
+            srcFileNames.append(srcFileName)
 
-        print
-        print '%s'%logPrefix
-        print '%sStart processing %s'%(logPrefix, fileName)
+        # build
+        print '%sStart build'%logPrefix
+        buildRetCode, buildLog = build(repSrcExt, workDir, projName, srcFileNames)
 
-        if fileLayout==0:
-            # 0 - one program per each student (one program can have multiple source files (1 zip file))
+        if buildRetCode!=0:
+            print '%sBuild error. Go on a next file...'%logPrefix
+        else:
+            print '%sEnd build'%logPrefix
+            print '%sStart running'%logPrefix
+            exitType, stdoutStr = run(repSrcExt, workDir, projName, gArgs.user_input, gArgs.timeout)
+            print '%sEnd running'%logPrefix
 
-            # prepare workDir
-            workDir = prepare(origFilePath, outputDir, assignmentParam['subdir'], projName, fileName)
-            print '%sWork directory: %s'%(logPrefix, workDir)
+        # add report data
+        submittedFileNames.append(origFileName)
+        srcFileLists.append([opjoin(origAssignDir, origSrcFileName) for origSrcFileName in origSrcFileNames])
+        buildRetCodes.append(buildRetCode)
+        buildLogs.append(buildLog)
+        if buildRetCode==0:
+            exitTypes.append(exitType)
+            stdoutStrs.append(stdoutStr)
+        else:
+            exitTypes.append(None)
+            stdoutStrs.append(None)
 
-            # get origSrcFileNames, repSrcExt
-            if ext=='.zip':
-                origSrcFileNames, srcExts = unzip(fileName)
-            else:
-                origSrcFileNames = [origFileName]
-                srcExts = [ext]
-            repSrcExt = assignmentParam['code-type'] if 'code-type' in assignmentParam else srcExts[0]
+    # elif fileLayout==1:
+        # # 1 - multiple programs (zipped) per each student (one file per each program)
+        # infileNames = unzip(fileName)
+        # for infileName in infileNames:
+            # inprojName, ext = os.path.splitext(os.path.basename(infileName))
+            # projName += inprojName
 
-            # unidecode srcFiles
-            srcFileNames = []
-            for i in range(len(origSrcFileNames)):
-                srcFileName = unidecode(origSrcFileNames[i]) 
-                shutil.move(opjoin(workDir, origSrcFileNames[i]), opjoin(workDir, srcFileName))
-                srcFileNames.append(srcFileName)
-
-            # build
-            print '%sStart build'%logPrefix
-            buildRetCode, buildLog = build(repSrcExt, workDir, projName, srcFileNames)
-
-            if buildRetCode!=0:
-                print '%sBuild error. Go on a next file...'%logPrefix
-            else:
-                print '%sEnd build'%logPrefix
-                print '%sStart running'%logPrefix
-                exitType, stdoutStr = run(repSrcExt, workDir, projName, assignmentParam['user-input'], timeOut)
-                print '%sEnd running'%logPrefix
-
-            # add report data
-            submittedFileNames.append(origFileName)
-            srcFileLists.append([opjoin(origSubDirPath, origSrcFileName) for origSrcFileName in origSrcFileNames])
-            buildRetCodes.append(buildRetCode)
-            buildLogs.append(buildLog)
-            if buildRetCode==0:
-                exitTypes.append(exitType)
-                stdoutStrs.append(stdoutStr)
-            else:
-                exitTypes.append(None)
-                stdoutStrs.append(None)
-
-        elif fileLayout==1:
-            # 1 - multiple programs (zipped) per each student (one file per each program)
-            infileNames = unzip(fileName)
-            for infileName in infileNames:
-                inprojName, ext = os.path.splitext(os.path.basename(infileName))
-                projName += inprojName
-
-        print '%sGenerating Report for %s...'%(logPrefix, assignmentParam['subdir'])
-        generateReport(outputDir, assignmentDir, assignmentParam, submittedFileNames, \
-                        srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
-        print 'Done.'
+    print '%sGenerating Report for %s...'%(logPrefix, gArgs.assignment_alias)
+    generateReport(gArgs, submittedFileNames, \
+                    srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
+    print 'Done.'
