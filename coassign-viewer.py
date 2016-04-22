@@ -374,7 +374,7 @@ parser.add_argument('--file-layout', default=0, type=int,
 1 - one zip file for each student. the zip file has \nmultiple source files and each source file represents \neach program.''')
 parser.add_argument('--timeout', default=2., type=float,
                     help='each target program is killed when TIMEOUT(seconds) \nis reached. useful for infinite loop cases. \ndefault: 2.0')
-parser.add_argument('--run-only',
+parser.add_argument('--run-only', action='store_true',
                     help='''when specified, run each target program without build. \nyou may use it when you want change USER_INPUT without
 build. if the programming language of the source file \ndoes not require build process, CoassignViewer \nautomatically skips the build process without \nspecifying this option.''')
 parser.add_argument('--assignment-alias',
@@ -391,11 +391,6 @@ gArgs = parser.parse_args()
 
 if not gArgs.assignment_alias:
     gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir[0]))
-
-if not gArgs.run_only:
-    gArgs.run_only = False
-else:
-    gArgs.run_only = True
 
 submittedFileNames = []
 srcFileLists = []
@@ -430,16 +425,21 @@ for i in range(len(submissionNames)):
             print '%sProject %d / %d: %s'%(logPrefix, i+1, len(leafDirsInDestDir), projName)
 
             # build
-            print '%sBuilding...'%logPrefix
-            buildRetCode, buildLog = build(ext, leafDir, projName, [srcFileName])
+            if not gArgs.run_only:
+                print '%sBuilding...'%logPrefix
+                buildRetCode, buildLog = build(ext, leafDir, projName, [srcFileName])
 
+            else:
+                buildRetCode = 0
+                buildLog = ''
+
+            # run
             if buildRetCode!=0:
                 print '%sBuild error. Go on a next file.'%logPrefix
             else:
                 print '%sRunning...'%logPrefix
                 exitType, stdoutStr = run(ext, leafDir, projName, gArgs.user_input, gArgs.timeout)
                 print '%sDone.'%logPrefix
-
 
             # add report data
             submittedFileNames.append(decode2orig[submissionName])
