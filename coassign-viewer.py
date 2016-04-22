@@ -192,12 +192,16 @@ def onTimeOut(proc):
 # exitType:
 #   0 - normal exit
 #   1 - forced kill due to timeout
+#   2 - cannot find the executable file (not built yet)
 def run(repSrcExt, workDir, projName, userInput, timeOut):
-    proc = subprocess.Popen([gRunPrefix + codeExt[repSrcExt]['runcmd-func'](projName)], cwd=workDir, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    try:
+        proc = subprocess.Popen([gRunPrefix + codeExt[repSrcExt]['runcmd-func'](workDir, projName)], cwd=workDir, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+    except OSError:
+        return 2, codeExt[repSrcExt]['runcmd-func'](workDir, projName)
+
     timer = threading.Timer(timeOut, onTimeOut, [proc])
-    
     timer.start()
-    stdoutStr = proc.communicate(userInput)[0]
+    stdoutStr, stderrStr = proc.communicate(userInput)
 
     if timer.is_alive():
         timer.cancel()
@@ -283,10 +287,12 @@ def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
     if buildRetCode!=0: # build error
         s += buildLog
     else:
-        if exitType == 1:   # time out
-            s += 'Timeout'
-        else:
+        if exitType == 0:
             s += stdoutStr
+        elif exitType == 1:   # time out
+            s += 'Timeout'
+        elif exitType == 2:   # no executable exists
+            s += 'Cannot find %s'%stdoutStr
     return s
  
 ############################################
@@ -307,8 +313,8 @@ def build_c_cpp(buildDir, projName, srcFileNames):
     else:
         return 0, buildLog
 
-def runcmd_c_cpp(projName):
-    return '%s.exe'%projName
+def runcmd_c_cpp(workDir, projName):
+    return os.path.abspath(opjoin(workDir, '%s.exe'%projName))
 
 ############################################
 # functions for each platform
