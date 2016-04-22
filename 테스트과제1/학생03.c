@@ -1,0 +1,9 @@
+#include <stdio.h>
+int main()
+{
+    while(1)
+    {
+        printf("æ»≥Á«œººø‰\n");
+    }
+    return 0;
+}
