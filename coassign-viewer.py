@@ -161,20 +161,6 @@ def postProcess(unzipDirNames):
 ############################################
 # main functions
 
-# # return workDir
-# def prepare_old(origFilePath, outputDir, alias, projName, fileName):
-    # # make workspace directory for projName
-    # workDir = opjoin(outputDir, opjoin(alias, projName))
-    # try:
-        # os.makedirs(workDir)
-    # except OSError as e:
-        # pass
-
-    # # copy assignment file to build directory
-    # shutil.copy(origFilePath, workDir)
-
-    # return workDir
-
 # return CMakeLists.txt code
 def getCMakeListsFileContents(projName, srcFileNames):
     srcFileCount = 0
@@ -464,74 +450,6 @@ for i in range(len(submissionNames)):
             else:
                 exitTypes.append(None)
                 stdoutStrs.append(None)
-
-
-# origSubFileNames = os.listdir(origAssignDir)
-# for i in range(len(origSubFileNames)):
-    # origSubFileName = origSubFileNames[i]
-    # origSubFilePath =  opjoin(origAssignDir, origSubFileName)
-    # if os.path.isdir(origSubFilePath):
-        # continue
-
-    # decodeSubFileName = unidecode(origSubFileName)
-    # projName, ext = os.path.splitext(os.path.basename(decodeSubFileName))
-
-    # print
-    # print '%s'%logPrefix
-    # print '%sSubmission %d / %d: %s'%(logPrefix, i+1, len(origSubFileNames), decodeSubFileName)
-
-    # if gArgs.file_layout==0:
-        # # 0 - one source file (.c or .cpp) per each student.
-        # workDir = prepare(origSubFilePath, gArgs.output_dir, gArgs.assignment_alias, projName, decodeSubFileName)
-
-        # # prepare workDir
-        # workDir = prepare(origSubFilePath, gArgs.output_dir, gArgs.assignment_alias, projName, decodeSubFileName)
-
-        # # get origSrcFileNames, repSrcExt
-        # if ext=='.zip':
-            # origSrcFileNames, srcExts = unzip(decodeSubFileName)
-        # else:
-            # origSrcFileNames = [origSubFileName]
-            # srcExts = [ext]
-        # repSrcExt = srcExts[0]
-
-        # # unidecode srcFiles
-        # srcFileNames = []
-        # for i in range(len(origSrcFileNames)):
-            # srcFileName = unidecode(origSrcFileNames[i]) 
-            # shutil.move(opjoin(workDir, origSrcFileNames[i]), opjoin(workDir, srcFileName))
-            # srcFileNames.append(srcFileName)
-
-        # # build
-        # print '%sBuilding...'%logPrefix
-        # buildRetCode, buildLog = build(repSrcExt, workDir, projName, srcFileNames)
-
-        # if buildRetCode!=0:
-            # print '%sBuild error. Go on a next file.'%logPrefix
-        # else:
-            # print '%sRunning...'%logPrefix
-            # exitType, stdoutStr = run(repSrcExt, workDir, projName, gArgs.user_input, gArgs.timeout)
-            # print '%sDone.'%logPrefix
-
-        # # add report data
-        # submittedFileNames.append(origSubFileName)
-        # srcFileLists.append([opjoin(origAssignDir, origSrcFileName) for origSrcFileName in origSrcFileNames])
-        # buildRetCodes.append(buildRetCode)
-        # buildLogs.append(buildLog)
-        # if buildRetCode==0:
-            # exitTypes.append(exitType)
-            # stdoutStrs.append(stdoutStr)
-        # else:
-            # exitTypes.append(None)
-            # stdoutStrs.append(None)
-
-
-    # # elif fileLayout==1:
-        # # # 1 - multiple programs (zipped) per each student (one file per each program)
-        # # infileNames = unzip(decodeSubFileName)
-        # # for infileName in infileNames:
-            # # inprojName, ext = os.path.splitext(os.path.basename(infileName))
-            # # projName += inprojName
 
 print
 print '%s'%logPrefix
