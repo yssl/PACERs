@@ -269,7 +269,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
 def getSourcesTable(srcPaths):
     htmlCode = ''
     for srcPath in srcPaths:
-        htmlCode += '%s\n'%os.path.basename(srcPath)
+        htmlCode += '%s\n'%srcPath.replace(gArgs.assignment_dir[0], '')
         htmlCode += '%s\n'%getRenderedSource(srcPath)
     return htmlCode 
 
