@@ -6,14 +6,15 @@ CoassignViewer
 Requirements:
     python 2.x
     cmake
-    Pygments (install via pip install Pygments)
+    Pygments (install via pip install pygments)
     Unidecode (install via pip install unidecode)
 
 Tested language & platform:
-    C - Microsoft Visual Studio 2010 on Windows 10
+    C - Microsoft Visual Studio 2010 on Windows 10 (Kor)
+    C - Microsoft Visual C++ 2010 Express on Windows 8.1 with Bing (Eng)
 
 * On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
-    C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin\IDE
+    C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
     C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 
@@ -141,19 +142,21 @@ def makeLeafDirAndMoveFile(destDir):
             os.rename(opjoin(root, fileName), opjoin(dirPath, fileName))
 
 
-def prepare():
+def preProcess():
     decode2orig = {}
 
     zipFileNames = unzipInAssignDir(gArgs.assignment_dir[0])
     unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
     destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, decode2orig)
-    removeUnzipDirsInAssignDir(gArgs.assignment_dir[0], unzipDirNames)
     removeZipFileInDestDir(destDir, zipFileNames)
 
     if gArgs.file_layout==0:
         makeLeafDirAndMoveFile(destDir)
 
-    return destDir, decode2orig
+    return destDir, decode2orig, unzipDirNames
+
+def postProcess(unzipDirNames):
+    removeUnzipDirsInAssignDir(gArgs.assignment_dir[0], unzipDirNames)
 
 ############################################
 # main functions
@@ -241,7 +244,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     File layout: %d
     Timeout: %f
     Run only: %d
-</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir[0]), opjoin(os.path.abspath(args.output_dir), args.assignment_alias), 
+</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir[0]), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
         args.user_input, args.file_layout, args.timeout, args.run_only)
 
     # main table
@@ -404,7 +407,7 @@ stdoutStrs = []
 ############################################
 # main routine
 
-destDir, decode2orig = prepare()
+destDir, decode2orig, unzipDirNames = preProcess()
 
 submissionNames = os.listdir(destDir)
 for i in range(len(submissionNames)):
@@ -449,17 +452,10 @@ for i in range(len(submissionNames)):
             d, f = os.path.split(destSrcFilePathAfterDestDir)
             modifiedDestSrcFilePathAfterDestDir = opjoin(os.path.split(d)[0], f)
 
-            # todo!!
+            origSrcFilePathAfterAssignDir = decode2orig[modifiedDestSrcFilePathAfterDestDir]
 
-            # \hagsaeng01\munje2.c -> \학생01\문제2.c
+            srcFileLists.append([gArgs.assignment_dir[0] + origSrcFilePathAfterAssignDir])
 
-            for key, value in decode2orig.items():
-                print key, value
-            origSrcFilePathAfterAssignDir = decode2orig[destSrcFilePathAfterDestDir]
-            print origSrcFilePathAfterAssignDir
-            exit()
-
-            srcFileLists.append([opjoin(leafDir, srcFileName)])
             buildRetCodes.append(buildRetCode)
             buildLogs.append(buildLog)
             if buildRetCode==0:
@@ -542,4 +538,5 @@ print '%s'%logPrefix
 print '%sGenerating Report for %s...'%(logPrefix, gArgs.assignment_alias)
 generateReport(gArgs, submittedFileNames, \
                 srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
+postProcess(unzipDirNames)
 print '%sDone.'%logPrefix
