@@ -92,16 +92,22 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
         shutil.rmtree(opjoin(assignDir, d))
 
-def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, decode2orig):
+def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, decode2orig, doNotCopy):
     decodeAlias = unidecode(unicode(assignAlias))
     decode2orig[decodeAlias] = assignAlias
     srcDir = assignDir
     destDir = opjoin(outputDir, decodeAlias)
 
-    if os.path.exists(destDir):
-        shutil.rmtree(destDir)
-        time.sleep(.01)
-    shutil.copytree(assignDir, destDir)
+    if not doNotCopy:
+        if os.path.exists(destDir):
+            shutil.rmtree(destDir)
+            time.sleep(.01)
+        shutil.copytree(assignDir, destDir)
+    else:
+        try:
+            os.remove(getReportFilePath(gArgs))
+        except OSError as e:
+            pass
 
     for root, dirs, files in os.walk(destDir, topdown=False):
         for name in dirs:
@@ -113,7 +119,9 @@ def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, d
             # decode2orig['hagsaeng01'] == '학생01'
             decodeName = unidecode(unicode(name))
             decode2orig[decodeName] = name
-            os.rename(opjoin(root, name), opjoin(root, decodeName))
+
+            if not doNotCopy:
+                os.rename(opjoin(root, name), opjoin(root, decodeName))
 
         for name in files:
             # decode2orig['\hagsaeng01\munje2.c'] == '\학생01\문제2.c'
@@ -123,9 +131,11 @@ def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, d
 
             # decode2orig['munje2.c'] == '문제2.c'
             decodeName = unidecode(unicode(name))
-            os.rename(opjoin(root, name), opjoin(root, decodeName))
             decode2orig[decodeName] = name
             decode2orig[os.path.splitext(decodeName)[0]] = os.path.splitext(name)[0]
+
+            if not doNotCopy:
+                os.rename(opjoin(root, name), opjoin(root, decodeName))
 
     return destDir
 
@@ -144,14 +154,16 @@ def makeLeafDirAndMoveFile(destDir):
 
 def preProcess():
     decode2orig = {}
+    doNotCopy = True if gArgs.run_only else False
 
     zipFileNames = unzipInAssignDir(gArgs.assignment_dir[0])
     unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
-    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, decode2orig)
+    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, decode2orig, doNotCopy)
     removeZipFileInDestDir(destDir, zipFileNames)
 
     if gArgs.file_layout==0:
-        makeLeafDirAndMoveFile(destDir)
+        if doNotCopy==False:
+            makeLeafDirAndMoveFile(destDir)
 
     return destDir, decode2orig, unzipDirNames
 
@@ -263,13 +275,16 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
 </html>'''
 
     # write html
-    with open(opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s.html'%args.assignment_alias), 'w') as f:
+    with open(getReportFilePath(args), 'w') as f:
         f.write(htmlCode.encode('utf-8'))
         # try:
             # f.write(htmlCode)
         # except UnicodeEncodeError:
             # f.write(htmlCode.encode('utf-8'))
         
+def getReportFilePath(args):
+    return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s.html'%args.assignment_alias)
+
 def getSourcesTable(srcPaths):
     htmlCode = ''
     for srcPath in srcPaths:
@@ -332,12 +347,18 @@ def kill_linux(proc):
 # pre-defined
 
 env = {'nt':{}, 'posix':{}}
+
 env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
-env['nt']['kill-func'] = kill_windows
-env['nt']['run-prefix'] = ''
 env['posix']['build-cmd'] = 'cmake ./; make'
+
+env['nt']['kill-func'] = kill_windows
 env['posix']['kill-func'] = kill_linux
+
+env['nt']['run-prefix'] = ''
 env['posix']['run-prefix'] = 'exec '
+
+env['nt']['slash'] = '\\'
+env['posix']['slash'] = '/'
 
 gBuildCmd = env[os.name]['build-cmd']
 gKillFunc = env[os.name]['kill-func']
@@ -405,12 +426,32 @@ for i in range(len(submissionNames)):
     print '%sSubmission %d / %d: %s'%(logPrefix, i+1, len(submissionNames), submissionName)
 
     if gArgs.file_layout==0:
-        leafDirsInDestDir = [root for root, dirs, files in os.walk(opjoin(destDir, submissionName)) if not dirs]
+        # leafDirsInDestDir = [root for root, dirs, files in os.walk(opjoin(destDir, submissionName)) if not dirs]
+        leafDirsInDestDir = []
+        for root, dirs, files in os.walk(opjoin(destDir, submissionName)):
+            numNonCMakeDir = 0
+            for d in dirs:
+                if 'CMakeFiles' not in d:
+                    numNonCMakeDir += 1
+            if numNonCMakeDir==0 and 'CMakeFiles' not in root:
+                leafDirsInDestDir.append(root)
 
         for i in range(len(leafDirsInDestDir)):
             leafDir = leafDirsInDestDir[i]
 
-            srcFileName = os.listdir(leafDir)[0]
+            if 'CMakeFiles' in leafDir:
+                continue
+
+            # srcFileName = os.listdir(leafDir)[0]
+            srcFileName = None
+            for name in os.listdir(leafDir):
+                projName, ext = os.path.splitext(name)
+                if ext in codeExt:
+                    srcFileName = name
+                    break
+            if srcFileName==None:
+                continue
+
             projName, ext = os.path.splitext(srcFileName)
 
             print '%s'%logPrefix
@@ -444,7 +485,11 @@ for i in range(len(submissionNames)):
             d, f = os.path.split(destSrcFilePathAfterDestDir)
             modifiedDestSrcFilePathAfterDestDir = opjoin(os.path.split(d)[0], f)
 
-            origSrcFilePathAfterAssignDir = decode2orig[modifiedDestSrcFilePathAfterDestDir]
+            # origSrcFilePathAfterAssignDir = decode2orig[modifiedDestSrcFilePathAfterDestDir]
+            if modifiedDestSrcFilePathAfterDestDir not in decode2orig:
+                origSrcFilePathAfterAssignDir = env[os.name]['slash'] + decode2orig[modifiedDestSrcFilePathAfterDestDir[1:]]
+            else:
+                origSrcFilePathAfterAssignDir = decode2orig[modifiedDestSrcFilePathAfterDestDir]
 
             srcFileLists.append([gArgs.assignment_dir[0] + origSrcFilePathAfterAssignDir])
 
