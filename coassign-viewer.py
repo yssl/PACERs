@@ -20,16 +20,15 @@ Tested language & platform:
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
                           [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
-                          [--run-only RUN_ONLY]
-                          [--assignment-alias ASSIGNMENT_ALIAS]
+                          [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
                           assignment_dir
 
-Automatic building & launching & reporting system for a large number of coding assignment files.
+Automatic building & launching & reporting system for a large number of coding
+ssignment files.
 
 positional arguments:
-  assignment_dir        a direcory that has source files. avoid including
-                        hangul characters in its full path.
+  assignment_dir        a direcory that has submitted files.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -40,16 +39,16 @@ optional arguments:
   --file-layout FILE_LAYOUT
                         indicates file layout in the assignment_dir.
                         default: 0
-                        0 - one source file per each student.
-                        1 - one zip file for each student. the zip file has
-                        multiple source files and each source file represents
-                        each program.
+                        0 - one source file per each program. (one source
+                        file, one zip file, one directory per each student
+                        are all allowed if each of included source file
+                        represents each separate program.)
   --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
                         is reached. useful for infinite loop cases.
                         default: 2.0
-  --run-only RUN_ONLY   when specified, run each target program without build.
+  --run-only            when specified, run each target program without build.
                         you may use it when you want change USER_INPUT without
-                        build. if the programming language of the source file
+                        build. if the programming language of source files
                         does not require build process, CoassignViewer
                         automatically skips the build process without
                         specifying this option.
@@ -62,6 +61,7 @@ optional arguments:
   --output-dir OUTPUT_DIR
                         specify OUTPUT_DIR in which the final report file
                         and build output files to be generated.
+                        avoid including hangul characters in its full path.
                         default: ./output
 '''
 
@@ -383,13 +383,15 @@ parser.add_argument('--user-input', default='',
                     help='specify USER_INPUT to be sent to the stdin of the \ntarget programs. \ndefault is an empty string.')
 parser.add_argument('--file-layout', default=0, type=int,
                     help='''indicates file layout in the assignment_dir. \ndefault: 0
-0 - one source file per each student.
-1 - one zip file for each student. the zip file has \nmultiple source files and each source file represents \neach program.''')
+0 - one source file per each program. (one source 
+file, one zip file, one directory per each student
+are all allowed if each of included source file
+represents each separate program.)''')
 parser.add_argument('--timeout', default=2., type=float,
                     help='each target program is killed when TIMEOUT(seconds) \nis reached. useful for infinite loop cases. \ndefault: 2.0')
 parser.add_argument('--run-only', action='store_true',
                     help='''when specified, run each target program without build. \nyou may use it when you want change USER_INPUT without
-build. if the programming language of the source file \ndoes not require build process, CoassignViewer \nautomatically skips the build process without \nspecifying this option.''')
+build. if the programming language of source files \ndoes not require build process, CoassignViewer \nautomatically skips the build process without \nspecifying this option.''')
 parser.add_argument('--assignment-alias',
                     help='specify ASSIGNMENT_ALIAS for each assignment_dir. \nASSIGNMENT_ALIAS is used when making a sub-directory \nin OUTPUT_DIR and the final report file. \n\
 default: "basename" of assignment_dir (bar if \nassignment_dir is /foo/bar/).')
