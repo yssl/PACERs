@@ -392,9 +392,9 @@ build. if the programming language of source files \ndoes not require build proc
 parser.add_argument('--assignment-alias',
                     help='specify ASSIGNMENT_ALIAS for each assignment_dir. \nASSIGNMENT_ALIAS is used when making a sub-directory \nin OUTPUT_DIR and the final report file. \n\
 default: "basename" of assignment_dir (bar if \nassignment_dir is /foo/bar/).')
-parser.add_argument('--output-dir', default='./output',
+parser.add_argument('--output-dir', default=opjoin('.', 'output'),
                     help='specify OUTPUT_DIR in which the final report file \nand build output files to be generated. \n\
-avoid including hangul characters in its full path.\ndefault: ./output')
+avoid including hangul characters in its full path.\ndefault: %s'%opjoin('.', 'output'))
 
 gArgs = parser.parse_args()
 
