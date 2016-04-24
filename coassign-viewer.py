@@ -75,6 +75,36 @@ reload(sys)
 sys.setdefaultencoding('cp949')
 
 ############################################
+# utility functions
+def unico2decoPath(unicoPath, deco2unicoMap):
+    print 'unicoPath:', unicoPath 
+    unicoTokens = os.path.normpath(unicoPath).split(os.sep)
+    print 'unicoTokens: ', unicoTokens
+    decoTokens = []
+    for unicoToken in unicoTokens:
+        decoToken = unidecode(unicoToken)
+        if decoToken not in deco2unicoMap:
+            deco2unicoMap[decoToken] = unicoToken
+        decoTokens.append(decoToken)
+    print 'decoTokens: ', decoTokens
+    print reduce(os.path.join, decoTokens)
+    print
+    return reduce(os.path.join, decoTokens)
+
+def deco2unicoPath(decoPath, deco2unicoMap):
+    print 'decoPath:', decoPath 
+    decoTokens = os.path.normpath(decoPath).split(os.sep)
+    print 'decoTokens: ', decoTokens
+    unicoTokens = []
+    for decoToken in decoTokens:
+        unicoToken = deco2unicoMap[decoToken]
+        unicoTokens.append(unicoToken)
+    print 'unicoTokens: ', unicoTokens
+    print reduce(os.path.join, unicoTokens)
+    print 
+    return reduce(os.path.join, unicoTokens)
+
+############################################
 # functions for preparation
 
 def unzipInAssignDir(assignDir):
@@ -92,9 +122,10 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
         shutil.rmtree(opjoin(assignDir, d))
 
-def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, decodeWord2origWord, doNotCopy):
-    decodeAlias = unidecode(unicode(assignAlias))
-    decodeWord2origWord[decodeAlias] = assignAlias
+def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, deco2unicoMap, doNotCopy):
+    # decodeAlias = unidecode(unicode(assignAlias))
+    # decodeWord2origWord[decodeAlias] = assignAlias
+    decodeAlias = unico2decoPath(unicode(assignAlias), deco2unicoMap)
     srcDir = assignDir
     destDir = opjoin(outputDir, decodeAlias)
 
@@ -109,39 +140,53 @@ def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, d
         except OSError as e:
             pass
 
-    for root, dirs, files in os.walk(destDir, topdown=False):
+    print '-----------'
+    print destDir
+    print '-----------'
+    # for root, dirs, files in os.walk(destDir, topdown=False):
+    for root, dirs, files in os.walk(assignDir, topdown=False):
+        print '# ', 
         for name in dirs:
-            # decodeWord2origWord['\hagsaeng01\munje2'] == '\학생01\문제2'
-            pathAfterDestDir = opjoin(root, name)
-            pathAfterDestDir = pathAfterDestDir.replace(destDir, '')
-            decodeWord2origWord[unidecode(unicode(pathAfterDestDir))] = pathAfterDestDir
+            # # decodeWord2origWord['\hagsaeng01\munje2'] == '\학생01\문제2'
+            # pathAfterDestDir = opjoin(root, name)
+            # pathAfterDestDir = pathAfterDestDir.replace(destDir, '')
+            # decodeWord2origWord[unidecode(unicode(pathAfterDestDir))] = pathAfterDestDir
 
-            # decodeWord2origWord['hagsaeng01'] == '학생01'
-            decodeName = unidecode(unicode(name))
-            decodeWord2origWord[decodeName] = name
+            # # decodeWord2origWord['hagsaeng01'] == '학생01'
+            # decodeName = unidecode(unicode(name))
+            # decodeWord2origWord[decodeName] = name
+
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
 
             if not doNotCopy:
-                os.rename(opjoin(root, name), opjoin(root, decodeName))
+                # os.rename(opjoin(root, name), opjoin(root, decodeName))
+                os.rename(opjoin(root, name), opjoin(root, decoName))
 
         for name in files:
-            # decodeWord2origWord['\hagsaeng01\munje2.c'] == '\학생01\문제2.c'
-            pathAfterDestDir = opjoin(root, name)
-            pathAfterDestDir = pathAfterDestDir.replace(destDir, '')
-            decodeWord2origWord[unidecode(unicode(pathAfterDestDir))] = pathAfterDestDir
+            # # decodeWord2origWord['\hagsaeng01\munje2.c'] == '\학생01\문제2.c'
+            # pathAfterDestDir = opjoin(root, name)
+            # pathAfterDestDir = pathAfterDestDir.replace(destDir, '')
+            # decodeWord2origWord[unidecode(unicode(pathAfterDestDir))] = pathAfterDestDir
 
-            # decodeWord2origWord['munje2.c'] == '문제2.c'
-            decodeName = unidecode(unicode(name))
-            decodeWord2origWord[decodeName] = name
-            decodeWord2origWord[os.path.splitext(decodeName)[0]] = os.path.splitext(name)[0]
+            # # decodeWord2origWord['munje2.c'] == '문제2.c'
+            # decodeName = unidecode(unicode(name))
+            # decodeWord2origWord[decodeName] = name
+            # decodeWord2origWord[os.path.splitext(decodeName)[0]] = os.path.splitext(name)[0]
+
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
 
             if not doNotCopy:
-                os.rename(opjoin(root, name), opjoin(root, decodeName))
+                # os.rename(opjoin(root, name), opjoin(root, decodeName))
+                os.rename(opjoin(root, name), opjoin(root, decoName))
 
     return destDir
 
 def removeZipFileInDestDir(destDir, zipFileNames):
     for name in zipFileNames:
-        os.remove(opjoin(destDir, unidecode(unicode(name))))
+        try:
+            os.remove(opjoin(destDir, unidecode(unicode(name))))
+        except OSError:
+            pass
 
 def makeLeafDirAndMoveFile(destDir):
     for root, dirs, files in os.walk(destDir, topdown=False):
@@ -153,19 +198,20 @@ def makeLeafDirAndMoveFile(destDir):
 
 
 def preProcess():
-    decodeWord2origWord = {}
+    # decodeWord2origWord = {}
+    deco2unicoMap = {'':''}
     doNotCopy = True if gArgs.run_only else False
 
     zipFileNames = unzipInAssignDir(gArgs.assignment_dir[0])
     unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
-    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, decodeWord2origWord, doNotCopy)
+    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
     removeZipFileInDestDir(destDir, zipFileNames)
 
     if gArgs.file_layout==0:
         if doNotCopy==False:
             makeLeafDirAndMoveFile(destDir)
 
-    return destDir, decodeWord2origWord, unzipDirNames
+    return destDir, deco2unicoMap, unzipDirNames
 
 def postProcess(unzipDirNames):
     removeUnzipDirsInAssignDir(gArgs.assignment_dir[0], unzipDirNames)
@@ -253,7 +299,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     htmlCode += '''<table border=1>
 <tr>
 <td>Submission Name</td>
-<td>Source Files</td>
+<td>Source Files (in Assignment Directory)</td>
 <td>Output</td>
 <td>Score</td>
 <td>Comment</td>
@@ -307,7 +353,7 @@ def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
         elif exitType == 1:   # time out
             s += 'Timeout'
         elif exitType == 2:   # no executable exists
-            s += 'Cannot find %s'%stdoutStr
+            s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
     return s
  
 ############################################
@@ -414,7 +460,7 @@ stdoutStrs = []
 ############################################
 # main routine
 
-destDir, decodeWord2origWord, unzipDirNames = preProcess()
+destDir, deco2unicoMap, unzipDirNames = preProcess()
 
 submissionNames = os.listdir(destDir)
 for i in range(len(submissionNames)):
@@ -474,7 +520,8 @@ for i in range(len(submissionNames)):
                 print '%sDone.'%logPrefix
 
             # add report data
-            submittedFileNames.append(decodeWord2origWord[submissionName])
+            # submittedFileNames.append(decodeWord2origWord[submissionName])
+            submittedFileNames.append(deco2unicoPath(submissionName, deco2unicoMap))
 
             # full path -> \hagsaeng01\munje2\munje2.c
             destSrcFilePath = opjoin(leafDir, srcFileName)
@@ -484,13 +531,15 @@ for i in range(len(submissionNames)):
             d, f = os.path.split(destSrcFilePathAfterDestDir)
             modifiedDestSrcFilePathAfterDestDir = opjoin(os.path.split(d)[0], f)
 
-            # origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
-            if modifiedDestSrcFilePathAfterDestDir not in decodeWord2origWord:
-                origSrcFilePathAfterAssignDir = os.sep + decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir[1:]]
-            else:
-                origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
+            # # origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
+            # if modifiedDestSrcFilePathAfterDestDir not in decodeWord2origWord:
+                # origSrcFilePathAfterAssignDir = os.sep + decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir[1:]]
+            # else:
+                # origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
+            origSrcFilePathAfterAssignDir = deco2unicoPath(modifiedDestSrcFilePathAfterDestDir, deco2unicoMap)
 
-            srcFileLists.append([gArgs.assignment_dir[0] + origSrcFilePathAfterAssignDir])
+            print opjoin(gArgs.assignment_dir[0], origSrcFilePathAfterAssignDir)
+            srcFileLists.append([opjoin(gArgs.assignment_dir[0], origSrcFilePathAfterAssignDir)])
 
             buildRetCodes.append(buildRetCode)
             buildLogs.append(buildLog)
