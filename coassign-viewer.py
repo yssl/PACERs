@@ -13,10 +13,15 @@ Tested language & platform:
     C - Microsoft Visual Studio 2010 on Windows 10 (Kor)
     C - Microsoft Visual C++ 2010 Express on Windows 8.1 with Bing (Eng)
 
-* On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
-    C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
-    C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
+Required environment setting:
+    On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
+        C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
+        C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
+Quick start:
+    1) run: git clone https://github.com/yssl/CoassignViewer.git
+    2) run: coassign-viewer.py test-assignment-1
+    3) open .\output/test-assignment-1/report-test-assignment-1.html in any web browser
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
                           [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
@@ -24,8 +29,7 @@ usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
                           [--output-dir OUTPUT_DIR]
                           assignment_dir
 
-Automatic building & launching & reporting system for a large number of coding
-ssignment files.
+Automatic building & launching & reporting system for a large number of coding assignment files.
 
 positional arguments:
   assignment_dir        a direcory that has submitted files.
@@ -39,10 +43,9 @@ optional arguments:
   --file-layout FILE_LAYOUT
                         indicates file layout in the assignment_dir.
                         default: 0
-                        0 - one source file per each program. (one source
-                        file, one zip file, one directory per each student
-                        are all allowed if each of included source file
-                        represents each separate program.)
+                        0 - one source file runs one program.
+                        each submission might have only one source file or a
+                        zip file or a directory including multiple source files.
   --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
                         is reached. useful for infinite loop cases.
                         default: 2.0
@@ -62,7 +65,7 @@ optional arguments:
                         specify OUTPUT_DIR in which the final report file
                         and build output files to be generated.
                         avoid including hangul characters in its full path.
-                        default: ./output
+                        default: .\output
 '''
 
 import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch
@@ -108,24 +111,6 @@ def deco2unicoPath(decoPath, deco2unicoMap):
         unicoPath += ext
     return unicoPath
 
-# def getLeafDirsExceptBuildDir(dirPath):
-    # # print dirPath
-    # leafDirs = []
-    # for root, dirs, files in os.walk(dirPath):
-        # # print root, dirs, files
-        # if len(dirs)==0 and gBuildDirPrefix not in root:
-            # leafDirs.append(root)
-    # return leafDirs
-
-# def getFirstSourceFileNameIn(dirPath):
-    # srcFileName = None
-    # for name in os.listdir(dirPath):
-        # projName, ext = os.path.splitext(name)
-        # if ext in gCodeExt:
-            # srcFileName = name
-            # break
-    # return srcFileName
-
 ############################################
 # functions for preparation
 
@@ -144,19 +129,6 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
         shutil.rmtree(opjoin(assignDir, d))
 
-# def rmtreeExceptProjExe(treeRootPath):
-    # for root, dirs, files in os.walk(treeRootPath, topdown=False):
-        # for name in dirs:
-            # try:
-                # os.rmdir(opjoin(root, name))
-            # except OSError:
-                # pass
-        # for name in files:
-            # na, ext = os.path.splitext(name)
-            # if not (na==os.path.basename(root) and ext.lower()=='.exe'):
-                # os.remove(opjoin(root, name))
-
-
 def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, deco2unicoMap, doNotCopy):
     decodeAlias = unico2decoPath(unicode(assignAlias), deco2unicoMap)
     srcDir = assignDir
@@ -168,21 +140,12 @@ def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, d
             time.sleep(.01)
         shutil.copytree(assignDir, destDir)
     else:
+        if not os.path.exists(destDir):
+            os.mkdir(destDir)
         try:
             os.remove(getReportFilePath(gArgs))
         except OSError:
             pass
-
-    # if os.path.exists(destDir):
-        # if runOnly:
-            # rmtreeExceptProjExe(destDir)
-        # else:
-            # shutil.rmtree(destDir)
-            # time.sleep(.01)
-    # try:
-        # shutil.copytree(assignDir, destDir)
-    # except OSError:
-        # pass
 
     if doNotCopy:
         for root, dirs, files in os.walk(assignDir, topdown=False):
@@ -208,15 +171,6 @@ def removeZipFileInDestDir(destDir, zipFileNames):
         except OSError:
             pass
 
-# def makeLeafDirAndMoveFile(destDir):
-    # for root, dirs, files in os.walk(destDir, topdown=False):
-        # for fileName in files:
-            # dirName = os.path.splitext(fileName)[0]
-            # dirPath = opjoin(root, dirName)
-            # os.mkdir(dirPath)
-            # os.rename(opjoin(root, fileName), opjoin(dirPath, fileName))
-
-
 def preProcess():
     deco2unicoMap = {'':''}
     doNotCopy = gArgs.run_only
@@ -224,10 +178,6 @@ def preProcess():
     unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
     destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
     removeZipFileInDestDir(destDir, zipFileNames)
-
-    # if gArgs.file_layout==0:
-        # if not gArgs.run_only:
-            # makeLeafDirAndMoveFile(destDir)
 
     return destDir, deco2unicoMap, unzipDirNames
 
@@ -454,8 +404,9 @@ parser.add_argument('--user-input', default='',
                     help='specify USER_INPUT to be sent to the stdin of the \ntarget programs. \ndefault is an empty string.')
 parser.add_argument('--file-layout', default=0, type=int,
                     help='''indicates file layout in the assignment_dir. \ndefault: 0
-0 - one source file for each submission, and one source file runs one program.
-1 - one zipfile or one directory for each submission, and each source file in zip or dir runs one program.''')
+0 - one source file runs one program. 
+each submission might have only one source file or a 
+zip file or a directory including multiple source files.''')
 parser.add_argument('--timeout', default=2., type=float,
                     help='each target program is killed when TIMEOUT(seconds) \nis reached. useful for infinite loop cases. \ndefault: 2.0')
 parser.add_argument('--run-only', action='store_true',
@@ -488,7 +439,8 @@ stdoutStrs = []
 
 destDir, deco2unicoMap, unzipDirNames = preProcess()
 
-submissionNames = os.listdir(destDir)
+print destDir
+submissionNames = [name for name in os.listdir(destDir) if gBuildDirPrefix not in name]
 for i in range(len(submissionNames)):
     submissionName = submissionNames[i]
 
@@ -496,33 +448,35 @@ for i in range(len(submissionNames)):
     print '%s'%gLogPrefix
     print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionNames), submissionName)
 
-    if gArgs.file_layout==1:
-        submissionDir = opjoin(destDir, submissionName)
+    if gArgs.file_layout==0:
+        if os.path.isdir(opjoin(destDir, submissionName)):
+            # test-assignment-3
+            #   student01
+            #       prob1.c
+            #       prob2.c
+            #   student02
+            #       prob1.c
+            #       prob2.c
+            submissionDir = opjoin(destDir, submissionName)
+            srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+        else:
+            # test-assignment-1
+            #   student01.c
+            #   student02.c
+            #   student03.c
+            submissionDir = destDir
+            srcFileNames = [submissionName]
 
-        # leafDirsInDestDir = [root for root, dirs, files in os.walk(opjoin(destDir, submissionName)) if not dirs]
-        # leafDirsInDestDir = getLeafDirsExceptBuildDir(opjoin(destDir, submissionName))
-
-        # for i in range(len(leafDirsInDestDir)):
-            # leafDir = leafDirsInDestDir[i]
-
-        srcFileNames = [name for name in os.listdir(submissionDir) if os.path.splitext(name)[1] in gCodeExt]
         for i in range(len(srcFileNames)):
             srcFileName = srcFileNames[i]
-
-            # srcFileName = getFirstSourceFileNameIn(leafDir)
-            # if srcFileName==None:
-                # continue
-
             projName, ext = os.path.splitext(srcFileName)
 
             print '%s'%gLogPrefix
-            # print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(leafDirsInDestDir), projName)
             print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(srcFileNames), projName)
 
             # build
             if not gArgs.run_only:
                 print '%sBuilding...'%gLogPrefix
-                # buildRetCode, buildLog = build(ext, leafDir, projName, [srcFileName])
                 buildRetCode, buildLog = build(ext, submissionDir, projName, [srcFileName])
 
             else:
@@ -534,33 +488,16 @@ for i in range(len(submissionNames)):
                 print '%sBuild error. Go on a next file.'%gLogPrefix
             else:
                 print '%sRunning...'%gLogPrefix
-                # exitType, stdoutStr = run(ext, leafDir, projName, gArgs.user_input, gArgs.timeout)
                 exitType, stdoutStr = run(ext, submissionDir, projName, gArgs.user_input, gArgs.timeout)
                 print '%sDone.'%gLogPrefix
 
             # add report data
-            # submittedFileNames.append(decodeWord2origWord[submissionName])
             submittedFileNames.append(deco2unicoPath(submissionName, deco2unicoMap))
 
             # full path -> \hagsaeng01\munje2\munje2.c
-            # destSrcFilePath = opjoin(leafDir, srcFileName)
             destSrcFilePath = opjoin(submissionDir, srcFileName)
             destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
-
-            # # \hagsaeng01\munje2\munje2.c -> \hagsaeng01\munje2.c
-            # d, f = os.path.split(destSrcFilePathAfterDestDir)
-            # modifiedDestSrcFilePathAfterDestDir = opjoin(os.path.split(d)[0], f)
-
-            # # origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
-            # if modifiedDestSrcFilePathAfterDestDir not in decodeWord2origWord:
-                # origSrcFilePathAfterAssignDir = os.sep + decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir[1:]]
-            # else:
-                # origSrcFilePathAfterAssignDir = decodeWord2origWord[modifiedDestSrcFilePathAfterDestDir]
-            # origSrcFilePathAfterAssignDir = deco2unicoPath(modifiedDestSrcFilePathAfterDestDir, deco2unicoMap)
-
             origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-
-            print opjoin(gArgs.assignment_dir[0], origSrcFilePathAfterAssignDir)
             srcFileLists.append([opjoin(gArgs.assignment_dir[0], origSrcFilePathAfterAssignDir)])
 
             buildRetCodes.append(buildRetCode)
