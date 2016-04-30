@@ -9,14 +9,15 @@ Requirements:
     cmake
     Pygments
         : Install in Windows - "pip install pygments"
-          Instal in Linux - "sudo pip install pygments" or "sudo apt-get install python-pygments"
+          Install in Linux - "sudo pip install pygments" or "sudo apt-get install python-pygments"
     Unidecode (install via pip install unidecode)
         : Install in Windows - "pip install unidecode"
-          Instal in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
+          Install in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
 
-Tested language & platform:
-    C - Microsoft Visual Studio 2010 on Windows 10 (Kor)
-    C - Microsoft Visual C++ 2010 Express on Windows 8.1 with Bing (Eng)
+Tested language, compiler(interpreter), platform:
+    C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
+    C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
+    C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
 
 Required environment setting:
     On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
@@ -24,12 +25,14 @@ Required environment setting:
         C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 Quick start:
-    1) run: git clone https://github.com/yssl/CoassignViewer.git
+    1) Run: git clone https://github.com/yssl/CoassignViewer.git
 
     2) On Linux, run: ./coassign-viewer.py test-assignment-1
        On Windows, run: coassign-viewer.py test-assignment-1
 
-    3) open ./output/test-assignment-1/report-test-assignment-1.html in any web browser
+    3) Open ./output/test-assignment-1/report-test-assignment-1.html in any web browser
+    The generated html file is written in unicode (utf-8), so if your browser shows broken characters
+    please try to change the text encoding option for the page to unicode or utf-8.
     
 Other examples:
     coassign-viewer.py --user-input "1 2" test-assignment-2
