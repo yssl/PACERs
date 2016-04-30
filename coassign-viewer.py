@@ -7,8 +7,12 @@ CoassignViewer
 Requirements:
     python 2.x
     cmake
-    Pygments (install via pip install pygments)
+    Pygments
+        : Install in Windows - "pip install pygments"
+          Instal in Linux - "sudo pip install pygments" or "sudo apt-get install python-pygments"
     Unidecode (install via pip install unidecode)
+        : Install in Windows - "pip install unidecode"
+          Instal in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
 
 Tested language & platform:
     C - Microsoft Visual Studio 2010 on Windows 10 (Kor)
@@ -21,8 +25,14 @@ Required environment setting:
 
 Quick start:
     1) run: git clone https://github.com/yssl/CoassignViewer.git
-    2) run: coassign-viewer.py test-assignment-1
-    3) open .\output/test-assignment-1/report-test-assignment-1.html in any web browser
+
+    2) On Linux, run: ./coassign-viewer.py test-assignment-1
+       On Windows, run: coassign-viewer.py test-assignment-1
+
+    3) open ./output/test-assignment-1/report-test-assignment-1.html in any web browser
+    
+Other examples:
+    coassign-viewer.py --user-input "1 2" test-assignment-2
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
                           [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
