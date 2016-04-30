@@ -233,7 +233,6 @@ def onTimeOut(proc):
     # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
     # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
 
-
 # return exitType, output(stdout) of target program
 # exitType:
 #   0 - normal exit
@@ -326,7 +325,7 @@ def getSourcesTable(srcPaths):
 def getRenderedSource(srcPath):
     with open(srcPath, 'r') as f:
         sourceCode = f.read()
-        sourceCode = unicode(sourceCode, 'cp949')
+        sourceCode = unicode(sourceCode, gArgs.source_encoding)
     return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
 
 def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
@@ -335,7 +334,7 @@ def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
         s += buildLog
     else:
         if exitType == 0:
-            s += unicode(stdoutStr, 'cp949')
+            s += unicode(stdoutStr, gArgs.source_encoding)
         elif exitType == 1:   # time out
             s += 'Timeout'
         elif exitType == 2:   # no executable exists
@@ -420,6 +419,10 @@ default: "basename" of assignment_dir (bar if \nassignment_dir is /foo/bar/).')
 parser.add_argument('--output-dir', default=opjoin('.', 'output'),
                     help='specify OUTPUT_DIR in which the final report file \nand build output files to be generated. \n\
 avoid including hangul characters in its full path.\ndefault: %s'%opjoin('.', 'output'))
+parser.add_argument('--source-encoding', default=sys.getdefaultencoding(),
+                    help='specify SOURCE_ENCODING in which source files \nare encoded. You don\'t need to use this option if\n\
+source code only has english characters or \nthe platform where source code is written and \nthe platform CoassignViewer is running is same. \n\
+If source files are written in another platform, \nyou might need to specify default encoding for \nthe platform to run CoassignViewer correctly. \ndefault: system default encoding')
 
 gArgs = parser.parse_args()
 
