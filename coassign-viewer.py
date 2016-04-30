@@ -85,8 +85,12 @@ from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 from unidecode import unidecode
 
-reload(sys)
-sys.setdefaultencoding('cp949')
+if os.name=='nt':
+    reload(sys)
+    sys.setdefaultencoding('cp949')
+elif os.name=='posix':
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
 ############################################
 # utility functions
@@ -322,6 +326,7 @@ def getSourcesTable(srcPaths):
 def getRenderedSource(srcPath):
     with open(srcPath, 'r') as f:
         sourceCode = f.read()
+        sourceCode = unicode(sourceCode, 'cp949')
     return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
 
 def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
@@ -330,7 +335,7 @@ def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
         s += buildLog
     else:
         if exitType == 0:
-            s += stdoutStr
+            s += unicode(stdoutStr, 'cp949')
         elif exitType == 1:   # time out
             s += 'Timeout'
         elif exitType == 2:   # no executable exists
