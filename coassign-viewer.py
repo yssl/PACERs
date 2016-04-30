@@ -204,7 +204,7 @@ def getCMakeListsFileContents(projName, srcFileNames):
     code = ''
     code += 'cmake_minimum_required(VERSION 2.6)\n'
     code += 'project(%s)\n'%projName
-    code += 'add_executable(%s '%projName
+    code += 'add_executable(%s.exe '%projName
     for fileName in srcFileNames:
         ext = os.path.splitext(fileName)[1].lower()
         if ext=='.c' or ext=='.cpp':
