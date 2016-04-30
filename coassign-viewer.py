@@ -117,6 +117,7 @@ def unico2decoPath(unicoPath, deco2unicoMap):
     decoTokens = []
     for unicoToken in unicoTokens:
         decoToken = unidecode(unicoToken)
+        decoToken = decoToken.replace(' ', '-')
         if decoToken not in deco2unicoMap:
             deco2unicoMap[decoToken] = unicoToken
         decoTokens.append(decoToken)
