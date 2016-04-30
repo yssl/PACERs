@@ -223,7 +223,12 @@ def build(extension, srcRootDir, projName, srcFileNames):
         return None, None 
 
 def onTimeOut(proc):
-    gKillFunc(proc)
+    proc.kill()
+
+# def kill_windows(proc):
+    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
+
 
 # return exitType, output(stdout) of target program
 # exitType:
@@ -361,17 +366,6 @@ def runcwd_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
 
-############################################
-# functions for each platform
-
-def kill_windows(proc):
-    # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
-
-def kill_linux(proc):
-    # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    proc.kill()
-
 
 ############################################
 # pre-defined
@@ -381,14 +375,10 @@ env = {'nt':{}, 'posix':{}}
 env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
 env['posix']['build-cmd'] = 'cmake ./; make'
 
-env['nt']['kill-func'] = kill_windows
-env['posix']['kill-func'] = kill_linux
-
 env['nt']['run-prefix'] = ''
 env['posix']['run-prefix'] = 'exec '
 
 gBuildCmd = env[os.name]['build-cmd']
-gKillFunc = env[os.name]['kill-func']
 gRunPrefix = env[os.name]['run-prefix']
 
 gCodeExt = {'.c':{}, '.cpp':{}}
