@@ -352,7 +352,7 @@ def build_c_cpp(srcRootDir, projName, srcFileNames):
 
     # build
     try:
-        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd), shell=True)
+        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
     else:
