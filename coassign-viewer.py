@@ -237,8 +237,9 @@ def build(extension, srcRootDir, projName, srcFileNames):
     if extension in gCodeExt:
         return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileNames)
     else:
-        print '%s%s is not a supported source file type.'%(gLogPrefix, extension)
-        return None, None 
+        errorMsg = '%s is not a supported source file type.'%extension
+        print '%s%s'%(gLogPrefix, errorMsg)
+        return -1, errorMsg 
 
 def onTimeOut(proc):
     proc.kill()
@@ -489,6 +490,7 @@ for i in range(len(submissionNames)):
         for i in range(len(srcFileNames)):
             srcFileName = srcFileNames[i]
             projName, ext = os.path.splitext(srcFileName)
+            ext = ext.lower()
 
             print '%s'%gLogPrefix
             print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(srcFileNames), projName)
@@ -533,5 +535,6 @@ print '%s'%gLogPrefix
 print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
 generateReport(gArgs, submittedFileNames, \
                 srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
+
 postProcess(unzipDirNames)
 print '%sDone.'%gLogPrefix
