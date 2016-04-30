@@ -237,7 +237,7 @@ def onTimeOut(proc):
 #   2 - cannot find the executable file (not built yet)
 def run(extension, srcRootDir, projName, userInput, timeOut):
     try:
-        proc = subprocess.Popen([gRunPrefix + gCodeExt[extension]['runcmd-func'](srcRootDir, projName)], \
+        proc = subprocess.Popen([gCodeExt[extension]['runcmd-func'](srcRootDir, projName)], \
                 cwd=gCodeExt[extension]['runcwd-func'](srcRootDir, projName), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         return 2, gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
@@ -375,11 +375,7 @@ env = {'nt':{}, 'posix':{}}
 env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
 env['posix']['build-cmd'] = 'cmake ./; make'
 
-env['nt']['run-prefix'] = ''
-env['posix']['run-prefix'] = 'exec '
-
 gBuildCmd = env[os.name]['build-cmd']
-gRunPrefix = env[os.name]['run-prefix']
 
 gCodeExt = {'.c':{}, '.cpp':{}}
 
