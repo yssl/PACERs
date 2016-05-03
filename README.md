@@ -34,12 +34,12 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
     
 ## Other examples
 ```
-coassign-viewer.py --user-input "1 2" test-assignment-2
+coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
 ```
 
 ## Usage
 ```
-usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
+usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                           [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
                           [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
@@ -49,48 +49,53 @@ usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
 positional arguments:
-  assignment_dir        a direcory that has submitted files. 
+  assignment_dir        a direcory that has submitted files.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --user-input USER_INPUT
-                        specify USER_INPUT to be sent to the stdin of the 
-                        target programs. 
+  --user-input USER_INPUT [USER_INPUT ...]
+                        specify USER_INPUT to be sent to the stdin of target
+                        programs. This option should be located after
+                        assignment_dir if no other optional arguments are
+                        given. You can provide multiple inputs. For example,
+                        if --user-input "1 2" "3 4" is used, CoassignViewer
+                        runs each target program two times - first time with
+                        input "1 2" and second with input "3 4".
                         default is an empty string.
   --file-layout FILE_LAYOUT
-                        indicates file layout in the assignment_dir. 
+                        indicates file layout in the assignment_dir.
                         default: 0
-                        0 - one source file runs one program. 
-                        each submission might have only one source file or a 
+                        0 - one source file runs one program.
+                        each submission might have only one source file or a
                         zip file or a directory including multiple source files.
-  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds) 
-                        is reached. useful for infinite loop cases. 
+  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
+                        is reached. useful for infinite loop cases.
                         default: 2.0
-  --run-only            when specified, run each target program without build. 
+  --run-only            when specified, run each target program without build.
                         you may use it when you want change USER_INPUT without
-                        build. if the programming language of source files 
-                        does not require build process, CoassignViewer 
-                        automatically skips the build process without 
+                        build. if the programming language of source files
+                        does not require build process, CoassignViewer
+                        automatically skips the build process without
                         specifying this option.
   --assignment-alias ASSIGNMENT_ALIAS
-                        specify ASSIGNMENT_ALIAS for each assignment_dir. 
-                        ASSIGNMENT_ALIAS is used when making a sub-directory 
-                        in OUTPUT_DIR and the final report file. 
-                        default: "basename" of assignment_dir (bar if 
+                        specify ASSIGNMENT_ALIAS for each assignment_dir.
+                        ASSIGNMENT_ALIAS is used when making a sub-directory
+                        in OUTPUT_DIR and the final report file.
+                        default: "basename" of assignment_dir (bar if
                         assignment_dir is /foo/bar/).
   --output-dir OUTPUT_DIR
-                        specify OUTPUT_DIR in which the final report file 
-                        and build output files to be generated. 
+                        specify OUTPUT_DIR in which the final report file
+                        and build output files to be generated.
                         avoid including hangul characters in its full path.
-                        default: ./output
+                        default: .\output
   --source-encoding SOURCE_ENCODING
-                        specify SOURCE_ENCODING in which source files 
+                        specify SOURCE_ENCODING in which source files
                         are encoded. You don't need to use this option if
-                        source code only has english characters or 
-                        the platform where source code is written and 
-                        the platform CoassignViewer is running is same. 
-                        If source files are written in another platform, 
-                        you might need to specify default encoding for 
-                        the platform to run CoassignViewer correctly. 
+                        source code only has english characters or
+                        the platform where source code is written and
+                        the platform CoassignViewer is running is same.
+                        If source files are written in another platform,
+                        you might need to specify default encoding for
+                        the platform to run CoassignViewer correctly.
                         default: system default encoding
 ```

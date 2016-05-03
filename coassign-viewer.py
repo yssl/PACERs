@@ -35,9 +35,9 @@ Quick start:
     please try to change the text encoding option for the page to unicode or utf-8.
     
 Other examples:
-    coassign-viewer.py --user-input "1 2" test-assignment-2
+    coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
 
-usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
+usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                           [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
                           [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
@@ -47,49 +47,54 @@ usage: coassign-viewer.py [-h] [--user-input USER_INPUT]
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
 positional arguments:
-  assignment_dir        a direcory that has submitted files. 
+  assignment_dir        a direcory that has submitted files.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --user-input USER_INPUT
-                        specify USER_INPUT to be sent to the stdin of the 
-                        target programs. 
+  --user-input USER_INPUT [USER_INPUT ...]
+                        specify USER_INPUT to be sent to the stdin of target
+                        programs. This option should be located after
+                        assignment_dir if no other optional arguments are
+                        given. You can provide multiple inputs. For example,
+                        if --user-input "1 2" "3 4" is used, CoassignViewer
+                        runs each target program two times - first time with
+                        input "1 2" and second with input "3 4".
                         default is an empty string.
   --file-layout FILE_LAYOUT
-                        indicates file layout in the assignment_dir. 
+                        indicates file layout in the assignment_dir.
                         default: 0
-                        0 - one source file runs one program. 
-                        each submission might have only one source file or a 
+                        0 - one source file runs one program.
+                        each submission might have only one source file or a
                         zip file or a directory including multiple source files.
-  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds) 
-                        is reached. useful for infinite loop cases. 
+  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
+                        is reached. useful for infinite loop cases.
                         default: 2.0
-  --run-only            when specified, run each target program without build. 
+  --run-only            when specified, run each target program without build.
                         you may use it when you want change USER_INPUT without
-                        build. if the programming language of source files 
-                        does not require build process, CoassignViewer 
-                        automatically skips the build process without 
+                        build. if the programming language of source files
+                        does not require build process, CoassignViewer
+                        automatically skips the build process without
                         specifying this option.
   --assignment-alias ASSIGNMENT_ALIAS
-                        specify ASSIGNMENT_ALIAS for each assignment_dir. 
-                        ASSIGNMENT_ALIAS is used when making a sub-directory 
-                        in OUTPUT_DIR and the final report file. 
-                        default: "basename" of assignment_dir (bar if 
+                        specify ASSIGNMENT_ALIAS for each assignment_dir.
+                        ASSIGNMENT_ALIAS is used when making a sub-directory
+                        in OUTPUT_DIR and the final report file.
+                        default: "basename" of assignment_dir (bar if
                         assignment_dir is /foo/bar/).
   --output-dir OUTPUT_DIR
-                        specify OUTPUT_DIR in which the final report file 
-                        and build output files to be generated. 
+                        specify OUTPUT_DIR in which the final report file
+                        and build output files to be generated.
                         avoid including hangul characters in its full path.
-                        default: ./output
+                        default: .\output
   --source-encoding SOURCE_ENCODING
-                        specify SOURCE_ENCODING in which source files 
+                        specify SOURCE_ENCODING in which source files
                         are encoded. You don't need to use this option if
-                        source code only has english characters or 
-                        the platform where source code is written and 
-                        the platform CoassignViewer is running is same. 
-                        If source files are written in another platform, 
-                        you might need to specify default encoding for 
-                        the platform to run CoassignViewer correctly. 
+                        source code only has english characters or
+                        the platform where source code is written and
+                        the platform CoassignViewer is running is same.
+                        If source files are written in another platform,
+                        you might need to specify default encoding for
+                        the platform to run CoassignViewer correctly.
                         default: system default encoding
 '''
 
@@ -275,7 +280,7 @@ def run(extension, srcRootDir, projName, userInput, timeOut):
 
 ############################################
 # functions for report
-def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists):
     htmlCode = ''
 
     # header
@@ -315,7 +320,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
         htmlCode += '<tr>\n'
         htmlCode += '<td>%s</td>\n'%submittedFileNames[i]
         htmlCode += '<td>%s</td>\n'%getSourcesTable(srcFileLists[i])
-        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], exitTypes[i], stdoutStrs[i])
+        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], args.user_input, exitTypeLists[i], stdoutStrLists[i])
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '</tr>\n'
@@ -346,17 +351,23 @@ def getRenderedSource(srcPath):
         sourceCode = unicode(sourceCode, gArgs.source_encoding)
     return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
 
-def getOutput(buildRetCode, buildLog, exitType, stdoutStr):
+def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
     if buildRetCode!=0: # build error
         s += buildLog
     else:
-        if exitType == 0:
-            s += unicode(stdoutStr, gArgs.source_encoding)
-        elif exitType == 1:   # time out
-            s += 'Timeout'
-        elif exitType == 2:   # no executable exists
-            s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
+        for i in range(len(userInputList)):
+            userInput = userInputList[i]
+            exitType = exitTypeList[i]
+            stdoutStr = stdoutStrList[i]
+            s += '(user input: %s)\n'%userInput
+            if exitType == 0:
+                s += unicode(stdoutStr, gArgs.source_encoding)
+            elif exitType == 1:   # time out
+                s += 'Timeout'
+            elif exitType == 2:   # no executable exists
+                s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
+            s += '\n'
     return s
  
 ############################################
@@ -419,8 +430,13 @@ gBuildDirPrefix = 'coassign-build-'
 parser = argparse.ArgumentParser(prog='coassign-viewer.py', description='Automatic building & launching & reporting system for a large number of coding assignment files.', formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('assignment_dir', nargs=1,
                     help='a direcory that has submitted files. ')
-parser.add_argument('--user-input', default='',
-                    help='specify USER_INPUT to be sent to the stdin of the \ntarget programs. \ndefault is an empty string.')
+parser.add_argument('--user-input', nargs='+', default=[''],
+                    help='specify USER_INPUT to be sent to the stdin of target \nprograms. This option should be located after \n\
+assignment_dir if no other optional arguments are \ngiven. You can provide multiple inputs. For example, \n\
+if --user-input "1 2" "3 4" is used, CoassignViewer \n\
+runs each target program two times - first time with \n\
+input "1 2" and second with input "3 4".\n\
+default is an empty string.')
 parser.add_argument('--file-layout', default=0, type=int,
                     help='''indicates file layout in the assignment_dir. \ndefault: 0
 0 - one source file runs one program. 
@@ -454,8 +470,8 @@ submittedFileNames = []
 srcFileLists = []
 buildRetCodes = []
 buildLogs = []
-exitTypes = []
-stdoutStrs = []
+exitTypeLists = []
+stdoutStrLists = []
 
 ############################################
 # main routine
@@ -508,11 +524,17 @@ for i in range(len(submissionNames)):
                 buildLog = ''
 
             # run
+            exitTypeList = []
+            stdoutStrList = []
             if buildRetCode!=0:
                 print '%sBuild error. Go on a next file.'%gLogPrefix
             else:
                 print '%sRunning...'%gLogPrefix
-                exitType, stdoutStr = run(ext, submissionDir, projName, gArgs.user_input, gArgs.timeout)
+                # exitType, stdoutStr = run(ext, submissionDir, projName, gArgs.user_input, gArgs.timeout)
+                for userInput in gArgs.user_input:
+                    exitType, stdoutStr = run(ext, submissionDir, projName, userInput, gArgs.timeout)
+                    exitTypeList.append(exitType)
+                    stdoutStrList.append(stdoutStr)
                 print '%sDone.'%gLogPrefix
 
             # add report data
@@ -526,18 +548,14 @@ for i in range(len(submissionNames)):
 
             buildRetCodes.append(buildRetCode)
             buildLogs.append(buildLog)
-            if buildRetCode==0:
-                exitTypes.append(exitType)
-                stdoutStrs.append(stdoutStr)
-            else:
-                exitTypes.append(None)
-                stdoutStrs.append(None)
+            exitTypeLists.append(exitTypeList)
+            stdoutStrLists.append(stdoutStrList)
 
 print
 print '%s'%gLogPrefix
 print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
 generateReport(gArgs, submittedFileNames, \
-                srcFileLists, buildRetCodes, buildLogs, exitTypes, stdoutStrs)
+                srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists)
 
 postProcess(unzipDirNames)
 print '%sDone.'%gLogPrefix
