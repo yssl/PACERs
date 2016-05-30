@@ -346,10 +346,13 @@ def getSourcesTable(srcPaths):
     return htmlCode 
 
 def getRenderedSource(srcPath):
-    with open(srcPath, 'r') as f:
-        sourceCode = f.read()
-        sourceCode = unicode(sourceCode, gArgs.source_encoding)
-    return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
+    try:
+        with open(srcPath, 'r') as f:
+            sourceCode = f.read()
+            sourceCode = unicode(sourceCode, gArgs.source_encoding)
+        return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
+    except UnicodeDecodeError as e:
+        return '<p></p>'+format(e)
 
 def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
