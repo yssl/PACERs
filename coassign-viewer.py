@@ -182,6 +182,7 @@ def unzipInAssignDir(assignDir):
         if zipfile.is_zipfile(filePath):
             with zipfile.ZipFile(filePath, 'r') as z:
                 unzipDir = os.path.splitext(filePath)[0]
+                unzipDir = unzipDir.strip()
                 z.extractall(unzipDir)
                 zipFileNames.append(name)
     return zipFileNames
