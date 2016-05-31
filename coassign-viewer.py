@@ -36,8 +36,8 @@ Quick start:
     
 Other examples:
     coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
-    coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5']}"
-    coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5']}"
+    coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+    coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                           [--user-dict USER_DICT] [--timeout TIMEOUT]
