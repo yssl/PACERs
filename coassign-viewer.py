@@ -36,10 +36,12 @@ Quick start:
     
 Other examples:
     coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
+    coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5']}"
+    coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5']}"
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                          [--timeout TIMEOUT] [--run-only]
-                          [--assignment-alias ASSIGNMENT_ALIAS]
+                          [--user-dict USER_DICT] [--timeout TIMEOUT]
+                          [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
                           [--source-encoding SOURCE_ENCODING]
                           assignment_dir
@@ -58,23 +60,36 @@ optional arguments:
                         Specify USER_INPUT to be sent to the stdin of target
                         programs. This option should be located after
                         assignment_dir if no other optional arguments are
-                        given. 3 types of user input are available.
+                        given. Two types of user input are available.
                         default is an empty string.
 
-                        | Type     | Example                           | Example's meaning                            |
-                        |----------|-----------------------------------|----------------------------------------------|
-                        | Single   | --user-input 15                   | run each source file with input 15           |
-                        | value    | --user-input "hello"              | run each source file with input "hello"      |
-                        |          | --user-input "1 2"                | run each source file with input "1 2"        |
-                        |----------|-----------------------------------|----------------------------------------------|
-                        | Multiple | --user-input 1 2 3                | run each source 3 times: with 1, 2, 3        |
-                        | values   | --user-input "1 2" "3 4"          | run each source 2 times: with "1 2", "3 4"   |
-                        |----------|-----------------------------------|----------------------------------------------|
-                        | Python   | --user-input {1:[1,2], 2:[2,5,7]} | run a source file whose name ends with '1'   |
-                        |dictionary|                                   | (e.g. prob1.c) 2 times (with 10, 20)         |
-                        |          |                                   | and run a source file whose name ends with   |
-                        |          |                                   | '2' (e.g. prob2.c) 3 times (with 2, 5, 7)    |
-                        |----------|-----------------------------------|----------------------------------------------|
+                        | Type     | Example                  | Example's meaning                          |
+                        |----------|--------------------------|--------------------------------------------|
+                        | Single   | --user-input 15          | run each source file with input 15         |
+                        | value    | --user-input "hello"     | run each source file with input "hello"    |
+                        |          | --user-input "1 2"       | run each source file with input "1 2"      |
+                        |----------|--------------------------|--------------------------------------------|
+                        | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
+                        | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+
+  --user-dict USER_DICT
+                        Specify USER_DICT to be sent to the stdin of target
+                        programs. Argument should be python dictionary
+                        representation. Each 'key' of the dictionary item
+                        is 'suffix' that should match with the last parts of
+                        each source file name. 'value' is user input for
+                        those matched source files.
+                        If both --user-input and --user-dict are specified,
+                        only --user-dict is used.
+
+                        Example:
+                        --user-dict {'1':['1','2'], '2':['2,'5','7']}
+
+                        runs a source file whose name ends with '1'
+                        (e.g. prob1.c) 2 times (with '10', '20')
+                        and run a source file whose name ends with
+                        '2' (e.g. prob2.c) 3 times (with '2','5','7').
+
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
                         default: 2.0
@@ -220,15 +235,15 @@ def removeZipFileInDestDir(destDir, zipFileNames):
 def preProcess():
     deco2unicoMap = {'':''}
     doNotCopy = gArgs.run_only
-    zipFileNames = unzipInAssignDir(gArgs.assignment_dir[0])
+    zipFileNames = unzipInAssignDir(gArgs.assignment_dir)
     unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
-    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir[0], gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
+    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir, gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
     removeZipFileInDestDir(destDir, zipFileNames)
 
     return destDir, deco2unicoMap, unzipDirNames
 
 def postProcess(unzipDirNames):
-    removeUnzipDirsInAssignDir(gArgs.assignment_dir[0], unzipDirNames)
+    removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
 
 ############################################
 # main functions
@@ -289,7 +304,7 @@ def run(extension, srcRootDir, projName, userInput, timeOut):
 
 ############################################
 # functions for report
-def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists):
     htmlCode = ''
 
     # header
@@ -309,10 +324,11 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     Assignment directory: %s
     Output directory: %s
     User input: %s
+    User dict: %s
     Timeout: %f
     Run only: %d
-</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir[0]), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
-        args.user_input, args.timeout, args.run_only)
+</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
+        args.user_input, args.user_dict, args.timeout, args.run_only)
 
     # main table
     htmlCode += '''<table border=1>
@@ -328,7 +344,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
         htmlCode += '<tr>\n'
         htmlCode += '<td>%s</td>\n'%submittedFileNames[i]
         htmlCode += '<td>%s</td>\n'%getSourcesTable(srcFileLists[i])
-        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], args.user_input, exitTypeLists[i], stdoutStrLists[i])
+        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], userInputLists[i], exitTypeLists[i], stdoutStrLists[i])
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '</tr>\n'
@@ -349,7 +365,7 @@ def getReportFilePath(args):
 def getSourcesTable(srcPaths):
     htmlCode = ''
     for srcPath in srcPaths:
-        htmlCode += '%s\n'%srcPath.replace(gArgs.assignment_dir[0], '')
+        htmlCode += '%s\n'%srcPath.replace(gArgs.assignment_dir, '')
         htmlCode += '%s\n'%getRenderedSource(srcPath)
     return htmlCode 
 
@@ -439,7 +455,7 @@ gBuildDirPrefix = 'coassign-build-'
 # main routine
 
 parser = argparse.ArgumentParser(prog='coassign-viewer.py', description='Automatic building & launching & reporting system for a large number of coding assignment files.', formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('assignment_dir', nargs=1,
+parser.add_argument('assignment_dir',
                     help='''A direcory that has submitted files.
 In assignment_dir, one source file runs one program. 
 Each submission might have only one source file or a 
@@ -448,23 +464,37 @@ parser.add_argument('--user-input', nargs='+', default=[''],
                     help='''Specify USER_INPUT to be sent to the stdin of target
 programs. This option should be located after
 assignment_dir if no other optional arguments are
-given. 3 types of user input are available.
+given. Two types of user input are available.
 default is an empty string.
 
-| Type     | Example                           | Example's meaning                            |
-|----------|-----------------------------------|----------------------------------------------|
-| Single   | --user-input 15                   | run each source file with input 15           |
-| value    | --user-input "hello"              | run each source file with input "hello"      |
-|          | --user-input "1 2"                | run each source file with input "1 2"        |
-|----------|-----------------------------------|----------------------------------------------|
-| Multiple | --user-input 1 2 3                | run each source 3 times: with 1, 2, 3        |
-| values   | --user-input "1 2" "3 4"          | run each source 2 times: with "1 2", "3 4"   |
-|----------|-----------------------------------|----------------------------------------------|
-| Python   | --user-input {1:[1,2], 2:[2,5,7]} | run a source file whose name ends with '1'   |
-|dictionary|                                   | (e.g. prob1.c) 2 times (with 10, 20)         |
-|          |                                   | and run a source file whose name ends with   |
-|          |                                   | '2' (e.g. prob2.c) 3 times (with 2, 5, 7)    |
-|----------|-----------------------------------|----------------------------------------------|
+| Type     | Example                  | Example's meaning                          |
+|----------|--------------------------|--------------------------------------------|
+| Single   | --user-input 15          | run each source file with input 15         |
+| value    | --user-input "hello"     | run each source file with input "hello"    |
+|          | --user-input "1 2"       | run each source file with input "1 2"      |
+|----------|--------------------------|--------------------------------------------|
+| Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
+| values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+
+''')
+parser.add_argument('--user-dict', default=None,
+                    help='''Specify USER_DICT to be sent to the stdin of target
+programs. Argument should be python dictionary 
+representation. Each 'key' of the dictionary item
+is 'suffix' that should match with the last parts of 
+each source file name. 'value' is user input for 
+those matched source files.
+If both --user-input and --user-dict are specified,
+only --user-dict is used.
+
+Example:
+--user-dict {'1':['1','2'], '2':['2,'5','7']}
+
+runs a source file whose name ends with '1'   
+(e.g. prob1.c) 2 times (with '10', '20')     
+and run a source file whose name ends with   
+'2' (e.g. prob2.c) 3 times (with '2','5','7').
+
 ''')
 # parser.add_argument('--file-layout', default=0, type=int,
                     # help='''indicates file layout in the assignment_dir. \ndefault: 0
@@ -510,7 +540,7 @@ gArgs = parser.parse_args()
 # exit()
 
 if not gArgs.assignment_alias:
-    gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir[0]))
+    gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
 submittedFileNames = []
 srcFileLists = []
@@ -518,13 +548,17 @@ buildRetCodes = []
 buildLogs = []
 exitTypeLists = []
 stdoutStrLists = []
+userInputLists = []
 
 ############################################
 # main routine
 
 destDir, deco2unicoMap, unzipDirNames = preProcess()
 
-print destDir
+# preprocess --user-dict
+if gArgs.user_dict!=None:
+    gArgs.user_dict = eval(gArgs.user_dict)
+
 submissionNames = [name for name in os.listdir(destDir) if gBuildDirPrefix not in name]
 for i in range(len(submissionNames)):
     submissionName = submissionNames[i]
@@ -569,15 +603,29 @@ for i in range(len(submissionNames)):
                 buildRetCode = 0
                 buildLog = ''
 
+            # set userInputs
+            if gArgs.user_dict!=None:
+                userInputs = None
+                for key in gArgs.user_dict:
+                    if projName.endswith(key):
+                        userInputs = gArgs.user_dict[key] 
+                        break
+                if userInputs == None:
+                    userInputs = []
+                    for key in gArgs.user_dict:
+                        userInputs.extend(gArgs.user_dict[key])
+            else:
+                userInputs = gArgs.user_input
+
             # run
             exitTypeList = []
             stdoutStrList = []
+            userInputList = userInputs
             if buildRetCode!=0:
                 print '%sBuild error. Go on a next file.'%gLogPrefix
             else:
                 print '%sRunning...'%gLogPrefix
-                # exitType, stdoutStr = run(ext, submissionDir, projName, gArgs.user_input, gArgs.timeout)
-                for userInput in gArgs.user_input:
+                for userInput in userInputs:
                     exitType, stdoutStr = run(ext, submissionDir, projName, userInput, gArgs.timeout)
                     exitTypeList.append(exitType)
                     stdoutStrList.append(stdoutStr)
@@ -590,18 +638,19 @@ for i in range(len(submissionNames)):
             destSrcFilePath = opjoin(submissionDir, srcFileName)
             destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
             origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-            srcFileLists.append([opjoin(gArgs.assignment_dir[0], origSrcFilePathAfterAssignDir)])
+            srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
 
             buildRetCodes.append(buildRetCode)
             buildLogs.append(buildLog)
             exitTypeLists.append(exitTypeList)
             stdoutStrLists.append(stdoutStrList)
+            userInputLists.append(userInputList)
 
 print
 print '%s'%gLogPrefix
 print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
 generateReport(gArgs, submittedFileNames, \
-                srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists)
+                srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
 
 postProcess(unzipDirNames)
 print '%sDone.'%gLogPrefix
