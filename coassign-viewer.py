@@ -58,11 +58,23 @@ optional arguments:
                         Specify USER_INPUT to be sent to the stdin of target
                         programs. This option should be located after
                         assignment_dir if no other optional arguments are
-                        given. You can provide multiple inputs. For example,
-                        if --user-input "1 2" "3 4" is used, CoassignViewer
-                        runs each target program two times - first time with
-                        input "1 2" and second with input "3 4".
+                        given. 3 types of user input are available.
                         default is an empty string.
+
+                        | Type     | Example                           | Example's meaning                            |
+                        |----------|-----------------------------------|----------------------------------------------|
+                        | Single   | --user-input 15                   | run each source file with input 15           |
+                        | value    | --user-input "hello"              | run each source file with input "hello"      |
+                        |          | --user-input "1 2"                | run each source file with input "1 2"        |
+                        |----------|-----------------------------------|----------------------------------------------|
+                        | Multiple | --user-input 1 2 3                | run each source 3 times: with 1, 2, 3        |
+                        | values   | --user-input "1 2" "3 4"          | run each source 2 times: with "1 2", "3 4"   |
+                        |----------|-----------------------------------|----------------------------------------------|
+                        | Python   | --user-input {1:[1,2], 2:[2,5,7]} | run a source file whose name ends with '1'   |
+                        |dictionary|                                   | (e.g. prob1.c) 2 times (with 10, 20)         |
+                        |          |                                   | and run a source file whose name ends with   |
+                        |          |                                   | '2' (e.g. prob2.c) 3 times (with 2, 5, 7)    |
+                        |----------|-----------------------------------|----------------------------------------------|
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
                         default: 2.0
@@ -436,11 +448,24 @@ parser.add_argument('--user-input', nargs='+', default=[''],
                     help='''Specify USER_INPUT to be sent to the stdin of target
 programs. This option should be located after
 assignment_dir if no other optional arguments are
-given. You can provide multiple inputs. For example,
-if --user-input "1 2" "3 4" is used, CoassignViewer
-runs each target program two times - first time with
-input "1 2" and second with input "3 4".
-default is an empty string.''')
+given. 3 types of user input are available.
+default is an empty string.
+
+| Type     | Example                           | Example's meaning                            |
+|----------|-----------------------------------|----------------------------------------------|
+| Single   | --user-input 15                   | run each source file with input 15           |
+| value    | --user-input "hello"              | run each source file with input "hello"      |
+|          | --user-input "1 2"                | run each source file with input "1 2"        |
+|----------|-----------------------------------|----------------------------------------------|
+| Multiple | --user-input 1 2 3                | run each source 3 times: with 1, 2, 3        |
+| values   | --user-input "1 2" "3 4"          | run each source 2 times: with "1 2", "3 4"   |
+|----------|-----------------------------------|----------------------------------------------|
+| Python   | --user-input {1:[1,2], 2:[2,5,7]} | run a source file whose name ends with '1'   |
+|dictionary|                                   | (e.g. prob1.c) 2 times (with 10, 20)         |
+|          |                                   | and run a source file whose name ends with   |
+|          |                                   | '2' (e.g. prob2.c) 3 times (with 2, 5, 7)    |
+|----------|-----------------------------------|----------------------------------------------|
+''')
 # parser.add_argument('--file-layout', default=0, type=int,
                     # help='''indicates file layout in the assignment_dir. \ndefault: 0
 # 0 - one source file runs one program. 
