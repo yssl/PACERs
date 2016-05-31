@@ -38,8 +38,8 @@ Other examples:
     coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
 
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                          [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
-                          [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
+                          [--timeout TIMEOUT] [--run-only]
+                          [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
                           [--source-encoding SOURCE_ENCODING]
                           assignment_dir
@@ -47,12 +47,15 @@ usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
 positional arguments:
-  assignment_dir        a direcory that has submitted files.
+  assignment_dir        A direcory that has submitted files.
+                        In assignment_dir, one source file runs one program.
+                        Each submission might have only one source file or a
+                        zip file or a directory including multiple source files
 
 optional arguments:
   -h, --help            show this help message and exit
   --user-input USER_INPUT [USER_INPUT ...]
-                        specify USER_INPUT to be sent to the stdin of target
+                        Specify USER_INPUT to be sent to the stdin of target
                         programs. This option should be located after
                         assignment_dir if no other optional arguments are
                         given. You can provide multiple inputs. For example,
@@ -60,34 +63,28 @@ optional arguments:
                         runs each target program two times - first time with
                         input "1 2" and second with input "3 4".
                         default is an empty string.
-  --file-layout FILE_LAYOUT
-                        indicates file layout in the assignment_dir.
-                        default: 0
-                        0 - one source file runs one program.
-                        each submission might have only one source file or a
-                        zip file or a directory including multiple source files.
-  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
-                        is reached. useful for infinite loop cases.
+  --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
+                        is reached. Useful for infinite loop cases.
                         default: 2.0
-  --run-only            when specified, run each target program without build.
-                        you may use it when you want change USER_INPUT without
+  --run-only            When specified, run each target program without build.
+                        You may use it when you want change USER_INPUT without
                         build. if the programming language of source files
                         does not require build process, CoassignViewer
                         automatically skips the build process without
                         specifying this option.
   --assignment-alias ASSIGNMENT_ALIAS
-                        specify ASSIGNMENT_ALIAS for each assignment_dir.
+                        Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
                         in OUTPUT_DIR and the final report file.
                         default: "basename" of assignment_dir (bar if
                         assignment_dir is /foo/bar/).
   --output-dir OUTPUT_DIR
-                        specify OUTPUT_DIR in which the final report file
+                        Specify OUTPUT_DIR in which the final report file
                         and build output files to be generated.
-                        avoid including hangul characters in its full path.
+                        Avoid including hangul characters in its full path.
                         default: .\output
   --source-encoding SOURCE_ENCODING
-                        specify SOURCE_ENCODING in which source files
+                        Specify SOURCE_ENCODING in which source files
                         are encoded. You don't need to use this option if
                         source code only has english characters or
                         the platform where source code is written and
@@ -300,11 +297,10 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     Assignment directory: %s
     Output directory: %s
     User input: %s
-    File layout: %d
     Timeout: %f
     Run only: %d
 </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir[0]), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
-        args.user_input, args.file_layout, args.timeout, args.run_only)
+        args.user_input, args.timeout, args.run_only)
 
     # main table
     htmlCode += '''<table border=1>
@@ -432,34 +428,56 @@ gBuildDirPrefix = 'coassign-build-'
 
 parser = argparse.ArgumentParser(prog='coassign-viewer.py', description='Automatic building & launching & reporting system for a large number of coding assignment files.', formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('assignment_dir', nargs=1,
-                    help='a direcory that has submitted files. ')
+                    help='''A direcory that has submitted files.
+In assignment_dir, one source file runs one program. 
+Each submission might have only one source file or a 
+zip file or a directory including multiple source files''')
 parser.add_argument('--user-input', nargs='+', default=[''],
-                    help='specify USER_INPUT to be sent to the stdin of target \nprograms. This option should be located after \n\
-assignment_dir if no other optional arguments are \ngiven. You can provide multiple inputs. For example, \n\
-if --user-input "1 2" "3 4" is used, CoassignViewer \n\
-runs each target program two times - first time with \n\
-input "1 2" and second with input "3 4".\n\
-default is an empty string.')
-parser.add_argument('--file-layout', default=0, type=int,
-                    help='''indicates file layout in the assignment_dir. \ndefault: 0
-0 - one source file runs one program. 
-each submission might have only one source file or a 
-zip file or a directory including multiple source files.''')
+                    help='''Specify USER_INPUT to be sent to the stdin of target
+programs. This option should be located after
+assignment_dir if no other optional arguments are
+given. You can provide multiple inputs. For example,
+if --user-input "1 2" "3 4" is used, CoassignViewer
+runs each target program two times - first time with
+input "1 2" and second with input "3 4".
+default is an empty string.''')
+# parser.add_argument('--file-layout', default=0, type=int,
+                    # help='''indicates file layout in the assignment_dir. \ndefault: 0
+# 0 - one source file runs one program. 
+# each submission might have only one source file or a 
+# zip file or a directory including multiple source files.''')
 parser.add_argument('--timeout', default=2., type=float,
-                    help='each target program is killed when TIMEOUT(seconds) \nis reached. useful for infinite loop cases. \ndefault: 2.0')
+                    help='''Each target program is killed when TIMEOUT(seconds)
+is reached. Useful for infinite loop cases.
+default: 2.0''')
 parser.add_argument('--run-only', action='store_true',
-                    help='''when specified, run each target program without build. \nyou may use it when you want change USER_INPUT without
-build. if the programming language of source files \ndoes not require build process, CoassignViewer \nautomatically skips the build process without \nspecifying this option.''')
+                    help='''When specified, run each target program without build.
+You may use it when you want change USER_INPUT without
+build. if the programming language of source files 
+does not require build process, CoassignViewer 
+automatically skips the build process without 
+specifying this option.''')
 parser.add_argument('--assignment-alias',
-                    help='specify ASSIGNMENT_ALIAS for each assignment_dir. \nASSIGNMENT_ALIAS is used when making a sub-directory \nin OUTPUT_DIR and the final report file. \n\
-default: "basename" of assignment_dir (bar if \nassignment_dir is /foo/bar/).')
+                    help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
+ASSIGNMENT_ALIAS is used when making a sub-directory 
+in OUTPUT_DIR and the final report file. 
+default: "basename" of assignment_dir (bar if 
+assignment_dir is /foo/bar/).''')
 parser.add_argument('--output-dir', default=opjoin('.', 'output'),
-                    help='specify OUTPUT_DIR in which the final report file \nand build output files to be generated. \n\
-avoid including hangul characters in its full path.\ndefault: %s'%opjoin('.', 'output'))
+                    help='''Specify OUTPUT_DIR in which the final report file 
+and build output files to be generated. 
+Avoid including hangul characters in its full path.
+default: %s'''%opjoin('.', 'output'))
 parser.add_argument('--source-encoding', default=sys.getdefaultencoding(),
-                    help='specify SOURCE_ENCODING in which source files \nare encoded. You don\'t need to use this option if\n\
-source code only has english characters or \nthe platform where source code is written and \nthe platform CoassignViewer is running is same. \n\
-If source files are written in another platform, \nyou might need to specify default encoding for \nthe platform to run CoassignViewer correctly. \ndefault: system default encoding')
+                    help='''Specify SOURCE_ENCODING in which source files 
+are encoded. You don't need to use this option if
+source code only has english characters or 
+the platform where source code is written and 
+the platform CoassignViewer is running is same. 
+If source files are written in another platform,
+you might need to specify default encoding for 
+the platform to run CoassignViewer correctly. 
+default: system default encoding''')
 
 gArgs = parser.parse_args()
 
@@ -490,7 +508,7 @@ for i in range(len(submissionNames)):
     print '%s'%gLogPrefix
     print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionNames), submissionName)
 
-    if gArgs.file_layout==0:
+    if True:    # no project file exists
         if os.path.isdir(opjoin(destDir, submissionName)):
             # test-assignment-3
             #   student01
