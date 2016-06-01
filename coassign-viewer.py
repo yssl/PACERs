@@ -390,7 +390,10 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             stdoutStr = stdoutStrList[i]
             s += '(user input: %s)\n'%userInput
             if exitType == 0:
-                s += unicode(stdoutStr, gArgs.source_encoding)
+                try:
+                    s += unicode(stdoutStr, gArgs.source_encoding)
+                except UnicodeDecodeError as e:
+                    s += format(e)
             elif exitType == 1:   # time out
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
