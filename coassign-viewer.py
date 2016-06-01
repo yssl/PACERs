@@ -177,6 +177,7 @@ def deco2unicoPath(decoPath, deco2unicoMap):
 
 def unzipInAssignDir(assignDir):
     zipFileNames = []
+    unzipDirNames = []
     for name in os.listdir(assignDir):
         filePath = opjoin(assignDir, name)
         if zipfile.is_zipfile(filePath):
@@ -185,7 +186,8 @@ def unzipInAssignDir(assignDir):
                 unzipDir = unzipDir.strip()
                 z.extractall(unzipDir)
                 zipFileNames.append(name)
-    return zipFileNames
+                unzipDirNames.append(unzipDir)
+    return zipFileNames, unzipDirNames
 
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
@@ -236,8 +238,7 @@ def removeZipFileInDestDir(destDir, zipFileNames):
 def preProcess():
     deco2unicoMap = {'':''}
     doNotCopy = gArgs.run_only
-    zipFileNames = unzipInAssignDir(gArgs.assignment_dir)
-    unzipDirNames = [os.path.splitext(zipFileName)[0] for zipFileName in zipFileNames]
+    zipFileNames, unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
     destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir, gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
     removeZipFileInDestDir(destDir, zipFileNames)
 
