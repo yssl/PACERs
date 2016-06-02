@@ -1,6 +1,26 @@
 # CoassignViewer
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
+## An example workflow
+
+*1. Collect submitted source files.*
+```
+<CWD>/test-assignment-2/
+    |-student 01.c
+    |-student 02.c
+    |-student 03.c
+```
+![example-source](https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png)
+
+*2. Run CoassignViewer.*
+```
+coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
+```
+
+*3. Open the generated HTML report.*  
+You can open the report in MS Word or MS Excel to grade each submission.  
+![example-result](https://cloud.githubusercontent.com/assets/5915359/15735194/887e36d6-28d1-11e6-90ff-bc34e52572da.png)
+
 ## Requirements
 - python 2.x
 - cmake
@@ -29,7 +49,7 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 2) On Linux, run: ```./coassign-viewer.py test-assignment-1```  
    On Windows, run: ```coassign-viewer.py test-assignment-1```
 
-3) Open ./output/test-assignment-1/report-test-assignment-1.html in any web browser.  
+3) Open ```./output/test-assignment-1/report-test-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
     
 ## Other examples
