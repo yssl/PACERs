@@ -63,13 +63,12 @@ pacers.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ## Usage
 ```
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                      [--user-dict USER_DICT] [--timeout TIMEOUT]
-                      [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
-                      [--output-dir OUTPUT_DIR]
-                      [--source-encoding SOURCE_ENCODING]
-                      assignment_dir
+                 [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
+                 [--assignment-alias ASSIGNMENT_ALIAS]
+                 [--output-dir OUTPUT_DIR] [--source-encoding SOURCE_ENCODING]
+                 assignment_dir
 
-Automatic building & launching & reporting system for a large number of coding assignment files.
+Programming Assignments Compiling, Executing, and Reporting system
 
 positional arguments:
   assignment_dir        A direcory that has submitted files.
