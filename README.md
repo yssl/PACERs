@@ -17,9 +17,9 @@ Programming Assignments Compiling, Executing, and Reporting system
 pacers.py test-assignments\C\assignment-2 --user-input "1 2" "3 4"
 ```
 
-*3. Open the generated HTML report.*  
+*3. Open the generated HTML report: <CWD>/output/assignment-2/report-assignment-2.html*  
 You can open the report in MS Word or MS Excel to grade each submission.  
-![example-result](https://cloud.githubusercontent.com/assets/5915359/15763351/38273d62-295e-11e6-9281-dcb1cbd925c1.png)
+![example-result](https://cloud.githubusercontent.com/assets/5915359/15764368/4ec64f70-2965-11e6-8815-ba521d3a2c0b.png)
 
 ## Requirements
 - python 2.x
