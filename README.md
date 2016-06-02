@@ -17,7 +17,7 @@ Automatic building & launching & reporting system for a large number of coding a
 - C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
 
 ## Required environment setting
-- On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.  
+- On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
 ```
 C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin  
 C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
@@ -34,13 +34,16 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
     
 ## Other examples
 ```
+coassign-viewer.py test-assignment-2 --user-input "3 5"
 coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
+coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ```
 
 ## Usage
 ```
 usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                          [--file-layout FILE_LAYOUT] [--timeout TIMEOUT]
+                          [--user-dict USER_DICT] [--timeout TIMEOUT]
                           [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
                           [--output-dir OUTPUT_DIR]
                           [--source-encoding SOURCE_ENCODING]
@@ -49,47 +52,69 @@ usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
 positional arguments:
-  assignment_dir        a direcory that has submitted files.
+  assignment_dir        A direcory that has submitted files.
+                        In assignment_dir, one source file runs one program.
+                        Each submission might have only one source file or a
+                        zip file or a directory including multiple source files
 
 optional arguments:
   -h, --help            show this help message and exit
   --user-input USER_INPUT [USER_INPUT ...]
-                        specify USER_INPUT to be sent to the stdin of target
+                        Specify USER_INPUT to be sent to the stdin of target
                         programs. This option should be located after
                         assignment_dir if no other optional arguments are
-                        given. You can provide multiple inputs. For example,
-                        if --user-input "1 2" "3 4" is used, CoassignViewer
-                        runs each target program two times - first time with
-                        input "1 2" and second with input "3 4".
+                        given. Two types of user input are available.
                         default is an empty string.
-  --file-layout FILE_LAYOUT
-                        indicates file layout in the assignment_dir.
-                        default: 0
-                        0 - one source file runs one program.
-                        each submission might have only one source file or a
-                        zip file or a directory including multiple source files.
-  --timeout TIMEOUT     each target program is killed when TIMEOUT(seconds)
-                        is reached. useful for infinite loop cases.
+
+                        | Type     | Example                  | Example's meaning                          |
+                        |----------|--------------------------|--------------------------------------------|
+                        | Single   | --user-input 15          | run each source file with input 15         |
+                        | value    | --user-input "hello"     | run each source file with input "hello"    |
+                        |          | --user-input "1 2"       | run each source file with input "1 2"      |
+                        |----------|--------------------------|--------------------------------------------|
+                        | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
+                        | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+
+  --user-dict USER_DICT
+                        Specify USER_DICT to be sent to the stdin of target
+                        programs. Argument should be python dictionary
+                        representation. Each 'key' of the dictionary item
+                        is 'suffix' that should match with the last parts of
+                        each source file name. 'value' is user input for
+                        those matched source files.
+                        If both --user-input and --user-dict are specified,
+                        only --user-dict is used.
+
+                        Example:
+                        --user-dict {'1':['1','2'], '2':['2,'5','7']}
+
+                        runs a source file whose name ends with '1'
+                        (e.g. prob1.c) 2 times (with '10', '20')
+                        and run a source file whose name ends with
+                        '2' (e.g. prob2.c) 3 times (with '2','5','7').
+
+  --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
+                        is reached. Useful for infinite loop cases.
                         default: 2.0
-  --run-only            when specified, run each target program without build.
-                        you may use it when you want change USER_INPUT without
+  --run-only            When specified, run each target program without build.
+                        You may use it when you want change USER_INPUT without
                         build. if the programming language of source files
                         does not require build process, CoassignViewer
                         automatically skips the build process without
                         specifying this option.
   --assignment-alias ASSIGNMENT_ALIAS
-                        specify ASSIGNMENT_ALIAS for each assignment_dir.
+                        Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
                         in OUTPUT_DIR and the final report file.
                         default: "basename" of assignment_dir (bar if
                         assignment_dir is /foo/bar/).
   --output-dir OUTPUT_DIR
-                        specify OUTPUT_DIR in which the final report file
+                        Specify OUTPUT_DIR in which the final report file
                         and build output files to be generated.
-                        avoid including hangul characters in its full path.
+                        Avoid including hangul characters in its full path.
                         default: .\output
   --source-encoding SOURCE_ENCODING
-                        specify SOURCE_ENCODING in which source files
+                        Specify SOURCE_ENCODING in which source files
                         are encoded. You don't need to use this option if
                         source code only has english characters or
                         the platform where source code is written and
