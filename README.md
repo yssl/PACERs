@@ -55,7 +55,9 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
 Currently, only C and C++ are supported.
 
 ## Try all the test-assignment files
+- C
 ```
+pacers.py test-assignments/C/assignment-1
 pacers.py test-assignments/C/assignment-2 --user-input "3 5"
 pacers.py test-assignments/C/assignment-2 --user-input "1 2" "3 4"
 pacers.py test-assignments/C/assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"

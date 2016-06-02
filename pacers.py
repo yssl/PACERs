@@ -14,11 +14,6 @@ Requirements:
         : Install in Windows - "pip install unidecode"
           Install in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
 
-Tested language, compiler(interpreter), platform:
-    C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
-    C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
-    C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
-
 Required environment setting:
     On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
         C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
@@ -34,11 +29,18 @@ Quick start:
     The generated html file is written in unicode (utf-8), so if your browser shows broken characters
     please try to change the text encoding option for the page to unicode or utf-8.
     
-Other examples:
-    pacers.py test-assignments/C/assignment-2 --user-input "3 5"
-    pacers.py test-assignments/C/assignment-2 --user-input "1 2" "3 4"
-    pacers.py test-assignments/C/assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-    pacers.py test-assignments/C/assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+Tested language, compiler(interpreter), platform:
+    C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
+    C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
+    C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
+
+Try all the test-assignment files:
+    - C
+        pacers.py test-assignments/C/assignment-1
+        pacers.py test-assignments/C/assignment-2 --user-input "3 5"
+        pacers.py test-assignments/C/assignment-2 --user-input "1 2" "3 4"
+        pacers.py test-assignments/C/assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+        pacers.py test-assignments/C/assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
