@@ -34,7 +34,7 @@ Tested language, compiler(interpreter), platform:
     C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
     C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
 
-Try all the test-assignment files:
+Try other test-assignment files:
     - C
         pacers.py test-assignments/C/assignment-1
         pacers.py test-assignments/C/assignment-2 --user-input "3 5"

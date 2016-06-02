@@ -54,7 +54,7 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
 
 Currently, only C and C++ are supported.
 
-## Try all the test-assignment files
+## Try other test-assignment files
 - C
 ```
 pacers.py test-assignments/C/assignment-1
