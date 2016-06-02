@@ -35,6 +35,7 @@ Quick start:
     please try to change the text encoding option for the page to unicode or utf-8.
     
 Other examples:
+    coassign-viewer.py test-assignment-2 --user-input "3 5"
     coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
     coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
     coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
