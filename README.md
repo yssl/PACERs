@@ -19,7 +19,7 @@ pacers.py test-assignment-2 --user-input "1 2" "3 4"
 
 *3. Open the generated HTML report.*  
 You can open the report in MS Word or MS Excel to grade each submission.  
-![example-result](https://cloud.githubusercontent.com/assets/5915359/15735194/887e36d6-28d1-11e6-90ff-bc34e52572da.png)
+![example-result](https://cloud.githubusercontent.com/assets/5915359/15763351/38273d62-295e-11e6-9281-dcb1cbd925c1.png)
 
 ## Requirements
 - python 2.x
