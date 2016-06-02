@@ -1,5 +1,5 @@
-# CoassignViewer
-Automatic building & launching & reporting system for a large number of coding assignment files.
+# PACERs
+Programming Assignments Compiling, Executing, and Reporting system
 
 ## An example workflow
 
@@ -12,9 +12,9 @@ Automatic building & launching & reporting system for a large number of coding a
 ```
 ![example-source](https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png)
 
-*2. Run CoassignViewer.*
+*2. Run PACERs.*
 ```
-coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
+pacers.py test-assignment-2 --user-input "1 2" "3 4"
 ```
 
 *3. Open the generated HTML report.*  
@@ -44,30 +44,30 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 ```
 
 ## Quick start
-1) Run: ```git clone https://github.com/yssl/CoassignViewer.git```
+1) Run: ```git clone https://github.com/yssl/PACERs.git```
 
-2) On Linux, run: ```./coassign-viewer.py test-assignment-1```  
-   On Windows, run: ```coassign-viewer.py test-assignment-1```
+2) On Linux, run: ```./pacers.py test-assignment-1```  
+   On Windows, run: ```pacers.py test-assignment-1```
 
 3) Open ```./output/test-assignment-1/report-test-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
     
 ## Other examples
 ```
-coassign-viewer.py test-assignment-2 --user-input "3 5"
-coassign-viewer.py test-assignment-2 --user-input "1 2" "3 4"
-coassign-viewer.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-coassign-viewer.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+pacers.py test-assignment-2 --user-input "3 5"
+pacers.py test-assignment-2 --user-input "1 2" "3 4"
+pacers.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+pacers.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ```
 
 ## Usage
 ```
-usage: coassign-viewer.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                          [--user-dict USER_DICT] [--timeout TIMEOUT]
-                          [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
-                          [--output-dir OUTPUT_DIR]
-                          [--source-encoding SOURCE_ENCODING]
-                          assignment_dir
+usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
+                      [--user-dict USER_DICT] [--timeout TIMEOUT]
+                      [--run-only] [--assignment-alias ASSIGNMENT_ALIAS]
+                      [--output-dir OUTPUT_DIR]
+                      [--source-encoding SOURCE_ENCODING]
+                      assignment_dir
 
 Automatic building & launching & reporting system for a large number of coding assignment files.
 
@@ -119,7 +119,7 @@ optional arguments:
   --run-only            When specified, run each target program without build.
                         You may use it when you want change USER_INPUT without
                         build. if the programming language of source files
-                        does not require build process, CoassignViewer
+                        does not require build process, PACERs
                         automatically skips the build process without
                         specifying this option.
   --assignment-alias ASSIGNMENT_ALIAS
@@ -138,9 +138,9 @@ optional arguments:
                         are encoded. You don't need to use this option if
                         source code only has english characters or
                         the platform where source code is written and
-                        the platform CoassignViewer is running is same.
+                        the platform PACERs is running is same.
                         If source files are written in another platform,
                         you might need to specify default encoding for
-                        the platform to run CoassignViewer correctly.
+                        the platform to run PACERs correctly.
                         default: system default encoding
 ```
