@@ -31,11 +31,6 @@ You can open the report in MS Word or MS Excel to grade each submission.
     Install in Windows - ```pip install unidecode```  
     Install in Linux - ```sudo pip install unidecode``` or ```sudo apt-get install python-unidecode```
 
-## Tested language, compiler(interpreter), platform
-- C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
-- C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
-- C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
-
 ## Required environment setting
 - On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
 ```
@@ -52,13 +47,22 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 3) Open ```./output/test-assignment-1/report-test-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
     
-## Other examples
+## Tested language, compiler(or interpreter), OS
+- C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
+- C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
+- C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
+
+Currently, only C and C++ are supported.
+
+## Try all the test-assignment files
 ```
-pacers.py test-assignment-2 --user-input "3 5"
+pacers.py test-assignment-1
 pacers.py test-assignment-2 --user-input "1 2" "3 4"
 pacers.py test-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 pacers.py test-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ```
+
+If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project. Then I'll update the "Tested language, compiler(or interpreter), OS" section in this page :).
 
 ## Usage
 ```
