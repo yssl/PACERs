@@ -22,8 +22,8 @@ You can open the report in MS Word or MS Excel to grade each submission.
 ![example-result](https://cloud.githubusercontent.com/assets/5915359/15764368/4ec64f70-2965-11e6-8815-ba521d3a2c0b.png)
 
 ## Requirements
-- python 2.x
-- cmake
+- Python 2.x
+- CMake
 - Pygments  
     Install in Windows - ```pip install pygments```  
     Install in Linux - ```sudo pip install pygments``` or ```sudo apt-get install python-pygments```
@@ -39,7 +39,8 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 ```
 
 ## Quick start
-1) Run: ```git clone https://github.com/yssl/PACERs.git```
+1) Run: ```git clone https://github.com/yssl/PACERs.git```  
+   or releases > Latest release > Download source code, extract it, and ```cd``` to the extracted directory..
 
 2) On Linux, run: ```./pacers.py test-assignments/C/assignment-1```  
    On Windows, run: ```pacers.py test-assignments\C\assignment-1```
@@ -54,7 +55,7 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
 
 Currently, only C and C++ are supported.
 
-## Try other test-assignment files
+## Try other test-assignments
 - C
 ```
 pacers.py test-assignments/C/assignment-1
