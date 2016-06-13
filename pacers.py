@@ -269,13 +269,10 @@ def getCMakeListsFileContents(projName, srcFileNames):
 
 # return errorCode, buildLog
 def build(extension, srcRootDir, projName, srcFileNames):
-
     if extension in gCodeExt:
         return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileNames)
     else:
-        errorMsg = '%s is not a supported source file type.'%extension
-        print '%s%s'%(gLogPrefix, errorMsg)
-        return -1, errorMsg 
+        return build_else(extension)
 
 def onTimeOut(proc):
     proc.kill()
@@ -290,21 +287,35 @@ def onTimeOut(proc):
 #   1 - forced kill due to timeout
 #   2 - cannot find the executable file (not built yet)
 def run(extension, srcRootDir, projName, userInput, timeOut):
-    try:
-        proc = subprocess.Popen([gCodeExt[extension]['runcmd-func'](srcRootDir, projName)], \
-                cwd=gCodeExt[extension]['runcwd-func'](srcRootDir, projName), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-    except OSError:
-        return 2, gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
+    if extension in gCodeExt:
+        try:
+            proc = subprocess.Popen([gCodeExt[extension]['runcmd-func'](srcRootDir, projName)], \
+                    cwd=gCodeExt[extension]['runcwd-func'](srcRootDir, projName), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        except OSError:
+            return 2, gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
 
-    timer = threading.Timer(timeOut, onTimeOut, [proc])
-    timer.start()
-    stdoutStr, stderrStr = proc.communicate(userInput)
+        timer = threading.Timer(timeOut, onTimeOut, [proc])
+        timer.start()
+        stdoutStr, stderrStr = proc.communicate(userInput)
 
-    if timer.is_alive():
-        timer.cancel()
-        return 0, stdoutStr
+        if timer.is_alive():
+            timer.cancel()
+            return 0, stdoutStr
+        else:
+            return 1, stdoutStr
     else:
-        return 1, stdoutStr
+        return run_else(extension)
+
+# return errorCode, buildLog
+def build_else(extension):
+    errorMsg = 'Building %s is not supported.'%extension
+    print '%s%s'%(gLogPrefix, errorMsg)
+    return -1, errorMsg 
+
+def run_else(extension):
+    errorMsg = 'Running %s is not supported.'%extension
+    print '%s%s'%(gLogPrefix, errorMsg)
+    return 0, errorMsg 
 
 ############################################
 # functions for report
@@ -444,6 +455,7 @@ env['posix']['build-cmd'] = 'cmake ./; make'
 
 gBuildCmd = env[os.name]['build-cmd']
 
+# gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 gCodeExt = {'.c':{}, '.cpp':{}}
 
 gCodeExt['.c']['build-func'] = build_c_cpp
@@ -453,6 +465,10 @@ gCodeExt['.c']['runcwd-func'] = runcwd_c_cpp
 gCodeExt['.cpp']['build-func'] = build_c_cpp
 gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
 gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
+
+# gCodeExt['.txt']['build-func'] = build_dummy
+# gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
+# gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
 
 opjoin = os.path.join
 gLogPrefix = '# '
