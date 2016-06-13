@@ -286,13 +286,19 @@ def onTimeOut(proc):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 #   2 - cannot find the executable file (not built yet)
+#   3 - from runcmd_dummy() 
 def run(extension, srcRootDir, projName, userInput, timeOut):
     if extension in gCodeExt:
+        runcmd = gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
+        runcwd = gCodeExt[extension]['runcwd-func'](srcRootDir, projName)
+
+        if runcmd == '':
+            return 3, ''
+
         try:
-            proc = subprocess.Popen([gCodeExt[extension]['runcmd-func'](srcRootDir, projName)], \
-                    cwd=gCodeExt[extension]['runcwd-func'](srcRootDir, projName), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+            proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
         except OSError:
-            return 2, gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
+            return 2, runcmd
 
         timer = threading.Timer(timeOut, onTimeOut, [proc])
         timer.start()
@@ -412,6 +418,8 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
                 s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
+            elif exitType == 3:   # from runcmd_dummy()
+                pass
             s += '\n'
     return s
  
@@ -444,6 +452,13 @@ def runcwd_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
 
+# return errorCode, buildLog
+def build_dummy(srcRootDir, projName, srcFileNames):
+    return 0, ''
+def runcmd_dummy(srcRootDir, projName):
+    return ''
+def runcwd_dummy(srcRootDir, projName):
+    return ''
 
 ############################################
 # pre-defined
@@ -455,8 +470,7 @@ env['posix']['build-cmd'] = 'cmake ./; make'
 
 gBuildCmd = env[os.name]['build-cmd']
 
-# gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
-gCodeExt = {'.c':{}, '.cpp':{}}
+gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 
 gCodeExt['.c']['build-func'] = build_c_cpp
 gCodeExt['.c']['runcmd-func'] = runcmd_c_cpp
@@ -466,9 +480,9 @@ gCodeExt['.cpp']['build-func'] = build_c_cpp
 gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
 gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
 
-# gCodeExt['.txt']['build-func'] = build_dummy
-# gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
-# gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
+gCodeExt['.txt']['build-func'] = build_dummy
+gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
+gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
 
 opjoin = os.path.join
 gLogPrefix = '# '
