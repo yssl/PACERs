@@ -52,8 +52,9 @@ The generated html file is written in unicode (utf-8), so if your browser shows 
 | Supported file type | Tested environment                                                                                                                                     |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | .c                       | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
-| .cpp                     |                                                                                                                                                        |
-| .txt                     |                                                                                                                                                     | 
+| .cpp                     | 	 |
+| .txt                     | N/A |    
+
 ## Try other test-assignments
 - C
 ```
