@@ -29,10 +29,14 @@ Quick start:
     The generated html file is written in unicode (utf-8), so if your browser shows broken characters
     please try to change the text encoding option for the page to unicode or utf-8.
     
-Tested language, compiler(interpreter), platform:
-    C - Microsoft Visual Studio 2010 - Windows 10 (Kor)
-    C - Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
-    C - gcc 4.8.4 - Ubuntu 14.04 (Kor)
+Supported file extensions:
+    - .c
+        Microsoft Visual Studio 2010 - Windows 10 (Kor)
+        Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
+        gcc 4.8.4 - Ubuntu 14.04 (Kor)
+    - .cpp
+    - .txt
+        N/A
 
 Try other test-assignment files:
     - C
@@ -41,6 +45,8 @@ Try other test-assignment files:
         pacers.py test-assignments/C/assignment-2 --user-input "1 2" "3 4"
         pacers.py test-assignments/C/assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
         pacers.py test-assignments/C/assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+    - txt
+        pacers.py test-assignments/txt-img/txt-assignment
 
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]

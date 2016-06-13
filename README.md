@@ -48,13 +48,12 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 3) Open ```./output/assignment-1/report-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
     
-## Supported Languages
-| Supported File Extension | Tested Environment                                                                                                                                     |
+## Supported file extension
+| Supported file extension | Tested environment                                                                                                                                     |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | .c                       | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
 | .cpp                     |                                                                                                                                                        |
-| .txt                     | N/A (The report just shows it)                                                                                                                                                    |
-
+| .txt                     |                                                                                                                                                     | 
 ## Try other test-assignments
 - C
 ```
