@@ -360,8 +360,8 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     # main table
     htmlCode += '''<table border=1>
 <tr>
-<td>Submission Name</td>
-<td>Source File Path in Assignment Directory</td>
+<td>Submission Title</td>
+<td>Source Files</td>
 <td>Output</td>
 <td>Score</td>
 <td>Comment</td>
