@@ -13,6 +13,9 @@ Requirements:
     Unidecode (install via pip install unidecode)
         : Install in Windows - "pip install unidecode"
           Install in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
+    chardet
+        : Install in Windows - "pip install chardet"
+          Install in Linux - "sudo pip install chardet"
 
 Required environment setting:
     On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
@@ -51,7 +54,7 @@ Try other test-assignment files:
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
                  [--assignment-alias ASSIGNMENT_ALIAS]
-                 [--output-dir OUTPUT_DIR] [--source-encoding SOURCE_ENCODING]
+                 [--output-dir OUTPUT_DIR]
                  assignment_dir
 
 Programming Assignments Compiling, Executing, and Reporting system
@@ -118,23 +121,15 @@ optional arguments:
                         and build output files to be generated.
                         Avoid including hangul characters in its full path.
                         default: .\output
-  --source-encoding SOURCE_ENCODING
-                        Specify SOURCE_ENCODING in which source files
-                        are encoded. You don't need to use this option if
-                        source code only has english characters or
-                        the platform where source code is written and
-                        the platform PACERs is running is same.
-                        If source files are written in another platform,
-                        you might need to specify default encoding for
-                        the platform to run PACERs correctly.
-                        default: system default encoding
 '''
 
 import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch
+import pygments
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 from unidecode import unidecode
+import chardet
 
 if os.name=='nt':
     reload(sys)
@@ -199,7 +194,7 @@ def unzipInAssignDir(assignDir):
 
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
-        shutil.rmtree(opjoin(assignDir, d))
+        shutil.rmtree(d)
 
 def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, deco2unicoMap, doNotCopy):
     decodeAlias = unico2decoPath(unicode(assignAlias), deco2unicoMap)
@@ -331,6 +326,7 @@ def run_else(extension):
 
 ############################################
 # functions for report
+
 def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists):
     htmlCode = ''
 
@@ -397,13 +393,17 @@ def getSourcesTable(srcPaths):
     return htmlCode 
 
 def getRenderedSource(srcPath):
-    try:
-        with open(srcPath, 'r') as f:
-            sourceCode = f.read()
-            sourceCode = unicode(sourceCode, gArgs.source_encoding)
-        return highlight(sourceCode, guess_lexer_for_filename(srcPath, sourceCode), HtmlFormatter())
-    except UnicodeDecodeError as e:
-        return '<p></p>'+format(e)
+    with open(srcPath, 'r') as f:
+        sourceCode = f.read()
+        success, unistr = getUnicodeStr(sourceCode)
+        if success:
+            try:
+                lexer = guess_lexer_for_filename(srcPath, unistr)
+            except pygments.util.ClassNotFound as e:
+                return '<p></p>'+'<pre>'+format(e)+'</pre>'
+            return highlight(unistr, lexer, HtmlFormatter())
+        else:
+            return '<p></p>'+'<pre>'+unistr+'</pre>'
 
 def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
@@ -416,10 +416,8 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             stdoutStr = stdoutStrList[i]
             s += '(user input: %s)\n'%userInput
             if exitType == 0:
-                try:
-                    s += unicode(stdoutStr, gArgs.source_encoding)
-                except UnicodeDecodeError as e:
-                    s += format(e)
+                success, unistr = getUnicodeStr(stdoutStr)
+                s += unistr
             elif exitType == 1:   # time out
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
@@ -429,6 +427,27 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             s += '\n'
     return s
  
+def getUnicodeStr(str):
+    encodingStrs = ['utf-8', sys.getfilesystemencoding(), '(chardet)']
+    detected = chardet.detect(str)
+    success = True
+
+    for encodingStr in encodingStrs:
+        if encodingStr=='(chardet)':
+            encoding = detected['encoding']
+        else:
+            encoding = encodingStr
+
+        try:
+            retstr = unicode(str, encoding)
+            success = True
+            break
+        except UnicodeDecodeError as e:
+            retstr = format(e)+'\n(chardet detects %s with the confidence level of %f)'%(detected['encoding'], detected['confidence'])
+            success = False
+
+    return success, retstr
+        
 ############################################
 # functions for each source file extension
 
@@ -566,16 +585,6 @@ parser.add_argument('--output-dir', default=opjoin('.', 'output'),
 and build output files to be generated. 
 Avoid including hangul characters in its full path.
 default: %s'''%opjoin('.', 'output'))
-parser.add_argument('--source-encoding', default=sys.getdefaultencoding(),
-                    help='''Specify SOURCE_ENCODING in which source files 
-are encoded. You don't need to use this option if
-source code only has english characters or 
-the platform where source code is written and 
-the platform PACERs is running is same. 
-If source files are written in another platform,
-you might need to specify default encoding for 
-the platform to run PACERs correctly. 
-default: system default encoding''')
 
 gArgs = parser.parse_args()
 
