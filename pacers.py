@@ -485,224 +485,225 @@ def runcmd_dummy(srcRootDir, projName):
 def runcwd_dummy(srcRootDir, projName):
     return ''
 
-############################################
-# pre-defined
+if __name__=='__main__':
+    ############################################
+    # pre-defined
 
-env = {'nt':{}, 'posix':{}}
+    env = {'nt':{}, 'posix':{}}
 
-env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
-env['posix']['build-cmd'] = 'cmake ./; make'
+    env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
+    env['posix']['build-cmd'] = 'cmake ./; make'
 
-gBuildCmd = env[os.name]['build-cmd']
+    gBuildCmd = env[os.name]['build-cmd']
 
-gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
+    gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 
-gCodeExt['.c']['build-func'] = build_c_cpp
-gCodeExt['.c']['runcmd-func'] = runcmd_c_cpp
-gCodeExt['.c']['runcwd-func'] = runcwd_c_cpp
+    gCodeExt['.c']['build-func'] = build_c_cpp
+    gCodeExt['.c']['runcmd-func'] = runcmd_c_cpp
+    gCodeExt['.c']['runcwd-func'] = runcwd_c_cpp
 
-gCodeExt['.cpp']['build-func'] = build_c_cpp
-gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
-gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
+    gCodeExt['.cpp']['build-func'] = build_c_cpp
+    gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
+    gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
 
-gCodeExt['.txt']['build-func'] = build_dummy
-gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
-gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
+    gCodeExt['.txt']['build-func'] = build_dummy
+    gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
+    gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
 
-opjoin = os.path.join
-gLogPrefix = '# '
-gBuildDirPrefix = 'pacers-build-'
+    opjoin = os.path.join
+    gLogPrefix = '# '
+    gBuildDirPrefix = 'pacers-build-'
 
-############################################
-# main routine
+    ############################################
+    # argparse
 
-parser = argparse.ArgumentParser(prog='pacers.py', description='Programming Assignments Compiling, Executing, and Reporting system', formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('assignment_dir',
-                    help='''A direcory that has submitted files.
-In assignment_dir, one source file runs one program. 
-Each submission might have only one source file or a 
-zip file or a directory including multiple source files''')
-parser.add_argument('--user-input', nargs='+', default=[''],
-                    help='''Specify USER_INPUT to be sent to the stdin of target
-programs. This option should be located after
-assignment_dir if no other optional arguments are
-given. Two types of user input are available.
-default is an empty string.
+    parser = argparse.ArgumentParser(prog='pacers.py', description='Programming Assignments Compiling, Executing, and Reporting system', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('assignment_dir',
+                        help='''A direcory that has submitted files.
+    In assignment_dir, one source file runs one program. 
+    Each submission might have only one source file or a 
+    zip file or a directory including multiple source files''')
+    parser.add_argument('--user-input', nargs='+', default=[''],
+                        help='''Specify USER_INPUT to be sent to the stdin of target
+    programs. This option should be located after
+    assignment_dir if no other optional arguments are
+    given. Two types of user input are available.
+    default is an empty string.
 
-| Type     | Example                  | Example's meaning                          |
-|----------|--------------------------|--------------------------------------------|
-| Single   | --user-input 15          | run each source file with input 15         |
-| value    | --user-input "hello"     | run each source file with input "hello"    |
-|          | --user-input "1 2"       | run each source file with input "1 2"      |
-|----------|--------------------------|--------------------------------------------|
-| Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
-| values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+    | Type     | Example                  | Example's meaning                          |
+    |----------|--------------------------|--------------------------------------------|
+    | Single   | --user-input 15          | run each source file with input 15         |
+    | value    | --user-input "hello"     | run each source file with input "hello"    |
+    |          | --user-input "1 2"       | run each source file with input "1 2"      |
+    |----------|--------------------------|--------------------------------------------|
+    | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
+    | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
 
-''')
-parser.add_argument('--user-dict', default=None,
-                    help='''Specify USER_DICT to be sent to the stdin of target
-programs. Argument should be python dictionary 
-representation. Each 'key' of the dictionary item
-is 'suffix' that should match with the last parts of 
-each source file name. 'value' is user input for 
-those matched source files.
-If both --user-input and --user-dict are specified,
-only --user-dict is used.
+    ''')
+    parser.add_argument('--user-dict', default=None,
+                        help='''Specify USER_DICT to be sent to the stdin of target
+    programs. Argument should be python dictionary 
+    representation. Each 'key' of the dictionary item
+    is 'suffix' that should match with the last parts of 
+    each source file name. 'value' is user input for 
+    those matched source files.
+    If both --user-input and --user-dict are specified,
+    only --user-dict is used.
 
-Example:
---user-dict {'1':['1','2'], '2':['2,'5','7']}
+    Example:
+    --user-dict {'1':['1','2'], '2':['2,'5','7']}
 
-runs a source file whose name ends with '1'   
-(e.g. prob1.c) 2 times (with '10', '20')     
-and run a source file whose name ends with   
-'2' (e.g. prob2.c) 3 times (with '2','5','7').
+    runs a source file whose name ends with '1'   
+    (e.g. prob1.c) 2 times (with '10', '20')     
+    and run a source file whose name ends with   
+    '2' (e.g. prob2.c) 3 times (with '2','5','7').
 
-''')
-# parser.add_argument('--file-layout', default=0, type=int,
-                    # help='''indicates file layout in the assignment_dir. \ndefault: 0
-# 0 - one source file runs one program. 
-# each submission might have only one source file or a 
-# zip file or a directory including multiple source files.''')
-parser.add_argument('--timeout', default=2., type=float,
-                    help='''Each target program is killed when TIMEOUT(seconds)
-is reached. Useful for infinite loop cases.
-default: 2.0''')
-parser.add_argument('--run-only', action='store_true',
-                    help='''When specified, run each target program without build.
-You may use it when you want change USER_INPUT without
-build. if the programming language of source files 
-does not require build process, PACERs 
-automatically skips the build process without 
-specifying this option.''')
-parser.add_argument('--assignment-alias',
-                    help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
-ASSIGNMENT_ALIAS is used when making a sub-directory 
-in OUTPUT_DIR and the final report file. 
-default: "basename" of assignment_dir (bar if 
-assignment_dir is /foo/bar/).''')
-parser.add_argument('--output-dir', default=opjoin('.', 'output'),
-                    help='''Specify OUTPUT_DIR in which the final report file 
-and build output files to be generated. 
-Avoid including hangul characters in its full path.
-default: %s'''%opjoin('.', 'output'))
+    ''')
+    # parser.add_argument('--file-layout', default=0, type=int,
+                        # help='''indicates file layout in the assignment_dir. \ndefault: 0
+    # 0 - one source file runs one program. 
+    # each submission might have only one source file or a 
+    # zip file or a directory including multiple source files.''')
+    parser.add_argument('--timeout', default=2., type=float,
+                        help='''Each target program is killed when TIMEOUT(seconds)
+    is reached. Useful for infinite loop cases.
+    default: 2.0''')
+    parser.add_argument('--run-only', action='store_true',
+                        help='''When specified, run each target program without build.
+    You may use it when you want change USER_INPUT without
+    build. if the programming language of source files 
+    does not require build process, PACERs 
+    automatically skips the build process without 
+    specifying this option.''')
+    parser.add_argument('--assignment-alias',
+                        help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
+    ASSIGNMENT_ALIAS is used when making a sub-directory 
+    in OUTPUT_DIR and the final report file. 
+    default: "basename" of assignment_dir (bar if 
+    assignment_dir is /foo/bar/).''')
+    parser.add_argument('--output-dir', default=opjoin('.', 'output'),
+                        help='''Specify OUTPUT_DIR in which the final report file 
+    and build output files to be generated. 
+    Avoid including hangul characters in its full path.
+    default: %s'''%opjoin('.', 'output'))
 
-gArgs = parser.parse_args()
+    gArgs = parser.parse_args()
 
-# print gArgs
-# exit()
+    # print gArgs
+    # exit()
 
-if not gArgs.assignment_alias:
-    gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
+    if not gArgs.assignment_alias:
+        gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
-submittedFileNames = []
-srcFileLists = []
-buildRetCodes = []
-buildLogs = []
-exitTypeLists = []
-stdoutStrLists = []
-userInputLists = []
+    ############################################
+    # main routine
 
-############################################
-# main routine
+    submittedFileNames = []
+    srcFileLists = []
+    buildRetCodes = []
+    buildLogs = []
+    exitTypeLists = []
+    stdoutStrLists = []
+    userInputLists = []
 
-destDir, deco2unicoMap, unzipDirNames = preProcess()
+    destDir, deco2unicoMap, unzipDirNames = preProcess()
 
-# preprocess --user-dict
-if gArgs.user_dict!=None:
-    gArgs.user_dict = eval(gArgs.user_dict)
+    # preprocess --user-dict
+    if gArgs.user_dict!=None:
+        gArgs.user_dict = eval(gArgs.user_dict)
 
-submissionNames = [name for name in os.listdir(destDir) if gBuildDirPrefix not in name]
-for i in range(len(submissionNames)):
-    submissionName = submissionNames[i]
+    submissionNames = [name for name in os.listdir(destDir) if gBuildDirPrefix not in name]
+    for i in range(len(submissionNames)):
+        submissionName = submissionNames[i]
+
+        print
+        print '%s'%gLogPrefix
+        print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionNames), submissionName)
+
+        if True:    # no project file exists
+            if os.path.isdir(opjoin(destDir, submissionName)):
+                # test-assignment-3
+                #   student01
+                #       prob1.c
+                #       prob2.c
+                #   student02
+                #       prob1.c
+                #       prob2.c
+                submissionDir = opjoin(destDir, submissionName)
+                srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+            else:
+                # test-assignment-1
+                #   student01.c
+                #   student02.c
+                #   student03.c
+                submissionDir = destDir
+                srcFileNames = [submissionName]
+
+            for i in range(len(srcFileNames)):
+                srcFileName = srcFileNames[i]
+                projName, ext = os.path.splitext(srcFileName)
+                ext = ext.lower()
+
+                print '%s'%gLogPrefix
+                print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(srcFileNames), projName)
+
+                # build
+                if not gArgs.run_only:
+                    print '%sBuilding...'%gLogPrefix
+                    buildRetCode, buildLog = build(ext, submissionDir, projName, [srcFileName])
+
+                else:
+                    buildRetCode = 0
+                    buildLog = ''
+
+                # set userInputs
+                if gArgs.user_dict!=None:
+                    userInputs = None
+                    for key in gArgs.user_dict:
+                        if projName.endswith(key):
+                            userInputs = gArgs.user_dict[key] 
+                            break
+                    if userInputs == None:
+                        userInputs = []
+                        for key in gArgs.user_dict:
+                            userInputs.extend(gArgs.user_dict[key])
+                else:
+                    userInputs = gArgs.user_input
+
+                # run
+                exitTypeList = []
+                stdoutStrList = []
+                userInputList = userInputs
+                if buildRetCode!=0:
+                    print '%sBuild error. Go on a next file.'%gLogPrefix
+                else:
+                    print '%sRunning...'%gLogPrefix
+                    for userInput in userInputs:
+                        exitType, stdoutStr = run(ext, submissionDir, projName, userInput, gArgs.timeout)
+                        exitTypeList.append(exitType)
+                        stdoutStrList.append(stdoutStr)
+                    print '%sDone.'%gLogPrefix
+
+                # add report data
+                submittedFileNames.append(deco2unicoPath(submissionName, deco2unicoMap))
+
+                # full path -> \hagsaeng01\munje2\munje2.c
+                destSrcFilePath = opjoin(submissionDir, srcFileName)
+                destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
+                origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
+
+                buildRetCodes.append(buildRetCode)
+                buildLogs.append(buildLog)
+                exitTypeLists.append(exitTypeList)
+                stdoutStrLists.append(stdoutStrList)
+                userInputLists.append(userInputList)
 
     print
     print '%s'%gLogPrefix
-    print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionNames), submissionName)
+    print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
+    generateReport(gArgs, submittedFileNames, \
+                    srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
 
-    if True:    # no project file exists
-        if os.path.isdir(opjoin(destDir, submissionName)):
-            # test-assignment-3
-            #   student01
-            #       prob1.c
-            #       prob2.c
-            #   student02
-            #       prob1.c
-            #       prob2.c
-            submissionDir = opjoin(destDir, submissionName)
-            srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
-        else:
-            # test-assignment-1
-            #   student01.c
-            #   student02.c
-            #   student03.c
-            submissionDir = destDir
-            srcFileNames = [submissionName]
-
-        for i in range(len(srcFileNames)):
-            srcFileName = srcFileNames[i]
-            projName, ext = os.path.splitext(srcFileName)
-            ext = ext.lower()
-
-            print '%s'%gLogPrefix
-            print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(srcFileNames), projName)
-
-            # build
-            if not gArgs.run_only:
-                print '%sBuilding...'%gLogPrefix
-                buildRetCode, buildLog = build(ext, submissionDir, projName, [srcFileName])
-
-            else:
-                buildRetCode = 0
-                buildLog = ''
-
-            # set userInputs
-            if gArgs.user_dict!=None:
-                userInputs = None
-                for key in gArgs.user_dict:
-                    if projName.endswith(key):
-                        userInputs = gArgs.user_dict[key] 
-                        break
-                if userInputs == None:
-                    userInputs = []
-                    for key in gArgs.user_dict:
-                        userInputs.extend(gArgs.user_dict[key])
-            else:
-                userInputs = gArgs.user_input
-
-            # run
-            exitTypeList = []
-            stdoutStrList = []
-            userInputList = userInputs
-            if buildRetCode!=0:
-                print '%sBuild error. Go on a next file.'%gLogPrefix
-            else:
-                print '%sRunning...'%gLogPrefix
-                for userInput in userInputs:
-                    exitType, stdoutStr = run(ext, submissionDir, projName, userInput, gArgs.timeout)
-                    exitTypeList.append(exitType)
-                    stdoutStrList.append(stdoutStr)
-                print '%sDone.'%gLogPrefix
-
-            # add report data
-            submittedFileNames.append(deco2unicoPath(submissionName, deco2unicoMap))
-
-            # full path -> \hagsaeng01\munje2\munje2.c
-            destSrcFilePath = opjoin(submissionDir, srcFileName)
-            destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
-            origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-            srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
-
-            buildRetCodes.append(buildRetCode)
-            buildLogs.append(buildLog)
-            exitTypeLists.append(exitTypeList)
-            stdoutStrLists.append(stdoutStrList)
-            userInputLists.append(userInputList)
-
-print
-print '%s'%gLogPrefix
-print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
-generateReport(gArgs, submittedFileNames, \
-                srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
-
-postProcess(unzipDirNames)
-print '%sDone.'%gLogPrefix
+    postProcess(unzipDirNames)
+    print '%sDone.'%gLogPrefix
