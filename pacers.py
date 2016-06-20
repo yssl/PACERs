@@ -27,8 +27,8 @@ Required environment setting:
 Quick start:
     1) Run: git clone https://github.com/yssl/PACERs.git
 
-    2) On Linux, run: ./pacers.py test-assignments/source/c/c-assignment-1
-       On Windows, run: pacers.py test-assignments\source\c\c-assignment-1
+    2) On Linux, run: ./pacers.py test-assignments/c-assignment-1
+       On Windows, run: pacers.py test-assignments\c-assignment-1
 
     3) Open ./output/c-assignment-1/report-c-assignment-1.html in any web browser
     The generated html file is written in unicode (utf-8), so if your browser shows broken characters
@@ -36,13 +36,13 @@ Quick start:
     
 Try other test-assignment files:
     - C
-        pacers.py test-assignments/source/c/c-assignment-1
-        pacers.py test-assignments/source/c/c-assignment-2 --user-input "3 5"
-        pacers.py test-assignments/source/c/c-assignment-2 --user-input "1 2" "3 4"
-        pacers.py test-assignments/source/c/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-        pacers.py test-assignments/source/c/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+        ./pacers.py test-assignments/c-assignment-1
+        ./pacers.py test-assignments/c-assignment-2 --user-input "3 5"
+        ./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
+        ./pacers.py test-assignments/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+        ./pacers.py test-assignments/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
     - txt
-        pacers.py test-assignments/resource/txt-assignment
+        ./pacers.py test-assignments/txt-assignment-1
 
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]

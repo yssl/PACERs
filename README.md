@@ -5,7 +5,7 @@ Programming Assignments Compiling, Executing, and Reporting system
 
 *1. Collect submitted source files.*
 ```
-<CWD>/test-assignments/source/c/c-assignment-2/
+<CWD>/test-assignments/c-assignment-2/
     |-student 01.c
     |-student 02.c
     |-student 03.c
@@ -13,8 +13,13 @@ Programming Assignments Compiling, Executing, and Reporting system
 ![example-source](https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png)
 
 *2. Run PACERs.*
+On Windows,
 ```
-pacers.py test-assignments\source\c\c-assignment-2 --user-input "1 2" "3 4"
+pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"
+```
+On Linux,
+```
+./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
 ```
 
 *3. Open the generated HTML report: ```<CWD>/output/c-assignment-2/report-c-assignment-2.html```*  
@@ -42,8 +47,8 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 1) Run: ```git clone https://github.com/yssl/PACERs.git```  
    or releases > Latest release > Download source code, extract it, and ```cd``` to the extracted directory..
 
-2) On Linux, run: ```./pacers.py test-assignments/source/c/c-assignment-1```  
-   On Windows, run: ```pacers.py test-assignments\source\c\c-assignment-1```
+2) On Linux, run: ```./pacers.py test-assignments/c-assignment-1```  
+   On Windows, run: ```pacers.py test-assignments\c-assignment-1```
 
 3) Open ```./output/c-assignment-1/report-c-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
@@ -67,15 +72,15 @@ The tested envirionments for each submission type are shown in the table.
 ## Try other test-assignments
 - C
 ```
-pacers.py test-assignments/source/c/c-assignment-1
-pacers.py test-assignments/source/c/c-assignment-2 --user-input "3 5"
-pacers.py test-assignments/source/c/c-assignment-2 --user-input "1 2" "3 4"
-pacers.py test-assignments/source/c/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-pacers.py test-assignments/source/c/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+./pacers.py test-assignments/c-assignment-1
+./pacers.py test-assignments/c-assignment-2 --user-input "3 5"
+./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
+./pacers.py test-assignments/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
+./pacers.py test-assignments/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ```
 - txt
 ```
-pacers.py test-assignments/resource/txt-assignment
+./pacers.py test-assignments/txt-assignment-1
 ```
 <!--
 If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project so that I could update the "Tested language, compiler(or interpreter), OS" section in this page :).
