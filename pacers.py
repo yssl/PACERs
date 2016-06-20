@@ -123,7 +123,7 @@ optional arguments:
                         default: .\output
 '''
 
-import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch
+import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch, glob
 import pygments
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
@@ -190,7 +190,7 @@ def unzipInAssignDir(assignDir):
                 z.extractall(unzipDir)
                 zipFileNames.append(name)
                 unzipDirNames.append(unzipDir)
-    return zipFileNames, unzipDirNames
+    return unzipDirNames
 
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
@@ -485,6 +485,32 @@ def runcmd_dummy(srcRootDir, projName):
 def runcwd_dummy(srcRootDir, projName):
     return ''
 
+
+############################################
+# project type detection
+
+def detectSubmissionType(submissionPath):
+    if os.path.isdir(opjoin(gArgs.assignment_dir, submissionTitle)):
+        # print 'dir'
+        for submissionType in range(BEGIN_SUBMISSION_TYPE+1, END_SUBMISSION_TYPE):
+            for pattern in gSubmissionPatterns[submissionType]:
+                if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
+                    return submissionType
+        return SOURCE_FILES
+    else:
+        # print 'file'
+        return SINGLE_SOURCE_FILE
+
+def decodeDestDirPathRecursive(destDir, deco2unicoMap):
+    for root, dirs, files in os.walk(destDir, topdown=False):
+        for name in dirs:
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            os.rename(opjoin(root, name), opjoin(root, decoName))
+        for name in files:
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            os.rename(opjoin(root, name), opjoin(root, decoName))
+
+
 if __name__=='__main__':
     ############################################
     # pre-defined
@@ -513,6 +539,28 @@ if __name__=='__main__':
     opjoin = os.path.join
     gLogPrefix = '# '
     gBuildDirPrefix = 'pacers-build-'
+
+
+    # submission type
+    BEGIN_SUBMISSION_TYPE = 0
+    CMAKE_PROJECT         = 1
+    VISUAL_STUDIO_PROJECT = 2
+    SOURCE_FILES          = 3
+    SINGLE_SOURCE_FILE    = 4
+    END_SUBMISSION_TYPE   = 5
+
+    gSubmissionDescrption                        = {}
+    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMake project'
+    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'Visual Studio project'
+    gSubmissionDescrption[SOURCE_FILES]          = 'Source files or resource files without any project files'
+    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'A single source file or resource file'
+
+    gSubmissionPatterns                        = {}
+    gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
+    gSubmissionPatterns[VISUAL_STUDIO_PROJECT] = ['*.vcxproj', '*.vcproj']
+    gSubmissionPatterns[SOURCE_FILES]          = ['*']
+    gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
+
 
     ############################################
     # argparse
@@ -606,38 +654,61 @@ if __name__=='__main__':
     stdoutStrLists = []
     userInputLists = []
 
-    destDir, deco2unicoMap, unzipDirNames = preProcess()
-
     # preprocess --user-dict
     if gArgs.user_dict!=None:
         gArgs.user_dict = eval(gArgs.user_dict)
 
-    submissionNames = [name for name in os.listdir(destDir) if gBuildDirPrefix not in name]
-    for i in range(len(submissionNames)):
-        submissionName = submissionNames[i]
+    # unzip in .zip files in assignment_dir
+    unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
+
+    # copy assignment_dir to destDir(output_dir/assignment_alias)
+    deco2unicoMap = {'':''}
+    decodeAlias = unico2decoPath(unicode(gArgs.assignment_alias), deco2unicoMap)
+    destDir = opjoin(gArgs.output_dir, decodeAlias)
+
+    if not gArgs.run_only:
+        # delete exsting one
+        if os.path.exists(destDir):
+            shutil.rmtree(destDir)
+            time.sleep(.01)
+        # copy tree
+        shutil.copytree(gArgs.assignment_dir, destDir)
+    else:
+        # delete report file only
+        try:
+            os.remove(getReportFilePath(gArgs))
+        except OSError:
+            pass
+
+    # check assignment_dir and get submission titles
+    try:
+        submissionTitles = [name for name in os.listdir(gArgs.assignment_dir) if os.path.splitext(name)[1].lower()!='.zip']
+    except OSError as e:
+        print 'PACERs: Unable to access \'%s\'. Please check the assignment_dir again.'%gArgs.assignment_dir
+        exit()
+
+    for i in range(len(submissionTitles)):
+        submissionTitle = submissionTitles[i]
 
         print
         print '%s'%gLogPrefix
-        print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionNames), submissionName)
+        print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionTitles), submissionTitle)
 
-        if True:    # no project file exists
-            if os.path.isdir(opjoin(destDir, submissionName)):
-                # test-assignment-3
-                #   student01
-                #       prob1.c
-                #       prob2.c
-                #   student02
-                #       prob1.c
-                #       prob2.c
-                submissionDir = opjoin(destDir, submissionName)
-                srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
-            else:
-                # test-assignment-1
-                #   student01.c
-                #   student02.c
-                #   student03.c
+        submissionType = detectSubmissionType(opjoin(gArgs.assignment_dir, submissionTitle))
+        
+        print '%sSubmission type: %s'%(gLogPrefix, gSubmissionDescrption[submissionType])
+
+        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+
+            decodeDestDirPathRecursive(destDir, deco2unicoMap)
+
+            if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
-                srcFileNames = [submissionName]
+                srcFileNames = [unico2decoPath(unicode(submissionTitle), deco2unicoMap)]
+
+            elif submissionType==SOURCE_FILES:
+                submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+                srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
 
             for i in range(len(srcFileNames)):
                 srcFileName = srcFileNames[i]
@@ -685,7 +756,7 @@ if __name__=='__main__':
                     print '%sDone.'%gLogPrefix
 
                 # add report data
-                submittedFileNames.append(deco2unicoPath(submissionName, deco2unicoMap))
+                submittedFileNames.append(submissionTitle)
 
                 # full path -> \hagsaeng01\munje2\munje2.c
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
