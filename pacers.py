@@ -705,12 +705,10 @@ if __name__=='__main__':
 
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
-                #todo
                 projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
-                #todo
                 projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
 
             projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
@@ -723,7 +721,7 @@ if __name__=='__main__':
             for root, dirs, files in os.walk(submissionDir):
                 if gBuildDirPrefix not in root:
                     for name in files:
-                        projSrcFileNames[0].append(opjoin(root, name))
+                        projSrcFileNames[0].append(opjoin(root, name).replace(submissionDir+os.sep, ''))
 
         else:
             continue
@@ -774,14 +772,14 @@ if __name__=='__main__':
             # add report data
             submittedFileNames.append(submissionTitle)
 
-#todo
-#todo
-#todo
             # full path -> \hagsaeng01\munje2\munje2.c
             for srcFileName in projSrcFileNames[i]:
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
-                destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
-                origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                    origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                else:
+                    origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
                 srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
 
             buildRetCodes.append(buildRetCode)
