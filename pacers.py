@@ -549,10 +549,10 @@ if __name__=='__main__':
     END_SUBMISSION_TYPE   = 5
 
     gSubmissionDescrption                        = {}
-    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - The submission has CMakeLists.txt.'
-    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'VISUAL_STUDIO_PROJECT - The submission has .vcxproj or .vcproj.'
-    gSubmissionDescrption[SOURCE_FILES]          = 'SOURCE_FILES - The submission has source or resource files without any project files.'
-    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - The submission has a single source or resource file.'
+    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
+    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'VISUAL_STUDIO_PROJECT - the submission has .vcxproj or .vcproj.'
+    gSubmissionDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
+    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
 
     gSubmissionPatterns                        = {}
     gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
@@ -666,6 +666,8 @@ if __name__=='__main__':
     destDir = opjoin(gArgs.output_dir, decodeAlias)
 
     if not gArgs.run_only:
+        print '%s'%gLogPrefix
+        print '%sCopying all submissions from \'%s\' to \'%s\'...'%(gLogPrefix, gArgs.assignment_dir, destDir)
         # delete exsting one
         if os.path.exists(destDir):
             shutil.rmtree(destDir)
@@ -777,7 +779,6 @@ if __name__=='__main__':
 #todo
             # full path -> \hagsaeng01\munje2\munje2.c
             for srcFileName in projSrcFileNames[i]:
-                print submissionDir, srcFileName
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
                 destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
                 origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
