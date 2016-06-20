@@ -225,7 +225,6 @@ def build_cmake(srcRootDir, projName):
         #todo
         buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd2), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
-        print e
         return e.returncode, e.output
     else:
         return 0, buildLog
@@ -700,6 +699,9 @@ if __name__=='__main__':
 
 
         # set submissionDir, projNames, projSrcFileNames for each project
+        # ex)
+        # projNames : ['proj1', 'proj2']
+        # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
             decodeDestDirPathRecursive(destDir, deco2unicoMap)
 
