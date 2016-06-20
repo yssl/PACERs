@@ -4,6 +4,8 @@
 PACERs
     : Programming Assignments Compiling, Executing, and Reporting system
 
+Please see https://github.com/yssl/PACERs for more information.
+
 Requirements:
     python 2.x
     cmake
@@ -32,15 +34,6 @@ Quick start:
     The generated html file is written in unicode (utf-8), so if your browser shows broken characters
     please try to change the text encoding option for the page to unicode or utf-8.
     
-Supported file types:
-    - .c
-        Microsoft Visual Studio 2010 - Windows 10 (Kor)
-        Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)
-        gcc 4.8.4 - Ubuntu 14.04 (Kor)
-    - .cpp
-    - .txt
-        N/A
-
 Try other test-assignment files:
     - C
         pacers.py test-assignments/source/c/c-assignment-1
@@ -550,10 +543,10 @@ if __name__=='__main__':
     END_SUBMISSION_TYPE   = 5
 
     gSubmissionDescrption                        = {}
-    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMake project'
-    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'Visual Studio project'
-    gSubmissionDescrption[SOURCE_FILES]          = 'Source files or resource files without any project files'
-    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'A single source file or resource file'
+    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - The submission has CMakeLists.txt.'
+    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'VISUAL_STUDIO_PROJECT - The submission has .vcxproj or .vcproj.'
+    gSubmissionDescrption[SOURCE_FILES]          = 'SOURCE_FILES - The submission has source or resource files without any project files.'
+    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - The submission has a single source or resource file.'
 
     gSubmissionPatterns                        = {}
     gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']

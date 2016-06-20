@@ -47,13 +47,22 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 3) Open ```./output/c-assignment-1/report-c-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
-    
-## Supported file types
-| Supported file type | Tested environment                                                                                                                                     |
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| .c                       | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
-| .cpp                     | 	 |
-| .txt                     | N/A |    
+
+## Supported submission types & language
+The type of each submission is auto-detected by PACERs.
+
+| Submission types | Meaning      |
+|--------------------------|-------------------------|
+| SOURCE_FILES              | The submission has source or resource files without any project files. |
+| SINGLE_SOURCE_FILE        | The submission has a single source or resource file.	 |
+
+The tested envirionments for each submission type are shown in the table.
+
+| Submission types | Language | Tested environment      |
+|-------------------------|--------------------------|-------------------------|
+| SOURCE_FILES or SINGLE_SOURCE_FILE | C                       | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
+| SOURCE_FILES or SINGLE_SOURCE_FILE | C++                     | 	 |
+| SOURCE_FILES or SINGLE_SOURCE_FILE | text file                     | N/A (just showing the text) |    
 
 ## Try other test-assignments
 - C
@@ -77,7 +86,7 @@ If you checked all the test-assignments are working correctly in your PC, please
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
                  [--assignment-alias ASSIGNMENT_ALIAS]
-                 [--output-dir OUTPUT_DIR] [--source-encoding SOURCE_ENCODING]
+                 [--output-dir OUTPUT_DIR]
                  assignment_dir
 
 Programming Assignments Compiling, Executing, and Reporting system
@@ -144,14 +153,4 @@ optional arguments:
                         and build output files to be generated.
                         Avoid including hangul characters in its full path.
                         default: .\output
-  --source-encoding SOURCE_ENCODING
-                        Specify SOURCE_ENCODING in which source files
-                        are encoded. You don't need to use this option if
-                        source code only has english characters or
-                        the platform where source code is written and
-                        the platform PACERs is running is same.
-                        If source files are written in another platform,
-                        you might need to specify default encoding for
-                        the platform to run PACERs correctly.
-                        default: system default encoding
 ```
