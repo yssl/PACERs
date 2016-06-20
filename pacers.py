@@ -497,6 +497,17 @@ def decodeDestDirPathRecursive(destDir, deco2unicoMap):
             decoName = unico2decoPath(unicode(name), deco2unicoMap)
             os.rename(opjoin(root, name), opjoin(root, decoName))
 
+def getUserInputsFromUserDict(userDict, projName):
+    userInputs = None
+    for key in userDict:
+        if projName.endswith(key):
+            userInputs = userDict[key] 
+            break
+    if userInputs == None:
+        userInputs = []
+        for key in userDict:
+            userInputs.extend(userDict[key])
+    return userInputs
 
 if __name__=='__main__':
     ############################################
@@ -733,18 +744,9 @@ if __name__=='__main__':
                 buildRetCode = 0
                 buildLog = ''
 
-#todo - split
             # set userInputs
             if gArgs.user_dict!=None:
-                userInputs = None
-                for key in gArgs.user_dict:
-                    if projNames[i].endswith(key):
-                        userInputs = gArgs.user_dict[key] 
-                        break
-                if userInputs == None:
-                    userInputs = []
-                    for key in gArgs.user_dict:
-                        userInputs.extend(gArgs.user_dict[key])
+                userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
             else:
                 userInputs = gArgs.user_input
 
