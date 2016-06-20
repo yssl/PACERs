@@ -341,7 +341,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     htmlCode += '''<table border=1>
 <tr>
 <td>Submission Title</td>
-<td>Source Files</td>
+<td>Source Files (Relative path from Assignment directory)</td>
 <td>Output</td>
 <td>Score</td>
 <td>Comment</td>
@@ -773,6 +773,7 @@ if __name__=='__main__':
             submittedFileNames.append(submissionTitle)
 
             # full path -> \hagsaeng01\munje2\munje2.c
+            projOrigSrcFilePathsAfterAssignDir = []
             for srcFileName in projSrcFileNames[i]:
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
                 destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
@@ -780,8 +781,9 @@ if __name__=='__main__':
                     origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
                 else:
                     origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
-                srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
+                projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
 
+            srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
             buildRetCodes.append(buildRetCode)
             buildLogs.append(buildLog)
             exitTypeLists.append(exitTypeList)
