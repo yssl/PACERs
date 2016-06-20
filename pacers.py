@@ -169,8 +169,7 @@ def deco2unicoPath(decoPath, deco2unicoMap):
     return unicoPath
 
 ############################################
-# functions for preparation
-
+# functions for unzipping
 def unzipInAssignDir(assignDir):
     zipFileNames = []
     unzipDirNames = []
@@ -188,60 +187,6 @@ def unzipInAssignDir(assignDir):
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
         shutil.rmtree(d)
-
-def copyAndDecodeAssignDirToOutDirRecursive(assignDir, outputDir, assignAlias, deco2unicoMap, doNotCopy):
-    decodeAlias = unico2decoPath(unicode(assignAlias), deco2unicoMap)
-    srcDir = assignDir
-    destDir = opjoin(outputDir, decodeAlias)
-
-    if not doNotCopy:
-        if os.path.exists(destDir):
-            shutil.rmtree(destDir)
-            time.sleep(.01)
-        shutil.copytree(assignDir, destDir)
-    else:
-        if not os.path.exists(destDir):
-            os.mkdir(destDir)
-        try:
-            os.remove(getReportFilePath(gArgs))
-        except OSError:
-            pass
-
-    if doNotCopy:
-        for root, dirs, files in os.walk(assignDir, topdown=False):
-            for name in dirs:
-                decoName = unico2decoPath(unicode(name), deco2unicoMap)
-            for name in files:
-                decoName = unico2decoPath(unicode(name), deco2unicoMap)
-    else:
-        for root, dirs, files in os.walk(destDir, topdown=False):
-            for name in dirs:
-                decoName = unico2decoPath(unicode(name), deco2unicoMap)
-                os.rename(opjoin(root, name), opjoin(root, decoName))
-            for name in files:
-                decoName = unico2decoPath(unicode(name), deco2unicoMap)
-                os.rename(opjoin(root, name), opjoin(root, decoName))
-
-    return destDir
-
-def removeZipFileInDestDir(destDir, zipFileNames):
-    for name in zipFileNames:
-        try:
-            os.remove(opjoin(destDir, unidecode(unicode(name))))
-        except OSError:
-            pass
-
-def preProcess():
-    deco2unicoMap = {'':''}
-    doNotCopy = gArgs.run_only
-    zipFileNames, unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
-    destDir = copyAndDecodeAssignDirToOutDirRecursive(gArgs.assignment_dir, gArgs.output_dir, gArgs.assignment_alias, deco2unicoMap, doNotCopy)
-    removeZipFileInDestDir(destDir, zipFileNames)
-
-    return destDir, deco2unicoMap, unzipDirNames
-
-def postProcess(unzipDirNames):
-    removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
 
 ############################################
 # main functions
@@ -680,6 +625,7 @@ if __name__=='__main__':
         print 'PACERs: Unable to access \'%s\'. Please check the assignment_dir again.'%gArgs.assignment_dir
         exit()
 
+    # process each submission
     for i in range(len(submissionTitles)):
         submissionTitle = submissionTitles[i]
 
@@ -769,5 +715,5 @@ if __name__=='__main__':
     generateReport(gArgs, submittedFileNames, \
                     srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
 
-    postProcess(unzipDirNames)
+    removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix
