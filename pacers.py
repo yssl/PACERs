@@ -207,11 +207,28 @@ def getCMakeListsFileContents(projName, srcFileNames):
     return code
 
 # return errorCode, buildLog
-def build(extension, srcRootDir, projName, srcFileNames):
+def build_single_source(srcRootDir, projName, srcFileName):
+    extension = os.path.splitext(srcFileName)[1].lower()
     if extension in gCodeExt:
-        return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileNames)
+        #todo
+        return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileName)
     else:
         return build_else(extension)
+
+# return errorCode, buildLog
+def build_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    os.makedirs(buildDir)
+
+    # build
+    try:
+        #todo
+        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd2), stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        print e
+        return e.returncode, e.output
+    else:
+        return 0, buildLog
 
 def onTimeOut(proc):
     proc.kill()
@@ -226,7 +243,8 @@ def onTimeOut(proc):
 #   1 - forced kill due to timeout
 #   2 - cannot find the executable file (not built yet)
 #   3 - from runcmd_dummy() 
-def run(extension, srcRootDir, projName, userInput, timeOut):
+def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
+    extension = os.path.splitext(srcFileName)[1].lower()
     if extension in gCodeExt:
         runcmd = gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
         runcwd = gCodeExt[extension]['runcwd-func'](srcRootDir, projName)
@@ -250,6 +268,34 @@ def run(extension, srcRootDir, projName, userInput, timeOut):
             return 1, stdoutStr
     else:
         return run_else(extension)
+
+# return exitType, output(stdout) of target program
+# exitType:
+#   0 - normal exit
+#   1 - forced kill due to timeout
+#   2 - cannot find the executable file (not built yet)
+#   3 - from runcmd_dummy() 
+def run_cmake(srcRootDir, projName, userInput, timeOut):
+    runcmd = gCodeExt['.c']['runcmd-func'](srcRootDir, projName)
+    runcwd = gCodeExt['.c']['runcwd-func'](srcRootDir, projName)
+
+    if runcmd == '':
+        return 3, ''
+
+    try:
+        proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+    except OSError as e:
+        return 2, runcmd
+
+    timer = threading.Timer(timeOut, onTimeOut, [proc])
+    timer.start()
+    stdoutStr, stderrStr = proc.communicate(userInput)
+
+    if timer.is_alive():
+        timer.cancel()
+        return 0, stdoutStr
+    else:
+        return 1, stdoutStr
 
 # return errorCode, buildLog
 def build_else(extension):
@@ -390,27 +436,30 @@ def getUnicodeStr(str):
 # functions for each source file extension
 
 # return errorCode, buildLog
-def build_c_cpp(srcRootDir, projName, srcFileNames):
+def build_c_cpp(srcRootDir, projName, srcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
 
     # make CMakeLists.txt
-    cmakeCode = getCMakeListsFileContents(projName, ['../'+name for name in srcFileNames])
+    cmakeCode = getCMakeListsFileContents(projName, ['../'+srcFileName])
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
         f.write(cmakeCode)
 
     # build
     try:
+        #todo
         buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
     else:
         return 0, buildLog
 
+#todo
 def runcmd_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return os.path.abspath(opjoin(buildDir, '%s.exe'%projName))
 
+#todo
 def runcwd_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
@@ -453,9 +502,15 @@ if __name__=='__main__':
     ############################################
     # pre-defined
 
+    opjoin = os.path.join
+    gLogPrefix = '# '
+    gBuildDirPrefix = 'pacers-build-'
+
     env = {'nt':{}, 'posix':{}}
 
+#todo
     env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
+    gBuildCmd2 = 'vcvars32.bat && cmake ../ -G "NMake Makefiles" && nmake'
     env['posix']['build-cmd'] = 'cmake ./; make'
 
     gBuildCmd = env[os.name]['build-cmd']
@@ -473,11 +528,6 @@ if __name__=='__main__':
     gCodeExt['.txt']['build-func'] = build_dummy
     gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
     gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
-
-    opjoin = os.path.join
-    gLogPrefix = '# '
-    gBuildDirPrefix = 'pacers-build-'
-
 
     # submission type
     BEGIN_SUBMISSION_TYPE = 0
@@ -628,86 +678,114 @@ if __name__=='__main__':
     # process each submission
     for i in range(len(submissionTitles)):
         submissionTitle = submissionTitles[i]
-
         print
         print '%s'%gLogPrefix
         print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionTitles), submissionTitle)
 
         submissionType = detectSubmissionType(opjoin(gArgs.assignment_dir, submissionTitle))
-        
         print '%sSubmission type: %s'%(gLogPrefix, gSubmissionDescrption[submissionType])
 
-        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
 
+        # set submissionDir, projNames, projSrcFileNames for each project
+        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
             decodeDestDirPathRecursive(destDir, deco2unicoMap)
 
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
-                srcFileNames = [unico2decoPath(unicode(submissionTitle), deco2unicoMap)]
+                #todo
+                projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
-                srcFileNames = [name for name in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                #todo
+                projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
 
-            for i in range(len(srcFileNames)):
-                srcFileName = srcFileNames[i]
-                projName, ext = os.path.splitext(srcFileName)
-                ext = ext.lower()
+            projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
-                print '%s'%gLogPrefix
-                print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(srcFileNames), projName)
+        elif submissionType==CMAKE_PROJECT:
+            submissionDir = opjoin(destDir, submissionTitle)
+            projNames = [submissionTitle]
 
-                # build
-                if not gArgs.run_only:
-                    print '%sBuilding...'%gLogPrefix
-                    buildRetCode, buildLog = build(ext, submissionDir, projName, [srcFileName])
+            projSrcFileNames = [[]]
+            for root, dirs, files in os.walk(submissionDir):
+                if gBuildDirPrefix not in root:
+                    for name in files:
+                        projSrcFileNames[0].append(opjoin(root, name))
 
-                else:
-                    buildRetCode = 0
-                    buildLog = ''
+        else:
+            continue
 
-                # set userInputs
-                if gArgs.user_dict!=None:
-                    userInputs = None
+        # build & run each project in one submission
+        for i in range(len(projNames)):
+            print '%s'%gLogPrefix
+            print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(projNames), projNames[i])
+
+            # build
+            if not gArgs.run_only:
+                print '%sBuilding...'%gLogPrefix
+
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                    buildRetCode, buildLog = build_single_source(submissionDir, projNames[i], projSrcFileNames[i][0])
+                elif submissionType==CMAKE_PROJECT:
+                    buildRetCode, buildLog = build_cmake(submissionDir, projNames[i])
+
+            else:
+                buildRetCode = 0
+                buildLog = ''
+
+#todo - split
+            # set userInputs
+            if gArgs.user_dict!=None:
+                userInputs = None
+                for key in gArgs.user_dict:
+                    if projNames[i].endswith(key):
+                        userInputs = gArgs.user_dict[key] 
+                        break
+                if userInputs == None:
+                    userInputs = []
                     for key in gArgs.user_dict:
-                        if projName.endswith(key):
-                            userInputs = gArgs.user_dict[key] 
-                            break
-                    if userInputs == None:
-                        userInputs = []
-                        for key in gArgs.user_dict:
-                            userInputs.extend(gArgs.user_dict[key])
-                else:
-                    userInputs = gArgs.user_input
+                        userInputs.extend(gArgs.user_dict[key])
+            else:
+                userInputs = gArgs.user_input
 
-                # run
-                exitTypeList = []
-                stdoutStrList = []
-                userInputList = userInputs
-                if buildRetCode!=0:
-                    print '%sBuild error. Go on a next file.'%gLogPrefix
-                else:
-                    print '%sRunning...'%gLogPrefix
-                    for userInput in userInputs:
-                        exitType, stdoutStr = run(ext, submissionDir, projName, userInput, gArgs.timeout)
-                        exitTypeList.append(exitType)
-                        stdoutStrList.append(stdoutStr)
-                    print '%sDone.'%gLogPrefix
+            # run
+            exitTypeList = []
+            stdoutStrList = []
+            userInputList = userInputs
+            if buildRetCode!=0:
+                print '%sBuild error. Go on a next file.'%gLogPrefix
+            else:
+                print '%sRunning...'%gLogPrefix
+                for userInput in userInputs:
 
-                # add report data
-                submittedFileNames.append(submissionTitle)
+                    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                        exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
+                    elif submissionType==CMAKE_PROJECT:
+                        exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
 
-                # full path -> \hagsaeng01\munje2\munje2.c
+                    exitTypeList.append(exitType)
+                    stdoutStrList.append(stdoutStr)
+                print '%sDone.'%gLogPrefix
+
+            # add report data
+            submittedFileNames.append(submissionTitle)
+
+#todo
+#todo
+#todo
+            # full path -> \hagsaeng01\munje2\munje2.c
+            for srcFileName in projSrcFileNames[i]:
+                print submissionDir, srcFileName
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
                 destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir, '')
                 origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
                 srcFileLists.append([opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir)])
 
-                buildRetCodes.append(buildRetCode)
-                buildLogs.append(buildLog)
-                exitTypeLists.append(exitTypeList)
-                stdoutStrLists.append(stdoutStrList)
-                userInputLists.append(userInputList)
+            buildRetCodes.append(buildRetCode)
+            buildLogs.append(buildLog)
+            exitTypeLists.append(exitTypeList)
+            stdoutStrLists.append(stdoutStrList)
+            userInputLists.append(userInputList)
 
     print
     print '%s'%gLogPrefix
