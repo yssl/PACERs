@@ -12,16 +12,9 @@ Programming Assignments Compiling, Executing, and Reporting system
 ```
 ![example-source](https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png)
 
-*2. Run PACERs.*
-
-On Windows,
-```
-pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"
-```
-On Linux,
-```
-./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
-```
+*2. Run PACERs.*  
+- On Windows: ```pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"```
+- On Linux: ```./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"```
 
 *3. Open the generated HTML report: ```<CWD>/output/c-assignment-2/report-c-assignment-2.html```*  
 You can open the report in MS Word or MS Excel to grade each submission.  
@@ -89,8 +82,8 @@ The tested envirionments for each submission type are shown in the table.
 ./pacers.py test-assignments/cmake-assignment-1
 ```
 You can run all test-assignments at once by the run-test-assignments script.
-- On Windows, ```run-test-assignments.bat```
-- On Linux, ```./run-test-assignments.sh```
+- On Windows: ```run-test-assignments.bat```
+- On Linux: ```./run-test-assignments.sh```
 
 <!--
 If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project so that I could update the "Tested language, compiler(or interpreter), OS" section in this page :).
