@@ -4,3 +4,5 @@ pacers.py test-assignments\c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '1
 pacers.py test-assignments\c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 
 pacers.py test-assignments\txt-assignment
+
+pacers.py test-assignments\cmake-assignment-1
