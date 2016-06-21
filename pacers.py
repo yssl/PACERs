@@ -316,19 +316,16 @@ def getUnicodeStr(str):
 # build functions
 
 # return CMakeLists.txt code
-def getCMakeListsFileContents(projName, srcFileNames):
-    srcFileCount = 0
+def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
     code = ''
     code += 'cmake_minimum_required(VERSION 2.6)\n'
     code += 'project(%s)\n'%projName
     code += 'add_executable(%s.exe '%projName
-    for fileName in srcFileNames:
-        ext = os.path.splitext(fileName)[1].lower()
-        if ext=='.c' or ext=='.cpp':
-            code += '%s '%fileName
-            srcFileCount += 1
+    code += '../%s'%srcFileName
     code += ')\n'
-    return code
+
+    with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
+        f.write(code)
 
 # return errorCode, buildLog
 def build_single_source(srcRootDir, projName, srcFileName):
@@ -344,10 +341,7 @@ def build_single_c_cpp(srcRootDir, projName, srcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
 
-    # make CMakeLists.txt
-    cmakeCode = getCMakeListsFileContents(projName, ['../'+srcFileName])
-    with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
-        f.write(cmakeCode)
+    makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir)
 
     return __cmake_build(buildDir, './')
 
@@ -790,3 +784,5 @@ if __name__=='__main__':
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix
+
+
