@@ -349,7 +349,7 @@ def build_single_c_cpp(srcRootDir, projName, srcFileName):
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
         f.write(cmakeCode)
 
-    return __cmake_build(buildDir)
+    return __cmake_build(buildDir, './')
 
 # return errorCode, buildLog
 def build_single_dummy(srcRootDir, projName, srcFileNames):
@@ -365,13 +365,12 @@ def build_single_else(extension):
 def build_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
-    return __cmake_build(buildDir)
+    return __cmake_build(buildDir, '../')
 
 # return errorCode, buildLog
-def __cmake_build(buildDir):
-    # build
+def __cmake_build(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd), stderr=subprocess.STDOUT, shell=True)
+        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
     else:
@@ -512,14 +511,9 @@ if __name__=='__main__':
     gLogPrefix = '# '
     gBuildDirPrefix = 'pacers-build-'
 
-    env = {'nt':{}, 'posix':{}}
-
-#todo
-    env['nt']['build-cmd'] = 'vcvars32.bat && cmake ./ -G "NMake Makefiles" && nmake'
-    gBuildCmd2 = 'vcvars32.bat && cmake ../ -G "NMake Makefiles" && nmake'
-    env['posix']['build-cmd'] = 'cmake ./; make'
-
-    gBuildCmd = env[os.name]['build-cmd']
+    gOSEnv = {'nt':{}, 'posix':{}}
+    gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
+    gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
 
     gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 
