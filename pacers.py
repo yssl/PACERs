@@ -359,7 +359,7 @@ def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
     code = ''
     code += 'cmake_minimum_required(VERSION 2.6)\n'
     code += 'project(%s)\n'%projName
-    code += 'add_executable(%s.exe '%projName
+    code += 'add_executable(%s '%projName
     code += '../%s'%srcFileName
     code += ')\n'
 
@@ -417,7 +417,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
 
 def runcmd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    return os.path.abspath(opjoin(buildDir, '%s.exe'%projName))
+    return os.path.abspath(opjoin(buildDir, '%s'%projName))
 
 def runcwd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
