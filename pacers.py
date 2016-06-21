@@ -286,7 +286,7 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
                 s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
-            elif exitType == 3:   # from runcmd_dummy()
+            elif exitType == 3:   # from runcmd_single_dummy()
                 pass
             s += '\n'
     return s
@@ -315,6 +315,45 @@ def getUnicodeStr(str):
 ############################################
 # build functions
 
+# return errorCode, buildLog
+
+def build_single_source(srcRootDir, projName, srcFileName):
+    extension = os.path.splitext(srcFileName)[1].lower()
+    if extension in gSourceExt:
+        return gSourceExt[extension]['build-single-source-func'](srcRootDir, projName, srcFileName)
+    else:
+        return build_single_else(extension)
+
+def build_single_c_cpp(srcRootDir, projName, srcFileName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    os.makedirs(buildDir)
+
+    makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir)
+
+    return __build_cmake(buildDir, './')
+
+def build_single_dummy(srcRootDir, projName, srcFileNames):
+    return 0, ''
+
+# return errorCode, buildLog
+def build_single_else(extension):
+    errorMsg = 'Building %s is not supported.'%extension
+    print '%s%s'%(gLogPrefix, errorMsg)
+    return -1, errorMsg 
+
+def build_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    os.makedirs(buildDir)
+    return __build_cmake(buildDir, '../')
+
+def __build_cmake(buildDir, cmakeLocationFromBuildDir):
+    try:
+        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        return e.returncode, e.output
+    else:
+        return 0, buildLog
+
 # return CMakeLists.txt code
 def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
     code = ''
@@ -327,112 +366,42 @@ def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
         f.write(code)
 
-# return errorCode, buildLog
-def build_single_source(srcRootDir, projName, srcFileName):
-    extension = os.path.splitext(srcFileName)[1].lower()
-    if extension in gCodeExt:
-        #todo
-        return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileName)
-    else:
-        return build_single_else(extension)
-
-# return errorCode, buildLog
-def build_single_c_cpp(srcRootDir, projName, srcFileName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    os.makedirs(buildDir)
-
-    makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir)
-
-    return __cmake_build(buildDir, './')
-
-# return errorCode, buildLog
-def build_single_dummy(srcRootDir, projName, srcFileNames):
-    return 0, ''
-
-# return errorCode, buildLog
-def build_single_else(extension):
-    errorMsg = 'Building %s is not supported.'%extension
-    print '%s%s'%(gLogPrefix, errorMsg)
-    return -1, errorMsg 
-
-# return errorCode, buildLog
-def build_cmake(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    os.makedirs(buildDir)
-    return __cmake_build(buildDir, '../')
-
-# return errorCode, buildLog
-def __cmake_build(buildDir, cmakeLocationFromBuildDir):
-    try:
-        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
-    except subprocess.CalledProcessError as e:
-        return e.returncode, e.output
-    else:
-        return 0, buildLog
-
 ############################################
 # run functions
-
-def onTimeOut(proc):
-    proc.kill()
-
-# def kill_windows(proc):
-    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
 
 # return exitType, output(stdout) of target program
 # exitType:
 #   0 - normal exit
 #   1 - forced kill due to timeout
 #   2 - cannot find the executable file (not built yet)
-#   3 - from runcmd_dummy() 
+#   3 - from runcmd_single_dummy() 
+
 def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
     extension = os.path.splitext(srcFileName)[1].lower()
-    if extension in gCodeExt:
-        runcmd = gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
-        runcwd = gCodeExt[extension]['runcwd-func'](srcRootDir, projName)
-
-        if runcmd == '':
-            return 3, ''
-
-        try:
-            proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-        except OSError:
-            return 2, runcmd
-
-        timer = threading.Timer(timeOut, onTimeOut, [proc])
-        timer.start()
-        stdoutStr, stderrStr = proc.communicate(userInput)
-
-        if timer.is_alive():
-            timer.cancel()
-            return 0, stdoutStr
-        else:
-            return 1, stdoutStr
+    if extension in gSourceExt:
+        runcmd = gSourceExt[extension]['runcmd-single-source-func'](srcRootDir, projName)
+        runcwd = gSourceExt[extension]['runcwd-single-source-func'](srcRootDir, projName)
+        return __run(runcmd, runcwd, userInput, timeOut)
     else:
-        return run_else(extension)
+        return run_single_else(extension)
 
-def run_else(extension):
+def run_single_else(extension):
     errorMsg = 'Running %s is not supported.'%extension
     print '%s%s'%(gLogPrefix, errorMsg)
     return 0, errorMsg 
 
-# return exitType, output(stdout) of target program
-# exitType:
-#   0 - normal exit
-#   1 - forced kill due to timeout
-#   2 - cannot find the executable file (not built yet)
-#   3 - from runcmd_dummy() 
 def run_cmake(srcRootDir, projName, userInput, timeOut):
-    runcmd = gCodeExt['.c']['runcmd-func'](srcRootDir, projName)
-    runcwd = gCodeExt['.c']['runcwd-func'](srcRootDir, projName)
+    runcmd = runcmd_single_c_cpp(srcRootDir, projName)
+    runcwd = runcwd_single_c_cpp(srcRootDir, projName)
+    return __run(runcmd, runcwd, userInput, timeOut)
 
+def __run(runcmd, runcwd, userInput, timeOut):
     if runcmd == '':
         return 3, ''
 
     try:
         proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-    except OSError as e:
+    except OSError:
         return 2, runcmd
 
     timer = threading.Timer(timeOut, onTimeOut, [proc])
@@ -445,20 +414,27 @@ def run_cmake(srcRootDir, projName, userInput, timeOut):
     else:
         return 1, stdoutStr
 
-#todo
-def runcmd_c_cpp(srcRootDir, projName):
+
+def runcmd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return os.path.abspath(opjoin(buildDir, '%s.exe'%projName))
 
-#todo
-def runcwd_c_cpp(srcRootDir, projName):
+def runcwd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
 
-def runcmd_dummy(srcRootDir, projName):
+def runcmd_single_dummy(srcRootDir, projName):
     return ''
-def runcwd_dummy(srcRootDir, projName):
+def runcwd_single_dummy(srcRootDir, projName):
     return ''
+
+
+def onTimeOut(proc):
+    proc.kill()
+
+# def kill_windows(proc):
+    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
 
 
 ############################################
@@ -509,19 +485,19 @@ if __name__=='__main__':
     gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
     gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
 
-    gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
+    gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 
-    gCodeExt['.c']['build-func'] = build_single_c_cpp
-    gCodeExt['.c']['runcmd-func'] = runcmd_c_cpp
-    gCodeExt['.c']['runcwd-func'] = runcwd_c_cpp
+    gSourceExt['.c']['build-single-source-func'] = build_single_c_cpp
+    gSourceExt['.c']['runcmd-single-source-func'] = runcmd_single_c_cpp
+    gSourceExt['.c']['runcwd-single-source-func'] = runcwd_single_c_cpp
 
-    gCodeExt['.cpp']['build-func'] = build_single_c_cpp
-    gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
-    gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
+    gSourceExt['.cpp']['build-single-source-func'] = build_single_c_cpp
+    gSourceExt['.cpp']['runcmd-single-source-func'] = runcmd_single_c_cpp
+    gSourceExt['.cpp']['runcwd-single-source-func'] = runcwd_single_c_cpp
 
-    gCodeExt['.txt']['build-func'] = build_single_dummy
-    gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
-    gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
+    gSourceExt['.txt']['build-single-source-func'] = build_single_dummy
+    gSourceExt['.txt']['runcmd-single-source-func'] = runcmd_single_dummy
+    gSourceExt['.txt']['runcwd-single-source-func'] = runcwd_single_dummy
 
     # submission type
     BEGIN_SUBMISSION_TYPE = 0
@@ -640,6 +616,11 @@ if __name__=='__main__':
     if gArgs.user_dict!=None:
         gArgs.user_dict = eval(gArgs.user_dict)
 
+    # check assignment_dir
+    if not os.path.isdir(gArgs.assignment_dir):  
+        print 'PACERs: Unable to access \'%s\'. Please check the assignment_dir again.'%gArgs.assignment_dir
+        exit()
+
     # unzip in .zip files in assignment_dir
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
 
@@ -664,12 +645,8 @@ if __name__=='__main__':
         except OSError:
             pass
 
-    # check assignment_dir and get submission titles
-    try:
-        submissionTitles = [name for name in os.listdir(gArgs.assignment_dir) if os.path.splitext(name)[1].lower()!='.zip']
-    except OSError as e:
-        print 'PACERs: Unable to access \'%s\'. Please check the assignment_dir again.'%gArgs.assignment_dir
-        exit()
+    # get submission titles
+    submissionTitles = [name for name in os.listdir(gArgs.assignment_dir) if os.path.splitext(name)[1].lower()!='.zip']
 
     # process each submission
     for i in range(len(submissionTitles)):
