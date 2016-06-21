@@ -116,7 +116,7 @@ optional arguments:
                         default: .\output
 '''
 
-import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch, glob
+import os, sys, shutil, subprocess, threading, time, argparse, zipfile, fnmatch, glob, re
 import pygments
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
@@ -391,7 +391,7 @@ def run_single_else(extension):
     return 0, errorMsg 
 
 def run_cmake(srcRootDir, projName, userInput, timeOut):
-    runcmd = runcmd_single_c_cpp(srcRootDir, projName)
+    runcmd = runcmd_cmake(srcRootDir, projName)
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
     return __run(runcmd, runcwd, userInput, timeOut)
 
@@ -422,6 +422,16 @@ def runcmd_single_c_cpp(srcRootDir, projName):
 def runcwd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
+
+def runcmd_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    execName = projName
+    with open(opjoin(srcRootDir,'CMakeLists.txt'), 'r') as f:
+        tokens = re.split(' |\n|\(|\)', f.read())
+        for i in range(len(tokens)):
+            if (tokens[i]=='add_executable' or tokens[i]=='ADD_EXECUTABLE') and i < len(tokens)-1:
+                execName = tokens[i+1]
+    return os.path.abspath(opjoin(buildDir, execName))
 
 def runcmd_single_dummy(srcRootDir, projName):
     return ''
