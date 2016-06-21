@@ -34,16 +34,6 @@ Quick start:
     The generated html file is written in unicode (utf-8), so if your browser shows broken characters
     please try to change the text encoding option for the page to unicode or utf-8.
     
-Try other test-assignment files:
-    - C
-        ./pacers.py test-assignments/c-assignment-1
-        ./pacers.py test-assignments/c-assignment-2 --user-input "3 5"
-        ./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
-        ./pacers.py test-assignments/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-        ./pacers.py test-assignments/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-    - txt
-        ./pacers.py test-assignments/txt-assignment-1
-
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
                  [--assignment-alias ASSIGNMENT_ALIAS]

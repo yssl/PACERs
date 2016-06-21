@@ -13,6 +13,7 @@ Programming Assignments Compiling, Executing, and Reporting system
 ![example-source](https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png)
 
 *2. Run PACERs.*
+
 On Windows,
 ```
 pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"
@@ -53,24 +54,25 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 3) Open ```./output/c-assignment-1/report-c-assignment-1.html``` in any web browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
 
-## Supported submission types & language
+## Supported submission types & languages
 The type of each submission is auto-detected by PACERs.
 
 | Submission types | Meaning      |
 |--------------------------|-------------------------|
 | SOURCE_FILES              | The submission has source or resource files without any project files. |
 | SINGLE_SOURCE_FILE        | The submission has a single source or resource file.	 |
+| CMAKE_PROJECT        | The submission has CMakeLists.txt.	 |
 
 The tested envirionments for each submission type are shown in the table.
 
 | Submission types | Language | Tested environment      |
 |-------------------------|--------------------------|-------------------------|
-| SOURCE_FILES or SINGLE_SOURCE_FILE | C                       | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
-| SOURCE_FILES or SINGLE_SOURCE_FILE | C++                     | 	 |
+| SOURCE_FILES or SINGLE_SOURCE_FILE | C & C++                      | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
 | SOURCE_FILES or SINGLE_SOURCE_FILE | text file                     | N/A (just showing the text) |    
+| CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
 
 ## Try other test-assignments
-- C
+- C source file
 ```
 ./pacers.py test-assignments/c-assignment-1
 ./pacers.py test-assignments/c-assignment-2 --user-input "3 5"
@@ -78,10 +80,18 @@ The tested envirionments for each submission type are shown in the table.
 ./pacers.py test-assignments/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ./pacers.py test-assignments/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
 ```
-- txt
+- text file
 ```
 ./pacers.py test-assignments/txt-assignment-1
 ```
+- CMake project
+```
+./pacers.py test-assignments/cmake-assignment-1
+```
+You can run all test-assignments at once by the run-test-assignments script.
+- On Windows, ```run-test-assignments.bat```
+- On Linux, ```./run-test-assignments.sh```
+
 <!--
 If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project so that I could update the "Tested language, compiler(or interpreter), OS" section in this page :).
 -->
