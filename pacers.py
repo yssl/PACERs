@@ -285,7 +285,7 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             elif exitType == 1:   # time out
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
-                s += 'Cannot find %s\n(Maybe not built yet)'%os.path.basename(stdoutStr)
+                s += 'Cannot find %s\n(May not be built yet)'%os.path.basename(stdoutStr)
             elif exitType == 3:   # from runcmd_single_dummy()
                 pass
             s += '\n'
