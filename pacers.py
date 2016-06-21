@@ -189,125 +189,6 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
         shutil.rmtree(d)
 
 ############################################
-# main functions
-
-# return CMakeLists.txt code
-def getCMakeListsFileContents(projName, srcFileNames):
-    srcFileCount = 0
-    code = ''
-    code += 'cmake_minimum_required(VERSION 2.6)\n'
-    code += 'project(%s)\n'%projName
-    code += 'add_executable(%s.exe '%projName
-    for fileName in srcFileNames:
-        ext = os.path.splitext(fileName)[1].lower()
-        if ext=='.c' or ext=='.cpp':
-            code += '%s '%fileName
-            srcFileCount += 1
-    code += ')\n'
-    return code
-
-# return errorCode, buildLog
-def build_single_source(srcRootDir, projName, srcFileName):
-    extension = os.path.splitext(srcFileName)[1].lower()
-    if extension in gCodeExt:
-        #todo
-        return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileName)
-    else:
-        return build_else(extension)
-
-# return errorCode, buildLog
-def build_cmake(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    os.makedirs(buildDir)
-
-    # build
-    try:
-        #todo
-        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd2), stderr=subprocess.STDOUT, shell=True)
-    except subprocess.CalledProcessError as e:
-        return e.returncode, e.output
-    else:
-        return 0, buildLog
-
-def onTimeOut(proc):
-    proc.kill()
-
-# def kill_windows(proc):
-    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
-
-# return exitType, output(stdout) of target program
-# exitType:
-#   0 - normal exit
-#   1 - forced kill due to timeout
-#   2 - cannot find the executable file (not built yet)
-#   3 - from runcmd_dummy() 
-def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
-    extension = os.path.splitext(srcFileName)[1].lower()
-    if extension in gCodeExt:
-        runcmd = gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
-        runcwd = gCodeExt[extension]['runcwd-func'](srcRootDir, projName)
-
-        if runcmd == '':
-            return 3, ''
-
-        try:
-            proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-        except OSError:
-            return 2, runcmd
-
-        timer = threading.Timer(timeOut, onTimeOut, [proc])
-        timer.start()
-        stdoutStr, stderrStr = proc.communicate(userInput)
-
-        if timer.is_alive():
-            timer.cancel()
-            return 0, stdoutStr
-        else:
-            return 1, stdoutStr
-    else:
-        return run_else(extension)
-
-# return exitType, output(stdout) of target program
-# exitType:
-#   0 - normal exit
-#   1 - forced kill due to timeout
-#   2 - cannot find the executable file (not built yet)
-#   3 - from runcmd_dummy() 
-def run_cmake(srcRootDir, projName, userInput, timeOut):
-    runcmd = gCodeExt['.c']['runcmd-func'](srcRootDir, projName)
-    runcwd = gCodeExt['.c']['runcwd-func'](srcRootDir, projName)
-
-    if runcmd == '':
-        return 3, ''
-
-    try:
-        proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
-    except OSError as e:
-        return 2, runcmd
-
-    timer = threading.Timer(timeOut, onTimeOut, [proc])
-    timer.start()
-    stdoutStr, stderrStr = proc.communicate(userInput)
-
-    if timer.is_alive():
-        timer.cancel()
-        return 0, stdoutStr
-    else:
-        return 1, stdoutStr
-
-# return errorCode, buildLog
-def build_else(extension):
-    errorMsg = 'Building %s is not supported.'%extension
-    print '%s%s'%(gLogPrefix, errorMsg)
-    return -1, errorMsg 
-
-def run_else(extension):
-    errorMsg = 'Running %s is not supported.'%extension
-    print '%s%s'%(gLogPrefix, errorMsg)
-    return 0, errorMsg 
-
-############################################
 # functions for report
 
 def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists):
@@ -432,10 +313,34 @@ def getUnicodeStr(str):
     return success, retstr
         
 ############################################
-# functions for each source file extension
+# build functions
+
+# return CMakeLists.txt code
+def getCMakeListsFileContents(projName, srcFileNames):
+    srcFileCount = 0
+    code = ''
+    code += 'cmake_minimum_required(VERSION 2.6)\n'
+    code += 'project(%s)\n'%projName
+    code += 'add_executable(%s.exe '%projName
+    for fileName in srcFileNames:
+        ext = os.path.splitext(fileName)[1].lower()
+        if ext=='.c' or ext=='.cpp':
+            code += '%s '%fileName
+            srcFileCount += 1
+    code += ')\n'
+    return code
 
 # return errorCode, buildLog
-def build_c_cpp(srcRootDir, projName, srcFileName):
+def build_single_source(srcRootDir, projName, srcFileName):
+    extension = os.path.splitext(srcFileName)[1].lower()
+    if extension in gCodeExt:
+        #todo
+        return gCodeExt[extension]['build-func'](srcRootDir, projName, srcFileName)
+    else:
+        return build_single_else(extension)
+
+# return errorCode, buildLog
+def build_single_c_cpp(srcRootDir, projName, srcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
 
@@ -444,14 +349,108 @@ def build_c_cpp(srcRootDir, projName, srcFileName):
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
         f.write(cmakeCode)
 
+    return __cmake_build(buildDir)
+
+# return errorCode, buildLog
+def build_single_dummy(srcRootDir, projName, srcFileNames):
+    return 0, ''
+
+# return errorCode, buildLog
+def build_single_else(extension):
+    errorMsg = 'Building %s is not supported.'%extension
+    print '%s%s'%(gLogPrefix, errorMsg)
+    return -1, errorMsg 
+
+# return errorCode, buildLog
+def build_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    os.makedirs(buildDir)
+    return __cmake_build(buildDir)
+
+# return errorCode, buildLog
+def __cmake_build(buildDir):
     # build
     try:
-        #todo
         buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gBuildCmd), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
     else:
         return 0, buildLog
+
+############################################
+# run functions
+
+def onTimeOut(proc):
+    proc.kill()
+
+# def kill_windows(proc):
+    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
+
+# return exitType, output(stdout) of target program
+# exitType:
+#   0 - normal exit
+#   1 - forced kill due to timeout
+#   2 - cannot find the executable file (not built yet)
+#   3 - from runcmd_dummy() 
+def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
+    extension = os.path.splitext(srcFileName)[1].lower()
+    if extension in gCodeExt:
+        runcmd = gCodeExt[extension]['runcmd-func'](srcRootDir, projName)
+        runcwd = gCodeExt[extension]['runcwd-func'](srcRootDir, projName)
+
+        if runcmd == '':
+            return 3, ''
+
+        try:
+            proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        except OSError:
+            return 2, runcmd
+
+        timer = threading.Timer(timeOut, onTimeOut, [proc])
+        timer.start()
+        stdoutStr, stderrStr = proc.communicate(userInput)
+
+        if timer.is_alive():
+            timer.cancel()
+            return 0, stdoutStr
+        else:
+            return 1, stdoutStr
+    else:
+        return run_else(extension)
+
+def run_else(extension):
+    errorMsg = 'Running %s is not supported.'%extension
+    print '%s%s'%(gLogPrefix, errorMsg)
+    return 0, errorMsg 
+
+# return exitType, output(stdout) of target program
+# exitType:
+#   0 - normal exit
+#   1 - forced kill due to timeout
+#   2 - cannot find the executable file (not built yet)
+#   3 - from runcmd_dummy() 
+def run_cmake(srcRootDir, projName, userInput, timeOut):
+    runcmd = gCodeExt['.c']['runcmd-func'](srcRootDir, projName)
+    runcwd = gCodeExt['.c']['runcwd-func'](srcRootDir, projName)
+
+    if runcmd == '':
+        return 3, ''
+
+    try:
+        proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+    except OSError as e:
+        return 2, runcmd
+
+    timer = threading.Timer(timeOut, onTimeOut, [proc])
+    timer.start()
+    stdoutStr, stderrStr = proc.communicate(userInput)
+
+    if timer.is_alive():
+        timer.cancel()
+        return 0, stdoutStr
+    else:
+        return 1, stdoutStr
 
 #todo
 def runcmd_c_cpp(srcRootDir, projName):
@@ -463,9 +462,6 @@ def runcwd_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     return buildDir
 
-# return errorCode, buildLog
-def build_dummy(srcRootDir, projName, srcFileNames):
-    return 0, ''
 def runcmd_dummy(srcRootDir, projName):
     return ''
 def runcwd_dummy(srcRootDir, projName):
@@ -527,15 +523,15 @@ if __name__=='__main__':
 
     gCodeExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 
-    gCodeExt['.c']['build-func'] = build_c_cpp
+    gCodeExt['.c']['build-func'] = build_single_c_cpp
     gCodeExt['.c']['runcmd-func'] = runcmd_c_cpp
     gCodeExt['.c']['runcwd-func'] = runcwd_c_cpp
 
-    gCodeExt['.cpp']['build-func'] = build_c_cpp
+    gCodeExt['.cpp']['build-func'] = build_single_c_cpp
     gCodeExt['.cpp']['runcmd-func'] = runcmd_c_cpp
     gCodeExt['.cpp']['runcwd-func'] = runcwd_c_cpp
 
-    gCodeExt['.txt']['build-func'] = build_dummy
+    gCodeExt['.txt']['build-func'] = build_single_dummy
     gCodeExt['.txt']['runcmd-func'] = runcmd_dummy
     gCodeExt['.txt']['runcwd-func'] = runcwd_dummy
 
