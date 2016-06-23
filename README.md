@@ -93,7 +93,7 @@ If you checked all the test-assignments are working correctly in your PC, please
 ```
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
-                 [--assignment-alias ASSIGNMENT_ALIAS]
+                 [--build-only] [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR]
                  assignment_dir
 
@@ -150,6 +150,7 @@ optional arguments:
                         does not require build process, PACERs
                         automatically skips the build process without
                         specifying this option.
+  --build-only          When specified, build each target program without running.
   --assignment-alias ASSIGNMENT_ALIAS
                         Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory

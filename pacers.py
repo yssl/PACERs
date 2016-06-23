@@ -36,7 +36,7 @@ Quick start:
     
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
-                 [--assignment-alias ASSIGNMENT_ALIAS]
+                 [--build-only] [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR]
                  assignment_dir
 
@@ -93,6 +93,7 @@ optional arguments:
                         does not require build process, PACERs
                         automatically skips the build process without
                         specifying this option.
+  --build-only          When specified, build each target program without running.
   --assignment-alias ASSIGNMENT_ALIAS
                         Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
@@ -204,8 +205,9 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     User dict: %s
     Timeout: %f
     Run only: %d
+    Build only: %d
 </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
-        args.user_input, args.user_dict, args.timeout, args.run_only)
+        args.user_input, args.user_dict, args.timeout, args.run_only, args.build_only)
 
     # main table
     htmlCode += '''<table border=1>
@@ -268,11 +270,12 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             userInput = userInputList[i]
             exitType = exitTypeList[i]
             stdoutStr = stdoutStrList[i]
-            s += '(user input: %s)\n'%userInput
             if exitType == 0:
+                s += '(user input: %s)\n'%userInput
                 success, unistr = getUnicodeStr(stdoutStr)
                 s += unistr
             elif exitType == 1:   # time out
+                s += '(user input: %s)\n'%userInput
                 s += 'Timeout'
             elif exitType == 2:   # no executable exists
                 s += 'Cannot find %s\n(May not be built yet)'%os.path.basename(stdoutStr)
@@ -526,45 +529,45 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(prog='pacers.py', description='Programming Assignments Compiling, Executing, and Reporting system', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('assignment_dir',
                         help='''A direcory that has submitted files.
-    In assignment_dir, one source file runs one program. 
-    Each submission might have only one source file or a 
-    zip file or a directory including multiple source files''')
+In assignment_dir, one source file runs one program. 
+Each submission might have only one source file or a 
+zip file or a directory including multiple source files''')
     parser.add_argument('--user-input', nargs='+', default=[''],
                         help='''Specify USER_INPUT to be sent to the stdin of target
-    programs. This option should be located after
-    assignment_dir if no other optional arguments are
-    given. Two types of user input are available.
-    default is an empty string.
+programs. This option should be located after
+assignment_dir if no other optional arguments are
+given. Two types of user input are available.
+default is an empty string.
 
-    | Type     | Example                  | Example's meaning                          |
-    |----------|--------------------------|--------------------------------------------|
-    | Single   | --user-input 15          | run each source file with input 15         |
-    | value    | --user-input "hello"     | run each source file with input "hello"    |
-    |          | --user-input "1 2"       | run each source file with input "1 2"      |
-    |----------|--------------------------|--------------------------------------------|
-    | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
-    | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+| Type     | Example                  | Example's meaning                          |
+|----------|--------------------------|--------------------------------------------|
+| Single   | --user-input 15          | run each source file with input 15         |
+| value    | --user-input "hello"     | run each source file with input "hello"    |
+|          | --user-input "1 2"       | run each source file with input "1 2"      |
+|----------|--------------------------|--------------------------------------------|
+| Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
+| values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
 
-    ''')
+''')
     parser.add_argument('--user-dict', default=None,
-                        help='''Specify USER_DICT to be sent to the stdin of target
-    programs. Argument should be python dictionary 
-    representation. Each 'key' of the dictionary item
-    is 'suffix' that should match with the last parts of 
-    each source file name. 'value' is user input for 
-    those matched source files.
-    If both --user-input and --user-dict are specified,
-    only --user-dict is used.
+                    help='''Specify USER_DICT to be sent to the stdin of target
+programs. Argument should be python dictionary 
+representation. Each 'key' of the dictionary item
+is 'suffix' that should match with the last parts of 
+each source file name. 'value' is user input for 
+those matched source files.
+If both --user-input and --user-dict are specified,
+only --user-dict is used.
 
-    Example:
-    --user-dict {'1':['1','2'], '2':['2,'5','7']}
+Example:
+--user-dict {'1':['1','2'], '2':['2,'5','7']}
 
-    runs a source file whose name ends with '1'   
-    (e.g. prob1.c) 2 times (with '10', '20')     
-    and run a source file whose name ends with   
-    '2' (e.g. prob2.c) 3 times (with '2','5','7').
+runs a source file whose name ends with '1'   
+(e.g. prob1.c) 2 times (with '10', '20')     
+and run a source file whose name ends with   
+'2' (e.g. prob2.c) 3 times (with '2','5','7').
 
-    ''')
+''')
     # parser.add_argument('--file-layout', default=0, type=int,
                         # help='''indicates file layout in the assignment_dir. \ndefault: 0
     # 0 - one source file runs one program. 
@@ -572,26 +575,28 @@ if __name__=='__main__':
     # zip file or a directory including multiple source files.''')
     parser.add_argument('--timeout', default=2., type=float,
                         help='''Each target program is killed when TIMEOUT(seconds)
-    is reached. Useful for infinite loop cases.
-    default: 2.0''')
+is reached. Useful for infinite loop cases.
+default: 2.0''')
     parser.add_argument('--run-only', action='store_true',
-                        help='''When specified, run each target program without build.
-    You may use it when you want change USER_INPUT without
-    build. if the programming language of source files 
-    does not require build process, PACERs 
-    automatically skips the build process without 
-    specifying this option.''')
+                    help='''When specified, run each target program without build.
+You may use it when you want change USER_INPUT without
+build. if the programming language of source files 
+does not require build process, PACERs 
+automatically skips the build process without 
+specifying this option.''')
+    parser.add_argument('--build-only', action='store_true',
+                        help='''When specified, build each target program without running.''')
     parser.add_argument('--assignment-alias',
                         help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
-    ASSIGNMENT_ALIAS is used when making a sub-directory 
-    in OUTPUT_DIR and the final report file. 
-    default: "basename" of assignment_dir (bar if 
-    assignment_dir is /foo/bar/).''')
+ASSIGNMENT_ALIAS is used when making a sub-directory 
+in OUTPUT_DIR and the final report file. 
+default: "basename" of assignment_dir (bar if 
+assignment_dir is /foo/bar/).''')
     parser.add_argument('--output-dir', default=opjoin('.', 'output'),
                         help='''Specify OUTPUT_DIR in which the final report file 
-    and build output files to be generated. 
-    Avoid including hangul characters in its full path.
-    default: %s'''%opjoin('.', 'output'))
+and build output files to be generated. 
+Avoid including hangul characters in its full path.
+default: %s'''%opjoin('.', 'output'))
 
     gArgs = parser.parse_args()
 
@@ -714,23 +719,28 @@ if __name__=='__main__':
                 userInputs = gArgs.user_input
 
             # run
-            exitTypeList = []
-            stdoutStrList = []
-            userInputList = userInputs
-            if buildRetCode!=0:
-                print '%sBuild error. Go on a next file.'%gLogPrefix
+            if not gArgs.build_only:
+                exitTypeList = []
+                stdoutStrList = []
+                userInputList = userInputs
+                if buildRetCode!=0:
+                    print '%sBuild error. Go on to the next file.'%gLogPrefix
+                else:
+                    print '%sRunning...'%gLogPrefix
+                    for userInput in userInputs:
+
+                        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                            exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
+                        elif submissionType==CMAKE_PROJECT:
+                            exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
+
+                        exitTypeList.append(exitType)
+                        stdoutStrList.append(stdoutStr)
+                    print '%sDone.'%gLogPrefix
             else:
-                print '%sRunning...'%gLogPrefix
-                for userInput in userInputs:
-
-                    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                        exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
-                    elif submissionType==CMAKE_PROJECT:
-                        exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
-
-                    exitTypeList.append(exitType)
-                    stdoutStrList.append(stdoutStr)
-                print '%sDone.'%gLogPrefix
+                exitTypeList = [3]
+                stdoutStrList = ['']
+                userInputList = ['']
 
             # add report data
             submittedFileNames.append(submissionTitle)
