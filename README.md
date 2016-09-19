@@ -54,7 +54,8 @@ The type of each submission is auto-detected by PACERs.
 |--------------------------|-------------------------|
 | SOURCE_FILES              | The submission has source or resource files without any project files. |
 | SINGLE_SOURCE_FILE        | The submission has a single source or resource file.	 |
-| CMAKE_PROJECT        | The submission has CMakeLists.txt.	 |
+| CMAKE_PROJECT             | The submission has CMakeLists.txt.	 |
+| VISUAL_CPP_PROJECT        | The submission has *.vcxproj or *.vcproj.	 |
 
 The tested envirionments for each submission type are shown in the table.
 
@@ -63,6 +64,7 @@ The tested envirionments for each submission type are shown in the table.
 | SOURCE_FILES or SINGLE_SOURCE_FILE | C & C++                      | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
 | SOURCE_FILES or SINGLE_SOURCE_FILE | text file                     | N/A (just showing the text) |    
 | CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
+| VISUAL_CPP_PROJECT | C & C++                     | Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
 
 ## Try other test-assignments
 - C source file
@@ -80,6 +82,10 @@ The tested envirionments for each submission type are shown in the table.
 - CMake project
 ```
 ./pacers.py test-assignments/cmake-assignment-1
+```
+- Visual C++ project (Windows only)
+```
+./pacers.py test-assignments/vcxproj-assignment-1
 ```
 You can run all test-assignments at once by the run-test-assignments script.
 - On Windows: ```run-test-assignments.bat```

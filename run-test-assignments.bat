@@ -6,3 +6,5 @@ pacers.py test-assignments\c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '1
 pacers.py test-assignments\txt-assignment-1
 
 pacers.py test-assignments\cmake-assignment-1
+
+pacers.py test-assignments\vcxproj-assignment-1

@@ -307,9 +307,10 @@ def getUnicodeStr(str):
         
 ############################################
 # build functions
-
 # return errorCode, buildLog
 
+####
+# build_single functions
 def build_single_source(srcRootDir, projName, srcFileName):
     extension = os.path.splitext(srcFileName)[1].lower()
     if extension in gSourceExt:
@@ -328,12 +329,13 @@ def build_single_c_cpp(srcRootDir, projName, srcFileName):
 def build_single_dummy(srcRootDir, projName, srcFileNames):
     return 0, ''
 
-# return errorCode, buildLog
 def build_single_else(extension):
     errorMsg = 'Building %s is not supported.'%extension
     print '%s%s'%(gLogPrefix, errorMsg)
     return -1, errorMsg 
 
+####
+# build_cmake functions
 def build_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
@@ -358,6 +360,28 @@ def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
 
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
         f.write(code)
+
+####
+# build_vcxproj functions
+def build_vcxproj(srcRootDir, projName):
+    # do not need to make buildDir. msbuild.exe automatically makes the outdir.
+    # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    # os.makedirs(buildDir)
+    
+    vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
+    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcxproj')))
+    if len(vcxprojNames)==0:
+        errorMsg = 'Cannot find .vcxproj or .vcproj file.'
+        print '%s%s'%(gLogPrefix, errorMsg)
+        return -1, errorMsg 
+
+    try:
+        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir=%s'
+                %(vcxprojNames[0], gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        return e.returncode, e.output
+    else:
+        return 0, buildLog
 
 ############################################
 # run functions
@@ -388,6 +412,12 @@ def run_cmake(srcRootDir, projName, userInput, timeOut):
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
     return __run(runcmd, runcwd, userInput, timeOut)
 
+def run_vcxproj(srcRootDir, projName, userInput, timeOut):
+    runcmd = runcmd_vcxproj(srcRootDir, projName)
+    print runcmd
+    runcwd = runcwd_single_c_cpp(srcRootDir, projName)
+    return __run(runcmd, runcwd, userInput, timeOut)
+
 def __run(runcmd, runcwd, userInput, timeOut):
     if runcmd == '':
         return 3, ''
@@ -413,8 +443,12 @@ def runcmd_single_c_cpp(srcRootDir, projName):
     return os.path.abspath(opjoin(buildDir, '%s'%projName))
 
 def runcwd_single_c_cpp(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    return buildDir
+    # run output executable from srcRootDir
+    return srcRootDir
+
+    # run output executable from buildDir
+    # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    # return buildDir
 
 def runcmd_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -422,8 +456,15 @@ def runcmd_cmake(srcRootDir, projName):
     with open(opjoin(srcRootDir,'CMakeLists.txt'), 'r') as f:
         tokens = re.split(' |\n|\(|\)', f.read())
         for i in range(len(tokens)):
-            if (tokens[i]=='add_executable' or tokens[i]=='ADD_EXECUTABLE') and i < len(tokens)-1:
+            if tokens[i].lower()=='add_executable' and i < len(tokens)-1:
                 execName = tokens[i+1]
+    return os.path.abspath(opjoin(buildDir, execName))
+
+def runcmd_vcxproj(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
+    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcxproj')))
+    execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
     return os.path.abspath(opjoin(buildDir, execName))
 
 def runcmd_single_dummy(srcRootDir, projName):
@@ -505,20 +546,20 @@ if __name__=='__main__':
     # submission type
     BEGIN_SUBMISSION_TYPE = 0
     CMAKE_PROJECT         = 1
-    VISUAL_STUDIO_PROJECT = 2
+    VISUAL_CPP_PROJECT    = 2
     SOURCE_FILES          = 3
     SINGLE_SOURCE_FILE    = 4
     END_SUBMISSION_TYPE   = 5
 
     gSubmissionDescrption                        = {}
     gSubmissionDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
-    gSubmissionDescrption[VISUAL_STUDIO_PROJECT] = 'VISUAL_STUDIO_PROJECT - the submission has .vcxproj or .vcproj.'
+    gSubmissionDescrption[VISUAL_CPP_PROJECT] = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
     gSubmissionDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
     gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
 
     gSubmissionPatterns                        = {}
     gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
-    gSubmissionPatterns[VISUAL_STUDIO_PROJECT] = ['*.vcxproj', '*.vcproj']
+    gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
     gSubmissionPatterns[SOURCE_FILES]          = ['*']
     gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
 
@@ -681,7 +722,10 @@ default: %s'''%opjoin('.', 'output'))
 
             projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
-        elif submissionType==CMAKE_PROJECT:
+        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+            # cmake does not allow hangul characters in source file paths,
+            # and visual cpp allow hangul chracters in source file paths,
+            # so both do not need unidecoding file paths.
             submissionDir = opjoin(destDir, submissionTitle)
             projNames = [submissionTitle]
 
@@ -692,6 +736,7 @@ default: %s'''%opjoin('.', 'output'))
                         projSrcFileNames[0].append(opjoin(root, name).replace(submissionDir+os.sep, ''))
 
         else:
+            print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionDescrption[submissionType])
             continue
 
         # build & run each project in one submission
@@ -707,6 +752,8 @@ default: %s'''%opjoin('.', 'output'))
                     buildRetCode, buildLog = build_single_source(submissionDir, projNames[i], projSrcFileNames[i][0])
                 elif submissionType==CMAKE_PROJECT:
                     buildRetCode, buildLog = build_cmake(submissionDir, projNames[i])
+                elif submissionType==VISUAL_CPP_PROJECT:
+                    buildRetCode, buildLog = build_vcxproj(submissionDir, projNames[i])
 
             else:
                 buildRetCode = 0
@@ -733,6 +780,8 @@ default: %s'''%opjoin('.', 'output'))
                             exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
                         elif submissionType==CMAKE_PROJECT:
                             exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
+                        elif submissionType==VISUAL_CPP_PROJECT:
+                            exitType, stdoutStr = run_vcxproj(submissionDir, projNames[i], userInput, gArgs.timeout)
 
                         exitTypeList.append(exitType)
                         stdoutStrList.append(stdoutStr)
