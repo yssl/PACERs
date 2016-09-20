@@ -369,14 +369,14 @@ def build_vcxproj(srcRootDir, projName):
     # os.makedirs(buildDir)
     
     vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
-    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcxproj')))
+    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcproj')))
     if len(vcxprojNames)==0:
         errorMsg = 'Cannot find .vcxproj or .vcproj file.'
         print '%s%s'%(gLogPrefix, errorMsg)
         return -1, errorMsg 
 
     try:
-        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir=%s'
+        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir="%s"'
                 %(vcxprojNames[0], gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
@@ -414,7 +414,6 @@ def run_cmake(srcRootDir, projName, userInput, timeOut):
 
 def run_vcxproj(srcRootDir, projName, userInput, timeOut):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
-    print runcmd
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
     return __run(runcmd, runcwd, userInput, timeOut)
 
@@ -691,6 +690,9 @@ default: %s'''%opjoin('.', 'output'))
         except OSError:
             pass
 
+    # unidecode destDir
+    decodeDestDirPathRecursive(destDir, deco2unicoMap)
+
     # get submission titles
     submissionTitles = [name for name in os.listdir(gArgs.assignment_dir) if os.path.splitext(name)[1].lower()!='.zip']
 
@@ -710,8 +712,6 @@ default: %s'''%opjoin('.', 'output'))
         # projNames : ['proj1', 'proj2']
         # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            decodeDestDirPathRecursive(destDir, deco2unicoMap)
-
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
                 projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
@@ -723,10 +723,7 @@ default: %s'''%opjoin('.', 'output'))
             projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
         elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
-            # cmake does not allow hangul characters in source file paths,
-            # and visual cpp allow hangul chracters in source file paths,
-            # so both do not need unidecoding file paths.
-            submissionDir = opjoin(destDir, submissionTitle)
+            submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
             projNames = [submissionTitle]
 
             projSrcFileNames = [[]]
@@ -799,10 +796,10 @@ default: %s'''%opjoin('.', 'output'))
             for srcFileName in projSrcFileNames[i]:
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
                 destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
-                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                    origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-                else:
-                    origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
+
+                # deco2unico src file paths to properly display in the report
+                origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+
                 projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
 
             srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
