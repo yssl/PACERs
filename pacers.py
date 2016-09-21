@@ -484,7 +484,7 @@ def onTimeOut(proc):
 # project type detection
 
 def detectSubmissionType(submissionPath):
-    if os.path.isdir(opjoin(gArgs.assignment_dir, submissionTitle)):
+    if os.path.isdir(submissionPath):
         # print 'dir'
         for submissionType in range(BEGIN_SUBMISSION_TYPE+1, END_SUBMISSION_TYPE):
             for pattern in gSubmissionPatterns[submissionType]:
@@ -694,7 +694,12 @@ default: %s'''%opjoin('.', 'output'))
     decodeDestDirPathRecursive(destDir, deco2unicoMap)
 
     # get submission titles
-    submissionTitles = [name for name in os.listdir(gArgs.assignment_dir) if os.path.splitext(name)[1].lower()!='.zip']
+    submissionTitles = []
+    for name in os.listdir(gArgs.assignment_dir):
+        # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
+        if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
+            continue
+        submissionTitles.append(name)
 
     # process each submission
     for i in range(len(submissionTitles)):
