@@ -242,10 +242,33 @@ def getReportFilePath(args):
     return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s.html'%args.assignment_alias)
 
 def getSourcesTable(srcPaths):
-    htmlCode = ''
+    renderedSrcPaths = []
+    renderedSource = []
+    failedMsgSrcPathMap = {}
+
     for srcPath in srcPaths:
-        htmlCode += '%s\n'%srcPath.replace(gArgs.assignment_dir, '')
-        htmlCode += '%s\n'%getRenderedSource(srcPath)
+        success, text = getRenderedSource(srcPath)
+        if success:
+            renderedSrcPaths.append(srcPath)
+            renderedSource.append(text)
+        else:
+            if text not in failedMsgSrcPathMap:
+                failedMsgSrcPathMap[text] = []
+            failedMsgSrcPathMap[text].append(srcPath)
+
+    htmlCode = ''
+
+    # add rendered source file text
+    for i in range(len(renderedSrcPaths)):
+        htmlCode += '<b>%s</b>'%renderedSrcPaths[i].replace(gArgs.assignment_dir, '')
+        htmlCode += '%s'%renderedSource[i]
+
+    # add failed source file paths
+    for errorMsg in failedMsgSrcPathMap:
+        htmlCode += '<b>%s</b><br></br>'%errorMsg
+        for failedSrcPath in failedMsgSrcPathMap[errorMsg]:
+            htmlCode += '%s<br></br>'%failedSrcPath.replace(gArgs.assignment_dir, '')
+
     return htmlCode 
 
 def getRenderedSource(srcPath):
@@ -256,10 +279,11 @@ def getRenderedSource(srcPath):
             try:
                 lexer = guess_lexer_for_filename(srcPath, unistr)
             except pygments.util.ClassNotFound as e:
-                return '<p></p>'+'<pre>'+format(e)+'</pre>'
-            return highlight(unistr, lexer, HtmlFormatter())
+                # return '<p></p>'+'<pre>'+format(e)+'</pre>'
+                return False, 'No lexer found for:'
+            return True, highlight(unistr, lexer, HtmlFormatter())
         else:
-            return '<p></p>'+'<pre>'+unistr+'</pre>'
+            return False, '<p></p>'+'<pre>'+unistr+'</pre>'
 
 def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
