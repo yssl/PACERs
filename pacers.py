@@ -126,37 +126,47 @@ elif os.name=='posix':
 # utility functions
 def unico2decoPath(unicoPath, deco2unicoMap):
     unicoTokens = os.path.normpath(unicoPath).split(os.sep)
-    hasExt = '.' in unicoTokens[-1]
-    if hasExt:
-        name, ext = os.path.splitext(unicoTokens[-1])
-        unicoTokens[-1] = name
+
     decoTokens = []
     for unicoToken in unicoTokens:
+        hasExt = '.' in unicoToken
+        if hasExt:
+            name, ext = os.path.splitext(unicoToken)
+            unicoToken = name
+
         decoToken = unidecode(unicoToken)
         decoToken = decoToken.replace(' ', '_')
         decoToken = decoToken.replace('(', '_')
         decoToken = decoToken.replace(')', '_')
         if decoToken not in deco2unicoMap:
             deco2unicoMap[decoToken] = unicoToken
+
+        if hasExt:
+            decoToken += ext
+
         decoTokens.append(decoToken)
+
     decoPath = reduce(os.path.join, decoTokens)
-    if hasExt:
-        decoPath += ext
     return decoPath
 
 def deco2unicoPath(decoPath, deco2unicoMap):
     decoTokens = os.path.normpath(decoPath).split(os.sep)
-    hasExt = '.' in decoTokens[-1]
-    if hasExt:
-        name, ext = os.path.splitext(decoTokens[-1])
-        decoTokens[-1] = name
+
     unicoTokens = []
     for decoToken in decoTokens:
+        hasExt = '.' in decoToken
+        if hasExt:
+            name, ext = os.path.splitext(decoToken)
+            decoToken = name
+
         unicoToken = deco2unicoMap[decoToken]
+
+        if hasExt:
+            unicoToken += ext
+
         unicoTokens.append(unicoToken)
+
     unicoPath = reduce(os.path.join, unicoTokens)
-    if hasExt:
-        unicoPath += ext
     return unicoPath
 
 ############################################
@@ -309,9 +319,14 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
     return s
  
 def getUnicodeStr(str):
-    encodingStrs = ['utf-8', sys.getfilesystemencoding(), '(chardet)']
-    detected = chardet.detect(str)
     success = True
+    encodingStrs = ['utf-8', sys.getfilesystemencoding(), '(chardet)']
+    try:
+        detected = chardet.detect(str)
+    except ValueError as e:
+        retstr = format(e)
+        success = False
+        return success, retstr
 
     for encodingStr in encodingStrs:
         if encodingStr=='(chardet)':
@@ -400,8 +415,10 @@ def build_vcxproj(srcRootDir, projName):
         return -1, errorMsg 
 
     try:
-        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir="%s"'
-                %(vcxprojNames[0], gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
+        print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s";IntDir="%s"'\
+                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
+        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir="%s/";IntDir="%s/"'
+                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
     else:
@@ -519,7 +536,31 @@ def detectSubmissionType(submissionPath):
         # print 'file'
         return SINGLE_SOURCE_FILE
 
-def decodeDestDirPathRecursive(destDir, deco2unicoMap):
+def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
+    origSubDir = opjoin(destDir, submissionTitle)
+    newSubDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+
+    # if --run-only mode, os.rename() will throw an exception, which is expected behavior.
+    try:
+        os.rename(origSubDir, newSubDir)
+    except:
+        pass
+
+    for root, dirs, files in os.walk(newSubDir, topdown=False):
+        for name in dirs:
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            try:
+                os.rename(opjoin(root, name), opjoin(root, decoName))
+            except:
+                pass
+        for name in files:
+            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            try:
+                os.rename(opjoin(root, name), opjoin(root, decoName))
+            except:
+                pass
+
+def decodeDestDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
     for root, dirs, files in os.walk(destDir, topdown=False):
         for name in dirs:
             decoName = unico2decoPath(unicode(name), deco2unicoMap)
@@ -714,9 +755,6 @@ default: %s'''%opjoin('.', 'output'))
         except OSError:
             pass
 
-    # unidecode destDir
-    decodeDestDirPathRecursive(destDir, deco2unicoMap)
-
     # get submission titles
     submissionTitles = []
     for name in os.listdir(gArgs.assignment_dir):
@@ -741,18 +779,29 @@ default: %s'''%opjoin('.', 'output'))
         # projNames : ['proj1', 'proj2']
         # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+            # unidecode destSubmissionDir
+            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
                 projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
-                projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                projSrcFileNames = []
+                for root, dirs, files in os.walk(submissionDir):
+                    if gBuildDirPrefix not in root:
+                        for name in files:
+                            projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
 
             projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
         elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
-            submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+            # No need of decodeDestSubmissionDirPathRecursive(), 
+            # because CMAKE_PROJECT should not include multibyte characters in its file paths already (due to cmake restriction)
+            # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
+            submissionDir = opjoin(destDir, submissionTitle)
             projNames = [submissionTitle]
 
             projSrcFileNames = [[]]
@@ -826,10 +875,15 @@ default: %s'''%opjoin('.', 'output'))
                 destSrcFilePath = opjoin(submissionDir, srcFileName)
                 destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
 
-                # deco2unico src file paths to properly display in the report
-                origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-
-                projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
+                if gArgs.run_only:
+                    projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
+                else:
+                    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                        # deco2unico src file paths to properly display in the report
+                        origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                    else:
+                        origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
+                    projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
 
             srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
             buildRetCodes.append(buildRetCode)
