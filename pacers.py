@@ -409,15 +409,19 @@ def build_vcxproj(srcRootDir, projName):
     
     vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
     vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcproj')))
+    for i in range(len(vcxprojNames)-1, -1, -1):
+        if os.path.isdir(vcxprojNames[i]):
+            del vcxprojNames[i]
+
     if len(vcxprojNames)==0:
         errorMsg = 'Cannot find .vcxproj or .vcproj file.'
         print '%s%s'%(gLogPrefix, errorMsg)
         return -1, errorMsg 
 
     try:
-        print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s";IntDir="%s"'\
-                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
-        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe %s /property:OutDir="%s/";IntDir="%s/"'
+        # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
+                # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
+        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
                 %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output
