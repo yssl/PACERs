@@ -94,6 +94,7 @@ optional arguments:
                         automatically skips the build process without
                         specifying this option.
   --build-only          When specified, build each target program without running.
+  --no-report           When specified, the final report is not generated.
   --assignment-alias ASSIGNMENT_ALIAS
                         Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
@@ -695,6 +696,8 @@ automatically skips the build process without
 specifying this option.''')
     parser.add_argument('--build-only', action='store_true',
                         help='''When specified, build each target program without running.''')
+    parser.add_argument('--no-report', action='store_true',
+                        help='''When specified, the final report is not generated.''')
     parser.add_argument('--assignment-alias',
                         help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
 ASSIGNMENT_ALIAS is used when making a sub-directory 
@@ -898,9 +901,11 @@ default: %s'''%opjoin('.', 'output'))
 
     print
     print '%s'%gLogPrefix
-    print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
-    generateReport(gArgs, submittedFileNames, \
-                    srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
+
+    if not gArgs.no_report:
+        print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
+        generateReport(gArgs, submittedFileNames, \
+                        srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix

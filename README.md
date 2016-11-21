@@ -157,6 +157,7 @@ optional arguments:
                         automatically skips the build process without
                         specifying this option.
   --build-only          When specified, build each target program without running.
+  --no-report           When specified, the final report is not generated.
   --assignment-alias ASSIGNMENT_ALIAS
                         Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
