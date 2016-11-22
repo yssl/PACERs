@@ -472,16 +472,23 @@ def __run(runcmd, runcwd, userInput, timeOut):
     except OSError:
         return 2, runcmd
 
-    timer = threading.Timer(timeOut, onTimeOut, [proc])
-    timer.start()
-    stdoutStr, stderrStr = proc.communicate(userInput)
+    if timeOut != 0:
+        # call onTimeOut() after timeOut seconds
+        timer = threading.Timer(timeOut, onTimeOut, [proc])
+        timer.start()
 
-    if timer.is_alive():
-        timer.cancel()
-        return 0, stdoutStr
+        # block until proc is finished
+        stdoutStr, stderrStr = proc.communicate(userInput)
+
+        if timer.is_alive():    # if proc has finished without calling onTimeOut()
+            timer.cancel()
+            return 0, stdoutStr
+        else:
+            return 1, stdoutStr # 1 means 'forced kill due to timeout'
     else:
-        return 1, stdoutStr
-
+        # block until proc is finished
+        stdoutStr, stderrStr = proc.communicate(userInput)
+        return 0, stdoutStr
 
 def runcmd_single_c_cpp(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -686,6 +693,8 @@ and run a source file whose name ends with
     parser.add_argument('--timeout', default=2., type=float,
                         help='''Each target program is killed when TIMEOUT(seconds)
 is reached. Useful for infinite loop cases.
+Setting zero seconds(--timeout 0) means unlimited execution time
+for each target program, which can be useful for GUI applications.
 default: 2.0''')
     parser.add_argument('--run-only', action='store_true',
                     help='''When specified, run each target program without build.

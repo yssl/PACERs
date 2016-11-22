@@ -149,6 +149,8 @@ optional arguments:
 
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
+                        Setting zero seconds(--timeout 0) means unlimited execution time
+                        for each target program, which can be useful for GUI applications.
                         default: 2.0
   --run-only            When specified, run each target program without build.
                         You may use it when you want change USER_INPUT without
