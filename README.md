@@ -61,8 +61,8 @@ The tested envirionments for each submission type are shown in the table.
 
 | Submission types | Language | Tested environment      |
 |-------------------------|--------------------------|-------------------------|
-| SOURCE_FILES or SINGLE_SOURCE_FILE | C & C++                      | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
-| SOURCE_FILES or SINGLE_SOURCE_FILE | text file                     | N/A (just showing the text) |    
+| SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
+| SINGLE_SOURCE_FILE or SOURCE_FILES | text file                     | N/A (just showing the text) |    
 | CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
 | VISUAL_CPP_PROJECT | C & C++                     | Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
 
@@ -86,6 +86,10 @@ The tested envirionments for each submission type are shown in the table.
 - Visual C++ project (Windows only)
 ```
 ./pacers.py test-assignments/vcxproj-assignment-1
+```
+- Visual C++ GUI project (Windows only)
+```
+./pacers.py test-assignments/vcxproj-GUI-assignment-1 --timeout 0 --exclude-patterns SDL2-2.0.4/*
 ```
 You can run all test-assignments at once by the run-test-assignments script.
 - On Windows: ```run-test-assignments.bat```
