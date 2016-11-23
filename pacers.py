@@ -36,17 +36,27 @@ Quick start:
     
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
-                 [--build-only] [--assignment-alias ASSIGNMENT_ALIAS]
+                 [--build-only] [--no-report]
+                 [--exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]]
+                 [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR]
                  assignment_dir
 
 Programming Assignments Compiling, Executing, and Reporting system
 
 positional arguments:
-  assignment_dir        A direcory that has submitted files.
-                        In assignment_dir, one source file runs one program.
-                        Each submission might have only one source file or a
-                        zip file or a directory including multiple source files
+  assignment_dir        A direcory that has submissions.
+                        The type of each submission is auto-detected by PACERs.
+
+                        | Submission types   | Meaning                                              |
+                        |--------------------|------------------------------------------------------|
+                        | SINGLE_SOURCE_FILE | The submission has a single source or resource file. |
+                        | SOURCE_FILES       | The submission has source or resource files without any project files.|
+                        | CMAKE_PROJECT      | The submission has CMakeLists.txt.                   |
+                        | VISUAL_CPP_PROJECT | The submission has *.vcxproj or *.vcproj.            |
+
+                        Each submission can have only one source file, or a zip file
+                        or a directory including many files.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -86,6 +96,8 @@ optional arguments:
 
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
+                        Setting zero seconds(--timeout 0) means unlimited execution time
+                        for each target program, which can be useful for GUI applications.
                         default: 2.0
   --run-only            When specified, run each target program without build.
                         You may use it when you want change USER_INPUT without
@@ -95,6 +107,13 @@ optional arguments:
                         specifying this option.
   --build-only          When specified, build each target program without running.
   --no-report           When specified, the final report is not generated.
+  --exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]
+                        Files containing EXCLUDE_PATTERNS in their relative path
+                        from each submission directory are excluded from the final report.
+                        (Submission dir: 'student01' in 'test-assignments/c-assignment-4')
+                        For example, use "--exclude-pattern *.txt foo/*"
+                        to exclude all txt files and all files in foo directory
+                        in each submission directory from the final report.
   --assignment-alias ASSIGNMENT_ALIAS
                         Specify ASSIGNMENT_ALIAS for each assignment_dir.
                         ASSIGNMENT_ALIAS is used when making a sub-directory
@@ -645,10 +664,18 @@ if __name__=='__main__':
 
     parser = argparse.ArgumentParser(prog='pacers.py', description='Programming Assignments Compiling, Executing, and Reporting system', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('assignment_dir',
-                        help='''A direcory that has submitted files.
-In assignment_dir, one source file runs one program. 
-Each submission might have only one source file or a 
-zip file or a directory including multiple source files''')
+                        help='''A direcory that has submissions.
+The type of each submission is auto-detected by PACERs.
+
+| Submission types   | Meaning                                              |
+|--------------------|------------------------------------------------------|
+| SINGLE_SOURCE_FILE | The submission has a single source or resource file. |
+| SOURCE_FILES       | The submission has source or resource files without any project files.|
+| CMAKE_PROJECT      | The submission has CMakeLists.txt.                   |
+| VISUAL_CPP_PROJECT | The submission has *.vcxproj or *.vcproj.            |
+
+Each submission can have only one source file, or a zip file
+or a directory including many files.''')
     parser.add_argument('--user-input', nargs='+', default=[''],
                         help='''Specify USER_INPUT to be sent to the stdin of target
 programs. This option should be located after
@@ -707,6 +734,13 @@ specifying this option.''')
                         help='''When specified, build each target program without running.''')
     parser.add_argument('--no-report', action='store_true',
                         help='''When specified, the final report is not generated.''')
+    parser.add_argument('--exclude-patterns', nargs='+', default=[''],
+                        help='''Files containing EXCLUDE_PATTERNS in their relative path
+from each submission directory are excluded from the final report.
+(Submission dir: 'student01' in 'test-assignments/c-assignment-4')
+For example, use "--exclude-pattern *.txt foo/*"
+to exclude all txt files and all files in foo directory
+in each submission directory from the final report.''')
     parser.add_argument('--assignment-alias',
                         help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
 ASSIGNMENT_ALIAS is used when making a sub-directory 
@@ -722,6 +756,7 @@ default: %s'''%opjoin('.', 'output'))
     gArgs = parser.parse_args()
 
     # print gArgs
+    # print gArgs.exclude_patterns
     # exit()
 
     if not gArgs.assignment_alias:
@@ -804,6 +839,7 @@ default: %s'''%opjoin('.', 'output'))
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+
                 # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
                 projSrcFileNames = []
                 for root, dirs, files in os.walk(submissionDir):
@@ -824,7 +860,16 @@ default: %s'''%opjoin('.', 'output'))
             for root, dirs, files in os.walk(submissionDir):
                 if gBuildDirPrefix not in root:
                     for name in files:
-                        projSrcFileNames[0].append(opjoin(root, name).replace(submissionDir+os.sep, ''))
+                        fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
+
+                        isSrcFile = True
+                        for pattern in gArgs.exclude_patterns:
+                            if fnmatch.fnmatch(fileName, pattern):
+                                isSrcFile = False
+                                break
+
+                        if isSrcFile:
+                            projSrcFileNames[0].append(fileName)
 
         else:
             print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionDescrption[submissionType])
