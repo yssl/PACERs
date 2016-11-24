@@ -840,14 +840,16 @@ def getUserInputsFromUserDict(userDict, projName):
 ############################################
 # multi processing worker functions
 def worker_build(params):
-    i, projInfo, q = params
+    numAllProjs, i, projInfo, q = params
     buildRetCode, buildLog = buildOneProj(projInfo)
     q.put([i, buildRetCode, buildLog])
+    printBuildResult(q.qsize(), numAllProjs, projInfo, buildRetCode, buildLog)
 
 def worker_run(params):
-    i, projInfo, timeOut, q = params
+    numAllProjs, i, projInfo, timeOut, q = params
     exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut)
     q.put([i, exitTypeList, stdoutStrList, userInputList])
+    printRunResult(q.qsize(), numAllProjs, projInfo, exitTypeList, stdoutStrList)
 
 ############################################
 # log print functions
@@ -1090,21 +1092,18 @@ default: %s'''%opjoin('.', 'output'))
             print
             p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
-            p.map(worker_build, [(i, allProjInfos[i], q) for i in range(len(allProjInfos))])
-            count = 1
+            p.map(worker_build, [(len(allProjInfos), i, allProjInfos[i], q) for i in range(len(allProjInfos))])
             while not q.empty():
                 i, buildRetCode, buildLog = q.get()
-                printBuildResult(count, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
                 buildResults[i] = [buildRetCode, buildLog]
-                count += 1
         else:
             print 
             print '%sBuilding projects in serial...'%gLogPrefix
             print
             for i in range(len(allProjInfos)):
                 buildRetCode, buildLog = buildOneProj(allProjInfos[i])
-                printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
                 buildResults[i] = [buildRetCode, buildLog]
+                printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
     else:
         for i in range(len(allProjInfos)):
             buildResults[i] = [0, '']
@@ -1118,21 +1117,18 @@ default: %s'''%opjoin('.', 'output'))
             print
             p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
-            p.map(worker_run, [(i, allProjInfos[i], gArgs.timeout, q) for i in range(len(allProjInfos))])
-            count = 1
+            p.map(worker_run, [(len(allProjInfos), i, allProjInfos[i], gArgs.timeout, q) for i in range(len(allProjInfos))])
             while not q.empty():
                 i, exitTypeList, stdoutStrList, userInputList = q.get()
-                printRunResult(count, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
-                count += 1
         else:
             print 
             print '%sRunning projects in serial...'%gLogPrefix
             print
             for i in range(len(allProjInfos)):
                 exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout)
-                printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
+                printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
     else:
         for i in range(len(allProjInfos)):
             runResults[i] = [[-1], [''], ['']]
