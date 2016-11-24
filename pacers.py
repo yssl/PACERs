@@ -857,6 +857,7 @@ default: %s'''%opjoin('.', 'output'))
 
     print
     print '%s[SubmissionIndex/#Submission SubmissionName SubmissionType (ProjIndex/#ProjInSubmission)]'%gLogPrefix
+    print
 
     # process each submission
     for j in range(len(submissionTitles)):
