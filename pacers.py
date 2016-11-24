@@ -878,14 +878,6 @@ default: %s'''%opjoin('.', 'output'))
     ############################################
     # main routine
 
-    submittedFileNames = []
-    srcFileLists = []
-    buildRetCodes = []
-    buildLogs = []
-    exitTypeLists = []
-    stdoutStrLists = []
-    userInputLists = []
-
     # preprocess --user-dict
     if gArgs.user_dict!=None:
         gArgs.user_dict = eval(gArgs.user_dict)
@@ -931,10 +923,13 @@ default: %s'''%opjoin('.', 'output'))
     print '%s[SubmissionIndex/#Submission SubmissionName SubmissionType (ProjIndex/#ProjInSubmission)]'%gLogPrefix
     print
 
-    # process each submission
+    # collect all project info
     allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, destDir, deco2unicoMap)
 
-    for projInfo in allProjInfos:
+    # build projects one by one
+    buildResults = []
+    for i in range(len(allProjInfos)):
+        projInfo = allProjInfos[i]
         submissionIndex = projInfo['submissionIndex']
         submissionTitle = projInfo['submissionTitle']
         submissionType = projInfo['submissionType']
@@ -959,6 +954,25 @@ default: %s'''%opjoin('.', 'output'))
         else:
             buildRetCode = 0
             buildLog = ''
+
+        buildResults.append([buildRetCode, buildLog])
+
+    # run projects one by one
+    runResults = []
+    for i in range(len(allProjInfos)):
+        projInfo = allProjInfos[i]
+        submissionIndex = projInfo['submissionIndex']
+        submissionTitle = projInfo['submissionTitle']
+        submissionType = projInfo['submissionType']
+        projIndex = projInfo['projIndex']
+        numProj = projInfo['numProj']
+        projName = projInfo['projName']
+        submissionDir = projInfo['submissionDir']
+        filesInProj = projInfo['filesInProj']
+
+        buildRetCode, buildLog = buildResults[i]
+
+        logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
 
         # set userInputs
         if gArgs.user_dict!=None:
@@ -988,6 +1002,27 @@ default: %s'''%opjoin('.', 'output'))
             exitTypeList = [3]
             stdoutStrList = ['']
             userInputList = ['']
+
+        runResults.append([exitTypeList, stdoutStrList, userInputList])
+
+    # generate report data
+    submittedFileNames = []
+    srcFileLists = []
+    buildRetCodes = []
+    buildLogs = []
+    exitTypeLists = []
+    stdoutStrLists = []
+    userInputLists = []
+
+    for i in range(len(allProjInfos)):
+        projInfo = allProjInfos[i]
+        submissionTitle = projInfo['submissionTitle']
+        submissionDir = projInfo['submissionDir']
+        filesInProj = projInfo['filesInProj']
+
+        buildRetCode, buildLog = buildResults[i]
+
+        exitTypeList, stdoutStrList, userInputList = runResults[i]
 
         # add report data
         submittedFileNames.append(submissionTitle)
