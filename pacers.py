@@ -35,8 +35,9 @@ Quick start:
     please try to change the text encoding option for the page to unicode or utf-8.
     
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                 [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
-                 [--build-only] [--no-report]
+                 [--timeout TIMEOUT] [--run-only] [--build-only]
+                 [--run-serial] [--build-serial] [--run-only-serial]
+                 [--num-cores NUM_CORES] [--no-report]
                  [--exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]]
                  [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR]
@@ -76,24 +77,6 @@ optional arguments:
                         | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
                         | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
 
-  --user-dict USER_DICT
-                        Specify USER_DICT to be sent to the stdin of target
-                        programs. Argument should be python dictionary
-                        representation. Each 'key' of the dictionary item
-                        is 'suffix' that should match with the last parts of
-                        each source file name. 'value' is user input for
-                        those matched source files.
-                        If both --user-input and --user-dict are specified,
-                        only --user-dict is used.
-
-                        Example:
-                        --user-dict {'1':['1','2'], '2':['2,'5','7']}
-
-                        runs a source file whose name ends with '1'
-                        (e.g. prob1.c) 2 times (with '10', '20')
-                        and run a source file whose name ends with
-                        '2' (e.g. prob2.c) 3 times (with '2','5','7').
-
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
                         Setting zero seconds(--timeout 0) means unlimited execution time
@@ -106,6 +89,14 @@ optional arguments:
                         automatically skips the build process without
                         specifying this option.
   --build-only          When specified, build each target program without running.
+  --run-serial          When specified, run each target program in serial.
+                        PACERs runs programs in parallel by default.
+  --build-serial        When specified, build each target program in serial.
+                        PACERs builds programs in parallel by default.
+  --run-only-serial     Shortcut for --run-only --run-serial.
+  --num-cores NUM_CORES
+                        Specify number of cpu cores used in building and running process.
+                        default: number of cpu cores in your machine.
   --no-report           When specified, the final report is not generated.
   --exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]
                         Files containing EXCLUDE_PATTERNS in their relative path
@@ -863,11 +854,11 @@ def worker_run(params):
 def printLogPrefixDescription():
     print
     print '%s[ProcessedCount/NumAllProjs SubmissionTitle SubmissionType (ProjName)]'%gLogPrefix
-    print
 
 def getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission):
     if numProjInSubmission > 1:
         # return '%s[%d/%d [%d]%s %s ([%d]%s)]'%(gLogPrefix, processedCount, numAllProjs, submissionIndex, submissionTitle, gSubmissionTypeName[submissionType], projIndex, projName)
+
         return '%s[%d/%d %s %s (%s)]'%(gLogPrefix, processedCount, numAllProjs, submissionTitle, gSubmissionTypeName[submissionType], projName)
     else:
         # return '%s[%d/%d [%d]%s %s]'%(gLogPrefix, processedCount, numAllProjs, submissionIndex, submissionTitle, gSubmissionTypeName[submissionType])
@@ -953,25 +944,6 @@ default is an empty string.
 | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
 
 ''')
-    parser.add_argument('--user-dict', default=None,
-                    help='''Specify USER_DICT to be sent to the stdin of target
-programs. Argument should be python dictionary 
-representation. Each 'key' of the dictionary item
-is 'suffix' that should match with the last parts of 
-each source file name. 'value' is user input for 
-those matched source files.
-If both --user-input and --user-dict are specified,
-only --user-dict is used.
-
-Example:
---user-dict {'1':['1','2'], '2':['2,'5','7']}
-
-runs a source file whose name ends with '1'   
-(e.g. prob1.c) 2 times (with '10', '20')     
-and run a source file whose name ends with   
-'2' (e.g. prob2.c) 3 times (with '2','5','7').
-
-''')
     # parser.add_argument('--file-layout', default=0, type=int,
                         # help='''indicates file layout in the assignment_dir. \ndefault: 0
     # 0 - one source file runs one program. 
@@ -992,6 +964,17 @@ automatically skips the build process without
 specifying this option.''')
     parser.add_argument('--build-only', action='store_true',
                         help='''When specified, build each target program without running.''')
+    parser.add_argument('--run-serial', action='store_true',
+                        help='''When specified, run each target program in serial.
+PACERs runs programs in parallel by default. ''')
+    parser.add_argument('--build-serial', action='store_true',
+                        help='''When specified, build each target program in serial.
+PACERs builds programs in parallel by default. ''')
+    parser.add_argument('--run-only-serial', action='store_true',
+                        help='''Shortcut for --run-only --run-serial.''')
+    parser.add_argument('--num-cores', default=mp.cpu_count(), type=int,
+                        help='''Specify number of cpu cores used in building and running process.
+default: number of cpu cores in your machine.''')
     parser.add_argument('--no-report', action='store_true',
                         help='''When specified, the final report is not generated.''')
     parser.add_argument('--exclude-patterns', nargs='+', default=[''],
@@ -1012,8 +995,32 @@ assignment_dir is /foo/bar/).''')
 and build output files to be generated. 
 Avoid including hangul characters in its full path.
 default: %s'''%opjoin('.', 'output'))
+    # parser.add_argument('--user-dict', default=None,
+                    # help='''An alternative option to specify user input
+# which can be helpful for SOURCE_FILES submission type. 
+# Specify USER_DICT to be sent to the stdin of target
+# programs. Argument should be python dictionary 
+# representation. Each 'key' of the dictionary item
+# is 'suffix' that should match with the last parts of 
+# each source file name. 'value' is user input for 
+# those matched source files.
+# If both --user-input and --user-dict are specified,
+# only --user-dict is used.
+
+# Example:
+# --user-dict {'1':['1','2'], '2':['2,'5','7']}
+
+# runs a source file whose name ends with '1'   
+# (e.g. prob1.c) 2 times (with '10', '20')     
+# and run a source file whose name ends with   
+# '2' (e.g. prob2.c) 3 times (with '2','5','7').
+# ''')
 
     gArgs = parser.parse_args()
+
+    if gArgs.run_only_serial:
+        gArgs.run_only = True 
+        gArgs.run_serial = True
 
     # print gArgs
     # print gArgs.exclude_patterns
@@ -1025,7 +1032,11 @@ default: %s'''%opjoin('.', 'output'))
     ############################################
     # main routine
 
+    print
+    print '%sStarting PACERs...'%gLogPrefix
+
     # preprocess --user-dict
+    gArgs.user_dict = None
     if gArgs.user_dict!=None:
         gArgs.user_dict = eval(gArgs.user_dict)
 
@@ -1043,7 +1054,6 @@ default: %s'''%opjoin('.', 'output'))
     destDir = opjoin(gArgs.output_dir, decodeAlias)
 
     if not gArgs.run_only:
-        print '%s'%gLogPrefix
         print '%sCopying all submissions from \'%s\' to \'%s\'...'%(gLogPrefix, gArgs.assignment_dir, destDir)
         # delete exsting one
         if os.path.exists(destDir):
@@ -1074,10 +1084,11 @@ default: %s'''%opjoin('.', 'output'))
     # build projects one by one
     buildResults = [None]*len(allProjInfos)
     if not gArgs.run_only:
-        # if gBuildParallel:
-        if True:
-        # if False:
-            p = mp.Pool(mp.cpu_count())
+        if not gArgs.build_serial:
+            print 
+            print '%sBuilding projects in parallel with %d cores...'%(gLogPrefix, gArgs.num_cores)
+            print
+            p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
             p.map(worker_build, [(i, allProjInfos[i], q) for i in range(len(allProjInfos))])
             count = 1
@@ -1087,6 +1098,9 @@ default: %s'''%opjoin('.', 'output'))
                 buildResults[i] = [buildRetCode, buildLog]
                 count += 1
         else:
+            print 
+            print '%sBuilding projects in serial...'%gLogPrefix
+            print
             for i in range(len(allProjInfos)):
                 buildRetCode, buildLog = buildOneProj(allProjInfos[i])
                 printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
@@ -1098,10 +1112,11 @@ default: %s'''%opjoin('.', 'output'))
     # run projects one by one
     runResults = [None]*len(allProjInfos)
     if not gArgs.build_only:
-        # if gRunParallel:
-        if True:
-        # if False:
-            p = mp.Pool(mp.cpu_count())
+        if not gArgs.run_serial:
+            print 
+            print '%sRunning projects in parallel with %d cores...'%(gLogPrefix, gArgs.num_cores)
+            print
+            p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
             p.map(worker_run, [(i, allProjInfos[i], gArgs.timeout, q) for i in range(len(allProjInfos))])
             count = 1
@@ -1111,6 +1126,9 @@ default: %s'''%opjoin('.', 'output'))
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
                 count += 1
         else:
+            print 
+            print '%sRunning projects in serial...'%gLogPrefix
+            print
             for i in range(len(allProjInfos)):
                 exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout)
                 printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
@@ -1124,7 +1142,6 @@ default: %s'''%opjoin('.', 'output'))
             generateReportDataForAllProjs(allProjInfos, buildResults, runResults)
 
     print
-    print '%s'%gLogPrefix
 
     if not gArgs.no_report:
         print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)

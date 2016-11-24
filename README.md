@@ -102,8 +102,9 @@ If you checked all the test-assignments are working correctly in your PC, please
 ## Usage
 ```
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                 [--user-dict USER_DICT] [--timeout TIMEOUT] [--run-only]
-                 [--build-only] [--no-report]
+                 [--timeout TIMEOUT] [--run-only] [--build-only]
+                 [--run-serial] [--build-serial] [--run-only-serial]
+                 [--num-cores NUM_CORES] [--no-report]
                  [--exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]]
                  [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR]
@@ -143,24 +144,6 @@ optional arguments:
                         | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
                         | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
 
-  --user-dict USER_DICT
-                        Specify USER_DICT to be sent to the stdin of target
-                        programs. Argument should be python dictionary
-                        representation. Each 'key' of the dictionary item
-                        is 'suffix' that should match with the last parts of
-                        each source file name. 'value' is user input for
-                        those matched source files.
-                        If both --user-input and --user-dict are specified,
-                        only --user-dict is used.
-
-                        Example:
-                        --user-dict {'1':['1','2'], '2':['2,'5','7']}
-
-                        runs a source file whose name ends with '1'
-                        (e.g. prob1.c) 2 times (with '10', '20')
-                        and run a source file whose name ends with
-                        '2' (e.g. prob2.c) 3 times (with '2','5','7').
-
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
                         Setting zero seconds(--timeout 0) means unlimited execution time
@@ -173,6 +156,14 @@ optional arguments:
                         automatically skips the build process without
                         specifying this option.
   --build-only          When specified, build each target program without running.
+  --run-serial          When specified, run each target program in serial.
+                        PACERs runs programs in parallel by default.
+  --build-serial        When specified, build each target program in serial.
+                        PACERs builds programs in parallel by default.
+  --run-only-serial     Shortcut for --run-only --run-serial.
+  --num-cores NUM_CORES
+                        Specify number of cpu cores used in building and running process.
+                        default: number of cpu cores in your machine.
   --no-report           When specified, the final report is not generated.
   --exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]
                         Files containing EXCLUDE_PATTERNS in their relative path

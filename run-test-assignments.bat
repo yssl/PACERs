@@ -9,4 +9,5 @@ pacers.py test-assignments\cmake-assignment-1
 
 pacers.py test-assignments\vcxproj-assignment-1
 
-pacers.py test-assignments\vcxproj-GUI-assignment-1 --timeout 0 --exclude-patterns SDL2-2.0.4/*
+pacers.py test-assignments\vcxproj-GUI-assignment-1 --build-only --exclude-patterns SDL2-2.0.4/*
+pacers.py test-assignments\vcxproj-GUI-assignment-1 --run-only-serial --timeout 0
