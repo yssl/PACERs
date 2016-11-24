@@ -368,7 +368,7 @@ def getUnicodeStr(str):
     return success, retstr
         
 ############################################
-# preparation functions
+# main functions
 def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir, deco2unicoMap):
     allProjInfos = []
 
@@ -441,6 +441,53 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
             allProjInfos.append(projInfo)
 
     return allProjInfos
+
+def generateReportData(allProjInfos, buildResults, runResults):
+    submittedFileNames = []
+    srcFileLists = []
+    buildRetCodes = []
+    buildLogs = []
+    exitTypeLists = []
+    stdoutStrLists = []
+    userInputLists = []
+
+    for i in range(len(allProjInfos)):
+        projInfo = allProjInfos[i]
+        submissionTitle = projInfo['submissionTitle']
+        submissionDir = projInfo['submissionDir']
+        filesInProj = projInfo['filesInProj']
+
+        buildRetCode, buildLog = buildResults[i]
+
+        exitTypeList, stdoutStrList, userInputList = runResults[i]
+
+        # add report data
+        submittedFileNames.append(submissionTitle)
+
+        # full path -> \hagsaeng01\munje2\munje2.c
+        projOrigSrcFilePathsAfterAssignDir = []
+        for srcFileName in filesInProj:
+            destSrcFilePath = opjoin(submissionDir, srcFileName)
+            destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
+
+            if gArgs.run_only:
+                projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
+            else:
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                    # deco2unico src file paths to properly display in the report
+                    origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                else:
+                    origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
+                projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
+
+        srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
+        buildRetCodes.append(buildRetCode)
+        buildLogs.append(buildLog)
+        exitTypeLists.append(exitTypeList)
+        stdoutStrLists.append(stdoutStrList)
+        userInputLists.append(userInputList)
+
+    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists
 
 ############################################
 # build functions
@@ -1006,49 +1053,8 @@ default: %s'''%opjoin('.', 'output'))
         runResults.append([exitTypeList, stdoutStrList, userInputList])
 
     # generate report data
-    submittedFileNames = []
-    srcFileLists = []
-    buildRetCodes = []
-    buildLogs = []
-    exitTypeLists = []
-    stdoutStrLists = []
-    userInputLists = []
-
-    for i in range(len(allProjInfos)):
-        projInfo = allProjInfos[i]
-        submissionTitle = projInfo['submissionTitle']
-        submissionDir = projInfo['submissionDir']
-        filesInProj = projInfo['filesInProj']
-
-        buildRetCode, buildLog = buildResults[i]
-
-        exitTypeList, stdoutStrList, userInputList = runResults[i]
-
-        # add report data
-        submittedFileNames.append(submissionTitle)
-
-        # full path -> \hagsaeng01\munje2\munje2.c
-        projOrigSrcFilePathsAfterAssignDir = []
-        for srcFileName in filesInProj:
-            destSrcFilePath = opjoin(submissionDir, srcFileName)
-            destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
-
-            if gArgs.run_only:
-                projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
-            else:
-                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                    # deco2unico src file paths to properly display in the report
-                    origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-                else:
-                    origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
-                projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
-
-        srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
-        buildRetCodes.append(buildRetCode)
-        buildLogs.append(buildLog)
-        exitTypeLists.append(exitTypeList)
-        stdoutStrLists.append(stdoutStrList)
-        userInputLists.append(userInputList)
+    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists = \
+            generateReportData(allProjInfos, buildResults, runResults)
 
     print
     print '%s'%gLogPrefix
