@@ -190,7 +190,7 @@ def deco2unicoPath(decoPath, deco2unicoMap):
     return unicoPath
 
 def getLogPrefix(submissionIndex, numSubmission, submissionTitle, submissionType, projIndex, numProj, projName):
-    if len(projNames) > 1:
+    if numProj > 1:
         return '%s[%d/%d %s %s (%d/%d %s)]'%(gLogPrefix, submissionIndex+1, numSubmission, submissionTitle, gSubmissionTypeName[submissionType], projIndex+1, numProj, projName)
     else:
         return '%s[%d/%d %s %s]'%(gLogPrefix, submissionIndex+1, numSubmission, submissionTitle, gSubmissionTypeName[submissionType])
@@ -368,6 +368,81 @@ def getUnicodeStr(str):
     return success, retstr
         
 ############################################
+# preparation functions
+def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir, deco2unicoMap):
+    allProjInfos = []
+
+    # process each submission
+    for j in range(len(submissionTitles)):
+        submissionTitle = submissionTitles[j]
+        submissionType = detectSubmissionType(opjoin(assignmentDir, submissionTitle))
+
+        # set submissionDir, projNames, projSrcFileNames for each project
+        # ex)
+        # projNames : ['proj1', 'proj2']
+        # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
+        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+            # unidecode destSubmissionDir
+            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+
+            if submissionType==SINGLE_SOURCE_FILE:
+                submissionDir = destDir
+                projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
+
+            elif submissionType==SOURCE_FILES:
+                submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+
+                # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                projSrcFileNames = []
+                for root, dirs, files in os.walk(submissionDir):
+                    if gBuildDirPrefix not in root:
+                        for name in files:
+                            projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
+
+            projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
+
+        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+            # No need of decodeDestSubmissionDirPathRecursive(), 
+            # because CMAKE_PROJECT should not include multibyte characters in its file paths already (due to cmake restriction)
+            # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
+            submissionDir = opjoin(destDir, submissionTitle)
+            projNames = [submissionTitle]
+
+            projSrcFileNames = [[]]
+            for root, dirs, files in os.walk(submissionDir):
+                if gBuildDirPrefix not in root:
+                    for name in files:
+                        fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
+
+                        isSrcFile = True
+                        for pattern in gArgs.exclude_patterns:
+                            if fnmatch.fnmatch(fileName, pattern):
+                                isSrcFile = False
+                                break
+
+                        if isSrcFile:
+                            projSrcFileNames[0].append(fileName)
+
+        else:
+            print '%s%s: Submission type %s is not supported.'%(gLogPrefix, submissionTitle, gSubmissionTypeName[submissionType])
+            continue
+
+        # collect info
+        for i in range(len(projNames)):
+            projInfo = {}
+            projInfo['submissionIndex'] = j
+            projInfo['submissionTitle'] = submissionTitle
+            projInfo['submissionType'] = submissionType
+            projInfo['projIndex'] = i
+            projInfo['numProj'] = len(projNames)
+            projInfo['projName'] = projNames[i]
+            projInfo['submissionDir'] = submissionDir
+            projInfo['filesInProj'] = projSrcFileNames[i]
+            allProjInfos.append(projInfo)
+
+    return allProjInfos
+
+############################################
 # build functions
 # return buildRetCode, buildLog
 # buildRetCode:
@@ -386,18 +461,18 @@ def buildProj(submissionDir, projName, projSrcFileNames):
 
 ####
 # build_single functions
-def build_single_source(srcRootDir, projName, srcFileName):
-    extension = os.path.splitext(srcFileName)[1].lower()
+def build_single_source(srcRootDir, projName, singleSrcFileName):
+    extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
-        return gSourceExt[extension]['build-single-source-func'](srcRootDir, projName, srcFileName)
+        return gSourceExt[extension]['build-single-source-func'](srcRootDir, projName, singleSrcFileName)
     else:
         return build_single_else(extension)
 
-def build_single_c_cpp(srcRootDir, projName, srcFileName):
+def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     os.makedirs(buildDir)
 
-    makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir)
+    makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir)
 
     return __build_cmake(buildDir, './')
 
@@ -424,12 +499,12 @@ def __build_cmake(buildDir, cmakeLocationFromBuildDir):
         return 0, buildLog
 
 # return CMakeLists.txt code
-def makeCMakeLists_single_c_cpp(projName, srcFileName, buildDir):
+def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
     code = ''
     code += 'cmake_minimum_required(VERSION 2.6)\n'
     code += 'project(%s)\n'%projName
     code += 'add_executable(%s '%projName
-    code += '../%s'%srcFileName
+    code += '../%s'%singleSrcFileName
     code += ')\n'
 
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
@@ -489,8 +564,8 @@ def runProj(submissionDir, projName, projSrcFileNames, userInputs, timeOut):
 
     return exitTypeList, stdoutStrList
 
-def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
-    extension = os.path.splitext(srcFileName)[1].lower()
+def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut):
+    extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
         runcmd = gSourceExt[extension]['runcmd-single-source-func'](srcRootDir, projName)
         runcwd = gSourceExt[extension]['runcwd-single-source-func'](srcRootDir, projName)
@@ -857,132 +932,217 @@ default: %s'''%opjoin('.', 'output'))
     print
 
     # process each submission
-    for j in range(len(submissionTitles)):
-        submissionTitle = submissionTitles[j]
-        submissionType = detectSubmissionType(opjoin(gArgs.assignment_dir, submissionTitle))
+    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, destDir, deco2unicoMap)
 
-        # set submissionDir, projNames, projSrcFileNames for each project
-        # ex)
-        # projNames : ['proj1', 'proj2']
-        # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
-        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            # unidecode destSubmissionDir
-            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+    for projInfo in allProjInfos:
+        submissionIndex = projInfo['submissionIndex']
+        submissionTitle = projInfo['submissionTitle']
+        submissionType = projInfo['submissionType']
+        projIndex = projInfo['projIndex']
+        numProj = projInfo['numProj']
+        projName = projInfo['projName']
+        submissionDir = projInfo['submissionDir']
+        filesInProj = projInfo['filesInProj']
 
-            if submissionType==SINGLE_SOURCE_FILE:
-                submissionDir = destDir
-                projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
+        logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
 
-            elif submissionType==SOURCE_FILES:
-                submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+        # build
+        if not gArgs.run_only:
+            buildRetCode, buildLog = buildProj(submissionDir, projName, filesInProj)
 
-                # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
-                projSrcFileNames = []
-                for root, dirs, files in os.walk(submissionDir):
-                    if gBuildDirPrefix not in root:
-                        for name in files:
-                            projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
-
-            projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
-
-        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
-            # No need of decodeDestSubmissionDirPathRecursive(), 
-            # because CMAKE_PROJECT should not include multibyte characters in its file paths already (due to cmake restriction)
-            # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
-            submissionDir = opjoin(destDir, submissionTitle)
-            projNames = [submissionTitle]
-
-            projSrcFileNames = [[]]
-            for root, dirs, files in os.walk(submissionDir):
-                if gBuildDirPrefix not in root:
-                    for name in files:
-                        fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
-
-                        isSrcFile = True
-                        for pattern in gArgs.exclude_patterns:
-                            if fnmatch.fnmatch(fileName, pattern):
-                                isSrcFile = False
-                                break
-
-                        if isSrcFile:
-                            projSrcFileNames[0].append(fileName)
-
+            if buildRetCode==0:
+                print '%s Build succeeded.'%logPrefix
+            elif buildRetCode==-1:
+                print '%s Build failed. %s'%(logPrefix, buildLog)
+            else:
+                print '%s Build failed. A build error occurred.'%logPrefix
         else:
-            print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionTypeName[submissionType])
-            continue
+            buildRetCode = 0
+            buildLog = ''
 
-        # build & run each project in one submission
-        for i in range(len(projNames)):
-            logPrefix = getLogPrefix(j, len(submissionTitles), submissionTitle, submissionType, i, len(projNames), projNames[i])
+        # set userInputs
+        if gArgs.user_dict!=None:
+            userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
+        else:
+            userInputs = gArgs.user_input
 
-            # build
-            if not gArgs.run_only:
-                buildRetCode, buildLog = buildProj(submissionDir, projNames[i], projSrcFileNames[i])
-
-                if buildRetCode==0:
-                    print '%s Build succeeded.'%logPrefix
-                elif buildRetCode==-1:
-                    print '%s Build failed. %s'%(logPrefix, buildLog)
-                else:
-                    print '%s Build failed. A build error occurred.'%logPrefix
+        # run
+        if not gArgs.build_only:
+            exitTypeList = []
+            stdoutStrList = []
+            userInputList = userInputs
+            if buildRetCode!=0:
+                pass
             else:
-                buildRetCode = 0
-                buildLog = ''
+                exitTypeList, stdoutStrList = runProj(submissionDir, projName, filesInProj, userInputs, gArgs.timeout)
 
-            # set userInputs
-            if gArgs.user_dict!=None:
-                userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
-            else:
-                userInputs = gArgs.user_input
-
-            # run
-            if not gArgs.build_only:
-                exitTypeList = []
-                stdoutStrList = []
-                userInputList = userInputs
-                if buildRetCode!=0:
-                    pass
+                if exitTypeList[0]==0:
+                    print '%s Execution terminated.'%logPrefix
+                elif exitTypeList[0]==-1:
+                    print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
+                elif exitTypeList[0]==1:
+                    print '%s Execution was stopped due to timeout.'%logPrefix
                 else:
-                    exitTypeList, stdoutStrList = runProj(submissionDir, projNames[i], projSrcFileNames[i], userInputs, gArgs.timeout)
+                    raise NotImplementedError
+        else:
+            exitTypeList = [3]
+            stdoutStrList = ['']
+            userInputList = ['']
 
-                    if exitTypeList[0]==0:
-                        print '%s Execution terminated.'%logPrefix
-                    elif exitTypeList[0]==-1:
-                        print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
-                    elif exitTypeList[0]==1:
-                        print '%s Execution was stopped due to timeout.'%logPrefix
-                    else:
-                        raise NotImplementedError
+        # add report data
+        submittedFileNames.append(submissionTitle)
+
+        # full path -> \hagsaeng01\munje2\munje2.c
+        projOrigSrcFilePathsAfterAssignDir = []
+        for srcFileName in filesInProj:
+            destSrcFilePath = opjoin(submissionDir, srcFileName)
+            destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
+
+            if gArgs.run_only:
+                projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
             else:
-                exitTypeList = [3]
-                stdoutStrList = ['']
-                userInputList = ['']
-
-            # add report data
-            submittedFileNames.append(submissionTitle)
-
-            # full path -> \hagsaeng01\munje2\munje2.c
-            projOrigSrcFilePathsAfterAssignDir = []
-            for srcFileName in projSrcFileNames[i]:
-                destSrcFilePath = opjoin(submissionDir, srcFileName)
-                destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
-
-                if gArgs.run_only:
-                    projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                    # deco2unico src file paths to properly display in the report
+                    origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
                 else:
-                    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                        # deco2unico src file paths to properly display in the report
-                        origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
-                    else:
-                        origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
-                    projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
+                    origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
+                projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
 
-            srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
-            buildRetCodes.append(buildRetCode)
-            buildLogs.append(buildLog)
-            exitTypeLists.append(exitTypeList)
-            stdoutStrLists.append(stdoutStrList)
-            userInputLists.append(userInputList)
+        srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
+        buildRetCodes.append(buildRetCode)
+        buildLogs.append(buildLog)
+        exitTypeLists.append(exitTypeList)
+        stdoutStrLists.append(stdoutStrList)
+        userInputLists.append(userInputList)
+
+
+
+    # for j in range(len(submissionTitles)):
+        # submissionTitle = submissionTitles[j]
+        # submissionType = detectSubmissionType(opjoin(gArgs.assignment_dir, submissionTitle))
+
+        # # set submissionDir, projNames, projSrcFileNames for each project
+        # # ex)
+        # # projNames : ['proj1', 'proj2']
+        # # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
+        # if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+            # # unidecode destSubmissionDir
+            # decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+
+            # if submissionType==SINGLE_SOURCE_FILE:
+                # submissionDir = destDir
+                # projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
+
+            # elif submissionType==SOURCE_FILES:
+                # submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+
+                # # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                # projSrcFileNames = []
+                # for root, dirs, files in os.walk(submissionDir):
+                    # if gBuildDirPrefix not in root:
+                        # for name in files:
+                            # projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
+
+            # projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
+
+        # elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+            # # No need of decodeDestSubmissionDirPathRecursive(), 
+            # # because CMAKE_PROJECT should not include multibyte characters in its file paths already (due to cmake restriction)
+            # # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
+            # submissionDir = opjoin(destDir, submissionTitle)
+            # projNames = [submissionTitle]
+
+            # projSrcFileNames = [[]]
+            # for root, dirs, files in os.walk(submissionDir):
+                # if gBuildDirPrefix not in root:
+                    # for name in files:
+                        # fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
+
+                        # isSrcFile = True
+                        # for pattern in gArgs.exclude_patterns:
+                            # if fnmatch.fnmatch(fileName, pattern):
+                                # isSrcFile = False
+                                # break
+
+                        # if isSrcFile:
+                            # projSrcFileNames[0].append(fileName)
+
+        # else:
+            # print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionTypeName[submissionType])
+            # continue
+
+        # # build & run each project in one submission
+        # for i in range(len(projNames)):
+            # logPrefix = getLogPrefix(j, len(submissionTitles), submissionTitle, submissionType, i, len(projNames), projNames[i])
+
+            # # build
+            # if not gArgs.run_only:
+                # buildRetCode, buildLog = buildProj(submissionDir, projNames[i], projSrcFileNames[i])
+
+                # if buildRetCode==0:
+                    # print '%s Build succeeded.'%logPrefix
+                # elif buildRetCode==-1:
+                    # print '%s Build failed. %s'%(logPrefix, buildLog)
+                # else:
+                    # print '%s Build failed. A build error occurred.'%logPrefix
+            # else:
+                # buildRetCode = 0
+                # buildLog = ''
+
+            # # set userInputs
+            # if gArgs.user_dict!=None:
+                # userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
+            # else:
+                # userInputs = gArgs.user_input
+
+            # # run
+            # if not gArgs.build_only:
+                # exitTypeList = []
+                # stdoutStrList = []
+                # userInputList = userInputs
+                # if buildRetCode!=0:
+                    # pass
+                # else:
+                    # exitTypeList, stdoutStrList = runProj(submissionDir, projNames[i], projSrcFileNames[i], userInputs, gArgs.timeout)
+
+                    # if exitTypeList[0]==0:
+                        # print '%s Execution terminated.'%logPrefix
+                    # elif exitTypeList[0]==-1:
+                        # print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
+                    # elif exitTypeList[0]==1:
+                        # print '%s Execution was stopped due to timeout.'%logPrefix
+                    # else:
+                        # raise NotImplementedError
+            # else:
+                # exitTypeList = [3]
+                # stdoutStrList = ['']
+                # userInputList = ['']
+
+            # # add report data
+            # submittedFileNames.append(submissionTitle)
+
+            # # full path -> \hagsaeng01\munje2\munje2.c
+            # projOrigSrcFilePathsAfterAssignDir = []
+            # for srcFileName in projSrcFileNames[i]:
+                # destSrcFilePath = opjoin(submissionDir, srcFileName)
+                # destSrcFilePathAfterDestDir = destSrcFilePath.replace(destDir+os.sep, '')
+
+                # if gArgs.run_only:
+                    # projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
+                # else:
+                    # if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                        # # deco2unico src file paths to properly display in the report
+                        # origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
+                    # else:
+                        # origSrcFilePathAfterAssignDir = destSrcFilePathAfterDestDir
+                    # projOrigSrcFilePathsAfterAssignDir.append(opjoin(gArgs.assignment_dir, origSrcFilePathAfterAssignDir))
+
+            # srcFileLists.append(projOrigSrcFilePathsAfterAssignDir)
+            # buildRetCodes.append(buildRetCode)
+            # buildLogs.append(buildLog)
+            # exitTypeLists.append(exitTypeList)
+            # stdoutStrLists.append(stdoutStrList)
+            # userInputLists.append(userInputList)
 
     print
     print '%s'%gLogPrefix
@@ -994,5 +1154,3 @@ default: %s'''%opjoin('.', 'output'))
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix
-
-
