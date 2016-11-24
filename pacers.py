@@ -368,6 +368,15 @@ def getUnicodeStr(str):
 # build functions
 # return errorCode, buildLog
 
+def buildProj(submissionDir, projName, projSrcFileNames):
+    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+        buildRetCode, buildLog = build_single_source(submissionDir, projName, projSrcFileNames[0])
+    elif submissionType==CMAKE_PROJECT:
+        buildRetCode, buildLog = build_cmake(submissionDir, projName)
+    elif submissionType==VISUAL_CPP_PROJECT:
+        buildRetCode, buildLog = build_vcxproj(submissionDir, projName)
+    return buildRetCode, buildLog
+
 ####
 # build_single functions
 def build_single_source(srcRootDir, projName, srcFileName):
@@ -457,6 +466,24 @@ def build_vcxproj(srcRootDir, projName):
 #   1 - forced kill due to timeout
 #   2 - cannot find the executable file (not built yet)
 #   3 - from runcmd_single_dummy() 
+
+def runProj(submissionDir, projName, projSrcFileNames, userInputs, timeOut):
+    exitTypeList = []
+    stdoutStrList = []
+
+    for userInput in userInputs:
+
+        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut)
+        elif submissionType==CMAKE_PROJECT:
+            exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut)
+        elif submissionType==VISUAL_CPP_PROJECT:
+            exitType, stdoutStr = run_vcxproj(submissionDir, projName, userInput, timeOut)
+
+        exitTypeList.append(exitType)
+        stdoutStrList.append(stdoutStr)
+
+    return exitTypeList, stdoutStrList
 
 def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
     extension = os.path.splitext(srcFileName)[1].lower()
@@ -880,17 +907,17 @@ default: %s'''%opjoin('.', 'output'))
             print '%s'%gLogPrefix
             print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(projNames), projNames[i])
 
-            # build
+            # # build
             if not gArgs.run_only:
                 print '%sBuilding...'%gLogPrefix
+                buildRetCode, buildLog = buildProj(submissionDir, projNames[i], projSrcFileNames[i])
 
-                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                    buildRetCode, buildLog = build_single_source(submissionDir, projNames[i], projSrcFileNames[i][0])
-                elif submissionType==CMAKE_PROJECT:
-                    buildRetCode, buildLog = build_cmake(submissionDir, projNames[i])
-                elif submissionType==VISUAL_CPP_PROJECT:
-                    buildRetCode, buildLog = build_vcxproj(submissionDir, projNames[i])
-
+                # if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                    # buildRetCode, buildLog = build_single_source(submissionDir, projNames[i], projSrcFileNames[i][0])
+                # elif submissionType==CMAKE_PROJECT:
+                    # buildRetCode, buildLog = build_cmake(submissionDir, projNames[i])
+                # elif submissionType==VISUAL_CPP_PROJECT:
+                    # buildRetCode, buildLog = build_vcxproj(submissionDir, projNames[i])
             else:
                 buildRetCode = 0
                 buildLog = ''
@@ -910,17 +937,21 @@ default: %s'''%opjoin('.', 'output'))
                     print '%sBuild error. Go on to the next file.'%gLogPrefix
                 else:
                     print '%sRunning...'%gLogPrefix
-                    for userInput in userInputs:
 
-                        if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-                            exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
-                        elif submissionType==CMAKE_PROJECT:
-                            exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
-                        elif submissionType==VISUAL_CPP_PROJECT:
-                            exitType, stdoutStr = run_vcxproj(submissionDir, projNames[i], userInput, gArgs.timeout)
+                    exitTypeList, stdoutStrList = runProj(submissionDir, projNames[i], projSrcFileNames[i], userInputs, gArgs.timeout)
 
-                        exitTypeList.append(exitType)
-                        stdoutStrList.append(stdoutStr)
+                    # for userInput in userInputs:
+
+                        # if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                            # exitType, stdoutStr = run_single_source(submissionDir, projNames[i], projSrcFileNames[i][0], userInput, gArgs.timeout)
+                        # elif submissionType==CMAKE_PROJECT:
+                            # exitType, stdoutStr = run_cmake(submissionDir, projNames[i], userInput, gArgs.timeout)
+                        # elif submissionType==VISUAL_CPP_PROJECT:
+                            # exitType, stdoutStr = run_vcxproj(submissionDir, projNames[i], userInput, gArgs.timeout)
+
+                        # exitTypeList.append(exitType)
+                        # stdoutStrList.append(stdoutStr)
+
                     print '%sDone.'%gLogPrefix
             else:
                 exitTypeList = [3]
