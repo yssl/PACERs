@@ -442,7 +442,7 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
 
     return allProjInfos
 
-def generateReportData(allProjInfos, buildResults, runResults):
+def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
     submittedFileNames = []
     srcFileLists = []
     buildRetCodes = []
@@ -456,6 +456,7 @@ def generateReportData(allProjInfos, buildResults, runResults):
         submissionTitle = projInfo['submissionTitle']
         submissionDir = projInfo['submissionDir']
         filesInProj = projInfo['filesInProj']
+        submissionType = projInfo['submissionType']
 
         buildRetCode, buildLog = buildResults[i]
 
@@ -489,6 +490,79 @@ def generateReportData(allProjInfos, buildResults, runResults):
 
     return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists
 
+def buildOneProj(projInfo):
+    submissionIndex = projInfo['submissionIndex']
+    submissionTitle = projInfo['submissionTitle']
+    submissionType = projInfo['submissionType']
+    projIndex = projInfo['projIndex']
+    numProj = projInfo['numProj']
+    projName = projInfo['projName']
+    submissionDir = projInfo['submissionDir']
+    filesInProj = projInfo['filesInProj']
+
+    logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
+
+    # build
+    if not gArgs.run_only:
+        buildRetCode, buildLog = buildProj(submissionType, submissionDir, projName, filesInProj)
+
+        if buildRetCode==0:
+            print '%s Build succeeded.'%logPrefix
+        elif buildRetCode==-1:
+            print '%s Build failed. %s'%(logPrefix, buildLog)
+        else:
+            print '%s Build failed. A build error occurred.'%logPrefix
+    else:
+        buildRetCode = 0
+        buildLog = ''
+
+    return buildRetCode, buildLog
+
+def runOneProj(projInfo, buildResult):
+    submissionIndex = projInfo['submissionIndex']
+    submissionTitle = projInfo['submissionTitle']
+    submissionType = projInfo['submissionType']
+    projIndex = projInfo['projIndex']
+    numProj = projInfo['numProj']
+    projName = projInfo['projName']
+    submissionDir = projInfo['submissionDir']
+    filesInProj = projInfo['filesInProj']
+
+    buildRetCode, buildLog = buildResult
+
+    logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
+
+    # set userInputs
+    if gArgs.user_dict!=None:
+        userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
+    else:
+        userInputs = gArgs.user_input
+
+    # run
+    if not gArgs.build_only:
+        exitTypeList = []
+        stdoutStrList = []
+        userInputList = userInputs
+        if buildRetCode!=0:
+            pass
+        else:
+            exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, gArgs.timeout)
+
+            if exitTypeList[0]==0:
+                print '%s Execution terminated.'%logPrefix
+            elif exitTypeList[0]==-1:
+                print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
+            elif exitTypeList[0]==1:
+                print '%s Execution was stopped due to timeout.'%logPrefix
+            else:
+                raise NotImplementedError
+    else:
+        exitTypeList = [3]
+        stdoutStrList = ['']
+        userInputList = ['']
+
+    return exitTypeList, stdoutStrList, userInputList
+
 ############################################
 # build functions
 # return buildRetCode, buildLog
@@ -497,7 +571,7 @@ def generateReportData(allProjInfos, buildResults, runResults):
 #   0 - build succeeded
 #   else - build failed due to build error
 
-def buildProj(submissionDir, projName, projSrcFileNames):
+def buildProj(submissionType, submissionDir, projName, projSrcFileNames):
     if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
         buildRetCode, buildLog = build_single_source(submissionDir, projName, projSrcFileNames[0])
     elif submissionType==CMAKE_PROJECT:
@@ -593,7 +667,7 @@ def build_vcxproj(srcRootDir, projName):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 
-def runProj(submissionDir, projName, projSrcFileNames, userInputs, timeOut):
+def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut):
     exitTypeList = []
     stdoutStrList = []
 
@@ -976,85 +1050,18 @@ default: %s'''%opjoin('.', 'output'))
     # build projects one by one
     buildResults = []
     for i in range(len(allProjInfos)):
-        projInfo = allProjInfos[i]
-        submissionIndex = projInfo['submissionIndex']
-        submissionTitle = projInfo['submissionTitle']
-        submissionType = projInfo['submissionType']
-        projIndex = projInfo['projIndex']
-        numProj = projInfo['numProj']
-        projName = projInfo['projName']
-        submissionDir = projInfo['submissionDir']
-        filesInProj = projInfo['filesInProj']
-
-        logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
-
-        # build
-        if not gArgs.run_only:
-            buildRetCode, buildLog = buildProj(submissionDir, projName, filesInProj)
-
-            if buildRetCode==0:
-                print '%s Build succeeded.'%logPrefix
-            elif buildRetCode==-1:
-                print '%s Build failed. %s'%(logPrefix, buildLog)
-            else:
-                print '%s Build failed. A build error occurred.'%logPrefix
-        else:
-            buildRetCode = 0
-            buildLog = ''
-
+        buildRetCode, buildLog = buildOneProj(allProjInfos[i])
         buildResults.append([buildRetCode, buildLog])
 
     # run projects one by one
     runResults = []
     for i in range(len(allProjInfos)):
-        projInfo = allProjInfos[i]
-        submissionIndex = projInfo['submissionIndex']
-        submissionTitle = projInfo['submissionTitle']
-        submissionType = projInfo['submissionType']
-        projIndex = projInfo['projIndex']
-        numProj = projInfo['numProj']
-        projName = projInfo['projName']
-        submissionDir = projInfo['submissionDir']
-        filesInProj = projInfo['filesInProj']
-
-        buildRetCode, buildLog = buildResults[i]
-
-        logPrefix = getLogPrefix(submissionIndex, len(submissionTitles), submissionTitle, submissionType, projIndex, numProj, projName)
-
-        # set userInputs
-        if gArgs.user_dict!=None:
-            userInputs = getUserInputsFromUserDict(gArgs.user_dict, projNames[i])
-        else:
-            userInputs = gArgs.user_input
-
-        # run
-        if not gArgs.build_only:
-            exitTypeList = []
-            stdoutStrList = []
-            userInputList = userInputs
-            if buildRetCode!=0:
-                pass
-            else:
-                exitTypeList, stdoutStrList = runProj(submissionDir, projName, filesInProj, userInputs, gArgs.timeout)
-
-                if exitTypeList[0]==0:
-                    print '%s Execution terminated.'%logPrefix
-                elif exitTypeList[0]==-1:
-                    print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
-                elif exitTypeList[0]==1:
-                    print '%s Execution was stopped due to timeout.'%logPrefix
-                else:
-                    raise NotImplementedError
-        else:
-            exitTypeList = [3]
-            stdoutStrList = ['']
-            userInputList = ['']
-
+        exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], buildResults[i])
         runResults.append([exitTypeList, stdoutStrList, userInputList])
 
     # generate report data
     submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists = \
-            generateReportData(allProjInfos, buildResults, runResults)
+            generateReportDataForAllProjs(allProjInfos, buildResults, runResults)
 
     print
     print '%s'%gLogPrefix
