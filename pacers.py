@@ -189,6 +189,12 @@ def deco2unicoPath(decoPath, deco2unicoMap):
     unicoPath = reduce(os.path.join, unicoTokens)
     return unicoPath
 
+def getLogPrefix(submissionIndex, numSubmission, submissionTitle, submissionType, projIndex, numProj, projName):
+    if len(projNames) > 1:
+        return '%s[%d/%d %s %s (%d/%d %s)]'%(gLogPrefix, submissionIndex+1, numSubmission, submissionTitle, gSubmissionTypeName[submissionType], projIndex+1, numProj, projName)
+    else:
+        return '%s[%d/%d %s %s]'%(gLogPrefix, submissionIndex+1, numSubmission, submissionTitle, gSubmissionTypeName[submissionType])
+
 ############################################
 # functions for unzipping
 def unzipInAssignDir(assignDir):
@@ -211,7 +217,6 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
 
 ############################################
 # functions for report
-
 def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists):
     htmlCode = ''
 
@@ -328,13 +333,11 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
                 s += '(user input: %s)\n'%userInput
                 success, unistr = getUnicodeStr(stdoutStr)
                 s += unistr
+            elif exitType == -1:
+                s += stdoutStr
             elif exitType == 1:   # time out
                 s += '(user input: %s)\n'%userInput
                 s += 'Timeout'
-            elif exitType == 2:   # no executable exists
-                s += 'Cannot find %s\n(May not be built yet)'%os.path.basename(stdoutStr)
-            elif exitType == 3:   # from runcmd_single_dummy()
-                pass
             s += '\n'
     return s
  
@@ -366,7 +369,11 @@ def getUnicodeStr(str):
         
 ############################################
 # build functions
-# return errorCode, buildLog
+# return buildRetCode, buildLog
+# buildRetCode:
+#   -1 - build failed due to internal error, not because build error (not supported extension, etc)
+#   0 - build succeeded
+#   else - build failed due to build error
 
 def buildProj(submissionDir, projName, projSrcFileNames):
     if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
@@ -394,12 +401,12 @@ def build_single_c_cpp(srcRootDir, projName, srcFileName):
 
     return __build_cmake(buildDir, './')
 
-def build_single_dummy(srcRootDir, projName, srcFileNames):
-    return 0, ''
+# def build_single_dummy(srcRootDir, projName, srcFileNames):
+    # return 0, ''
 
 def build_single_else(extension):
     errorMsg = 'Building %s is not supported.'%extension
-    print '%s%s'%(gLogPrefix, errorMsg)
+    # print '%s%s'%(gLogPrefix, errorMsg)
     return -1, errorMsg 
 
 ####
@@ -444,7 +451,7 @@ def build_vcxproj(srcRootDir, projName):
 
     if len(vcxprojNames)==0:
         errorMsg = 'Cannot find .vcxproj or .vcproj file.'
-        print '%s%s'%(gLogPrefix, errorMsg)
+        # print '%s%s'%(gLogPrefix, errorMsg)
         return -1, errorMsg 
 
     try:
@@ -462,10 +469,9 @@ def build_vcxproj(srcRootDir, projName):
 
 # return exitType, output(stdout) of target program
 # exitType:
+#   -1 - execution failed due to internal error (not supported extension, not built yet)
 #   0 - normal exit
 #   1 - forced kill due to timeout
-#   2 - cannot find the executable file (not built yet)
-#   3 - from runcmd_single_dummy() 
 
 def runProj(submissionDir, projName, projSrcFileNames, userInputs, timeOut):
     exitTypeList = []
@@ -496,8 +502,8 @@ def run_single_source(srcRootDir, projName, srcFileName, userInput, timeOut):
 
 def run_single_else(extension):
     errorMsg = 'Running %s is not supported.'%extension
-    print '%s%s'%(gLogPrefix, errorMsg)
-    return 0, errorMsg 
+    # print '%s%s'%(gLogPrefix, errorMsg)
+    return -1, errorMsg 
 
 def run_cmake(srcRootDir, projName, userInput, timeOut):
     runcmd = runcmd_cmake(srcRootDir, projName)
@@ -510,13 +516,14 @@ def run_vcxproj(srcRootDir, projName, userInput, timeOut):
     return __run(runcmd, runcwd, userInput, timeOut)
 
 def __run(runcmd, runcwd, userInput, timeOut):
-    if runcmd == '':
-        return 3, ''
+    # if runcmd == '':
+        # return 3, ''
 
     try:
         proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
-        return 2, runcmd
+        # return 2, runcmd
+        return -1, 'Cannot find %s (May not be built yet).'%os.path.basename(runcmd)
 
     if timeOut != 0:
         # call onTimeOut() after timeOut seconds
@@ -565,10 +572,10 @@ def runcmd_vcxproj(srcRootDir, projName):
     execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
     return os.path.abspath(opjoin(buildDir, execName))
 
-def runcmd_single_dummy(srcRootDir, projName):
-    return ''
-def runcwd_single_dummy(srcRootDir, projName):
-    return ''
+# def runcmd_single_dummy(srcRootDir, projName):
+    # return ''
+# def runcwd_single_dummy(srcRootDir, projName):
+    # return ''
 
 
 def onTimeOut(proc):
@@ -651,7 +658,8 @@ if __name__=='__main__':
     gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
     gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
 
-    gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
+    # gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
+    gSourceExt = {'.c':{}, '.cpp':{}}
 
     gSourceExt['.c']['build-single-source-func'] = build_single_c_cpp
     gSourceExt['.c']['runcmd-single-source-func'] = runcmd_single_c_cpp
@@ -661,9 +669,9 @@ if __name__=='__main__':
     gSourceExt['.cpp']['runcmd-single-source-func'] = runcmd_single_c_cpp
     gSourceExt['.cpp']['runcwd-single-source-func'] = runcwd_single_c_cpp
 
-    gSourceExt['.txt']['build-single-source-func'] = build_single_dummy
-    gSourceExt['.txt']['runcmd-single-source-func'] = runcmd_single_dummy
-    gSourceExt['.txt']['runcwd-single-source-func'] = runcwd_single_dummy
+    # gSourceExt['.txt']['build-single-source-func'] = build_single_dummy
+    # gSourceExt['.txt']['runcmd-single-source-func'] = runcmd_single_dummy
+    # gSourceExt['.txt']['runcwd-single-source-func'] = runcwd_single_dummy
 
     # submission type
     BEGIN_SUBMISSION_TYPE = 0
@@ -673,11 +681,17 @@ if __name__=='__main__':
     SINGLE_SOURCE_FILE    = 4
     END_SUBMISSION_TYPE   = 5
 
-    gSubmissionDescrption                        = {}
-    gSubmissionDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
-    gSubmissionDescrption[VISUAL_CPP_PROJECT] = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
-    gSubmissionDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
-    gSubmissionDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
+    gSubmissionTypeDescrption                        = {}
+    gSubmissionTypeDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
+    gSubmissionTypeDescrption[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
+    gSubmissionTypeDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
+    gSubmissionTypeDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
+
+    gSubmissionTypeName                        = {}
+    gSubmissionTypeName[CMAKE_PROJECT]         = 'CMAKE_PROJECT'
+    gSubmissionTypeName[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT'
+    gSubmissionTypeName[SOURCE_FILES]          = 'SOURCE_FILES'
+    gSubmissionTypeName[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE'
 
     gSubmissionPatterns                        = {}
     gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
@@ -841,15 +855,17 @@ default: %s'''%opjoin('.', 'output'))
             continue
         submissionTitles.append(name)
 
+    print
+    print '%s[SubmissionIndex/#Submission SubmissionName SubmissionType (ProjIndex/#ProjInSubmission)]'%gLogPrefix
+
     # process each submission
-    for i in range(len(submissionTitles)):
-        submissionTitle = submissionTitles[i]
-        print
-        print '%s'%gLogPrefix
-        print '%sSubmission %d / %d: %s'%(gLogPrefix, i+1, len(submissionTitles), submissionTitle)
+    for j in range(len(submissionTitles)):
+        submissionTitle = submissionTitles[j]
+        # print '%s'%gLogPrefix
+        # print '%sSubmission %d / %d: %s'%(gLogPrefix, j+1, len(submissionTitles), submissionTitle)
 
         submissionType = detectSubmissionType(opjoin(gArgs.assignment_dir, submissionTitle))
-        print '%sSubmission type: %s'%(gLogPrefix, gSubmissionDescrption[submissionType])
+        # print '%sSubmission type: %s'%(gLogPrefix, gSubmissionTypeDescrption[submissionType])
 
 
         # set submissionDir, projNames, projSrcFileNames for each project
@@ -899,18 +915,29 @@ default: %s'''%opjoin('.', 'output'))
                             projSrcFileNames[0].append(fileName)
 
         else:
-            print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionDescrption[submissionType])
+            print '%sSubmission type %s is not supported.'%(gLogPrefix, gSubmissionTypeName[submissionType])
             continue
 
         # build & run each project in one submission
         for i in range(len(projNames)):
-            print '%s'%gLogPrefix
-            print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(projNames), projNames[i])
+            # print '%s'%gLogPrefix
+            # print '%sProject %d / %d: %s'%(gLogPrefix, i+1, len(projNames), projNames[i])
+
+            logPrefix = getLogPrefix(j, len(submissionTitles), submissionTitle, submissionType, i, len(projNames), projNames[i])
 
             # # build
             if not gArgs.run_only:
-                print '%sBuilding...'%gLogPrefix
+
+                # print '%sBuilding...'%gLogPrefix
+
                 buildRetCode, buildLog = buildProj(submissionDir, projNames[i], projSrcFileNames[i])
+
+                if buildRetCode==0:
+                    print '%s Build succeeded.'%logPrefix
+                elif buildRetCode==-1:
+                    print '%s Build failed. %s'%(logPrefix, buildLog)
+                else:
+                    print '%s Build failed. A build error occurred.'%logPrefix
 
                 # if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
                     # buildRetCode, buildLog = build_single_source(submissionDir, projNames[i], projSrcFileNames[i][0])
@@ -934,11 +961,20 @@ default: %s'''%opjoin('.', 'output'))
                 stdoutStrList = []
                 userInputList = userInputs
                 if buildRetCode!=0:
-                    print '%sBuild error. Go on to the next file.'%gLogPrefix
+                    pass
+                    # print '%sBuild error. Go on to the next file.'%gLogPrefix
                 else:
-                    print '%sRunning...'%gLogPrefix
-
+                    # print '%sRunning...'%gLogPrefix
                     exitTypeList, stdoutStrList = runProj(submissionDir, projNames[i], projSrcFileNames[i], userInputs, gArgs.timeout)
+
+                    if exitTypeList[0]==0:
+                        print '%s Execution terminated.'%logPrefix
+                    elif exitTypeList[0]==-1:
+                        print '%s Execution failed. %s'%(logPrefix, stdoutStrList[0])
+                    elif exitTypeList[0]==1:
+                        print '%s Execution was stopped due to timeout.'%logPrefix
+                    else:
+                        raise NotImplementedError
 
                     # for userInput in userInputs:
 
@@ -952,7 +988,8 @@ default: %s'''%opjoin('.', 'output'))
                         # exitTypeList.append(exitType)
                         # stdoutStrList.append(stdoutStr)
 
-                    print '%sDone.'%gLogPrefix
+                    # print '%sDone.'%gLogPrefix
+                    # print '%s[%d/%d %s %s] Done.'%(gLogPrefix, j+1, len(submissionTitles), submissionTitle, gSubmissionTypeName[submissionType])
             else:
                 exitTypeList = [3]
                 stdoutStrList = ['']
