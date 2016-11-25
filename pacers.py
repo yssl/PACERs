@@ -49,12 +49,20 @@ positional arguments:
   assignment_dir        A direcory that has submissions.
                         The type of each submission is auto-detected by PACERs.
 
-                        | Submission types   | Meaning                                              |
-                        |--------------------|------------------------------------------------------|
-                        | SINGLE_SOURCE_FILE | The submission has a single source or resource file. |
-                        | SOURCE_FILES       | The submission has source or resource files without any project files.|
-                        | CMAKE_PROJECT      | The submission has CMakeLists.txt.                   |
-                        | VISUAL_CPP_PROJECT | The submission has *.vcxproj or *.vcproj.            |
+                        | Submission types   | Meaning                                               |
+                        |--------------------|-------------------------------------------------------|
+                        | SINGLE_SOURCE_FILE | Each submission has a single source or resource file  |
+                        |                    | and represents a single project (and a program).      |
+                        |--------------------|-------------------------------------------------------|
+                        | SOURCE_FILES       | Each submission has source or resource files without  |
+                        |                    | any kind of project files. A single source file in    |
+                        |                    | each submission represents a single project (program).|
+                        |--------------------|-------------------------------------------------------|
+                        | CMAKE_PROJECT      | Each submission has CMakeLists.txt and represents     |
+                        |                    | a single project (and a program).                     |
+                        |--------------------|-------------------------------------------------------|
+                        | VISUAL_CPP_PROJECT | Each submission has *.vcxproj or *.vcproj and         |
+                        |                    | represents a single project (and a program).          |
 
                         Each submission can have only one source file, or a zip file
                         or a directory including many files.
@@ -70,12 +78,12 @@ optional arguments:
 
                         | Type     | Example                  | Example's meaning                          |
                         |----------|--------------------------|--------------------------------------------|
-                        | Single   | --user-input 15          | run each source file with input 15         |
-                        | value    | --user-input "hello"     | run each source file with input "hello"    |
-                        |          | --user-input "1 2"       | run each source file with input "1 2"      |
+                        | Single   | --user-input 15          | run each program with input 15             |
+                        | value    | --user-input "hello"     | run each program with input "hello"        |
+                        |          | --user-input "1 2"       | run each program with input "1 2"          |
                         |----------|--------------------------|--------------------------------------------|
-                        | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
-                        | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+                        | Multiple | --user-input 1 2 3       | run each program 3 times: with 1, 2, 3     |
+                        | values   | --user-input "1 2" "3 4" | run each program 2 times: with "1 2", "3 4"|
 
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
@@ -920,12 +928,20 @@ if __name__=='__main__':
                         help='''A direcory that has submissions.
 The type of each submission is auto-detected by PACERs.
 
-| Submission types   | Meaning                                              |
-|--------------------|------------------------------------------------------|
-| SINGLE_SOURCE_FILE | The submission has a single source or resource file. |
-| SOURCE_FILES       | The submission has source or resource files without any project files.|
-| CMAKE_PROJECT      | The submission has CMakeLists.txt.                   |
-| VISUAL_CPP_PROJECT | The submission has *.vcxproj or *.vcproj.            |
+| Submission types   | Meaning                                               |
+|--------------------|-------------------------------------------------------|
+| SINGLE_SOURCE_FILE | Each submission has a single source or resource file  |
+|                    | and represents a single project (and a program).      |
+|--------------------|-------------------------------------------------------|
+| SOURCE_FILES       | Each submission has source or resource files without  |
+|                    | any kind of project files. A single source file in    |
+|                    | each submission represents a single project (program).|
+|--------------------|-------------------------------------------------------|
+| CMAKE_PROJECT      | Each submission has CMakeLists.txt and represents     |
+|                    | a single project (and a program).                     |
+|--------------------|-------------------------------------------------------|
+| VISUAL_CPP_PROJECT | Each submission has *.vcxproj or *.vcproj and         |
+|                    | represents a single project (and a program).          |
 
 Each submission can have only one source file, or a zip file
 or a directory including many files.''')
@@ -938,12 +954,12 @@ default is an empty string.
 
 | Type     | Example                  | Example's meaning                          |
 |----------|--------------------------|--------------------------------------------|
-| Single   | --user-input 15          | run each source file with input 15         |
-| value    | --user-input "hello"     | run each source file with input "hello"    |
-|          | --user-input "1 2"       | run each source file with input "1 2"      |
+| Single   | --user-input 15          | run each program with input 15             |
+| value    | --user-input "hello"     | run each program with input "hello"        |
+|          | --user-input "1 2"       | run each program with input "1 2"          |
 |----------|--------------------------|--------------------------------------------|
-| Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
-| values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+| Multiple | --user-input 1 2 3       | run each program 3 times: with 1, 2, 3     |
+| values   | --user-input "1 2" "3 4" | run each program 2 times: with "1 2", "3 4"|
 
 ''')
     # parser.add_argument('--file-layout', default=0, type=int,

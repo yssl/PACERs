@@ -26,7 +26,7 @@ You can open the report in MS Word or MS Excel to grade each submission.
 - Pygments  
     Install in Windows - ```pip install pygments```  
     Install in Linux - ```sudo pip install pygments``` or ```sudo apt-get install python-pygments```
-- Unidecode (install via pip install unidecode)  
+- Unidecode
     Install in Windows - ```pip install unidecode```  
     Install in Linux - ```sudo pip install unidecode``` or ```sudo apt-get install python-unidecode```
 
@@ -39,23 +39,23 @@ C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 ## Quick start
 1) Run: ```git clone https://github.com/yssl/PACERs.git```  
-   or releases > Latest release > Download source code, extract it, and ```cd``` to the extracted directory..
+   or Releases > Latest release > Download source code, extract it, and ```cd``` to the extracted directory..
 
 2) On Linux, run: ```./pacers.py test-assignments/c-assignment-1```  
    On Windows, run: ```pacers.py test-assignments\c-assignment-1```
 
 3) Open ```./output/c-assignment-1/report-c-assignment-1.html``` in any web browser.  
-The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please try to change the text encoding option for the page to unicode or utf-8.
+The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please change the text encoding option for the page to unicode or utf-8.
 
 ## Supported submission types & languages
 The type of each submission is auto-detected by PACERs.
 
 | Submission types | Meaning      |
 |--------------------------|-------------------------|
-| SINGLE_SOURCE_FILE        | The submission has a single source or resource file.	 |
-| SOURCE_FILES              | The submission has source or resource files without any project files. |
-| CMAKE_PROJECT             | The submission has CMakeLists.txt.	 |
-| VISUAL_CPP_PROJECT        | The submission has *.vcxproj or *.vcproj.	 |
+| SINGLE_SOURCE_FILE        | Each submission has a single source or resource file and represents a single project (and a program).	 |
+| SOURCE_FILES              | Each submission has source or resource files without any kind of project files. A single source file in each submission represents a single project (program).|
+| CMAKE_PROJECT             | Each submission has CMakeLists.txt and represents a single project (and a program). |
+| VISUAL_CPP_PROJECT        | Each submission has *.vcxproj or *.vcproj and	represents a single project (and a program). |
 
 The tested envirionments for each submission type are shown in the table.
 
@@ -100,7 +100,6 @@ If you checked all the test-assignments are working correctly in your PC, please
 -->
 
 ## Usage
-```
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--timeout TIMEOUT] [--run-only] [--build-only]
                  [--run-serial] [--build-serial] [--run-only-serial]
@@ -116,12 +115,20 @@ positional arguments:
   assignment_dir        A direcory that has submissions.
                         The type of each submission is auto-detected by PACERs.
 
-                        | Submission types   | Meaning                                              |
-                        |--------------------|------------------------------------------------------|
-                        | SINGLE_SOURCE_FILE | The submission has a single source or resource file. |
-                        | SOURCE_FILES       | The submission has source or resource files without any project files.|
-                        | CMAKE_PROJECT      | The submission has CMakeLists.txt.                   |
-                        | VISUAL_CPP_PROJECT | The submission has *.vcxproj or *.vcproj.            |
+                        | Submission types   | Meaning                                               |
+                        |--------------------|-------------------------------------------------------|
+                        | SINGLE_SOURCE_FILE | Each submission has a single source or resource file  |
+                        |                    | and represents a single project (and a program).      |
+                        |--------------------|-------------------------------------------------------|
+                        | SOURCE_FILES       | Each submission has source or resource files without  |
+                        |                    | any kind of project files. A single source file in    |
+                        |                    | each submission represents a single project (program).|
+                        |--------------------|-------------------------------------------------------|
+                        | CMAKE_PROJECT      | Each submission has CMakeLists.txt and represents     |
+                        |                    | a single project (and a program).                     |
+                        |--------------------|-------------------------------------------------------|
+                        | VISUAL_CPP_PROJECT | Each submission has *.vcxproj or *.vcproj and         |
+                        |                    | represents a single project (and a program).          |
 
                         Each submission can have only one source file, or a zip file
                         or a directory including many files.
@@ -137,12 +144,12 @@ optional arguments:
 
                         | Type     | Example                  | Example's meaning                          |
                         |----------|--------------------------|--------------------------------------------|
-                        | Single   | --user-input 15          | run each source file with input 15         |
-                        | value    | --user-input "hello"     | run each source file with input "hello"    |
-                        |          | --user-input "1 2"       | run each source file with input "1 2"      |
+                        | Single   | --user-input 15          | run each program with input 15             |
+                        | value    | --user-input "hello"     | run each program with input "hello"        |
+                        |          | --user-input "1 2"       | run each program with input "1 2"          |
                         |----------|--------------------------|--------------------------------------------|
-                        | Multiple | --user-input 1 2 3       | run each source 3 times: with 1, 2, 3      |
-                        | values   | --user-input "1 2" "3 4" | run each source 2 times: with "1 2", "3 4" |
+                        | Multiple | --user-input 1 2 3       | run each program 3 times: with 1, 2, 3     |
+                        | values   | --user-input "1 2" "3 4" | run each program 2 times: with "1 2", "3 4"|
 
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
