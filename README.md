@@ -26,7 +26,7 @@ You can open the report in MS Word or MS Excel to grade each submission.
 - Pygments  
     Install in Windows - ```pip install pygments```  
     Install in Linux - ```sudo pip install pygments``` or ```sudo apt-get install python-pygments```
-- Unidecode
+- Unidecode  
     Install in Windows - ```pip install unidecode```  
     Install in Linux - ```sudo pip install unidecode``` or ```sudo apt-get install python-unidecode```
 
