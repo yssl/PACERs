@@ -100,6 +100,7 @@ If you checked all the test-assignments are working correctly in your PC, please
 -->
 
 ## Usage
+```
 usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--timeout TIMEOUT] [--run-only] [--build-only]
                  [--run-serial] [--build-serial] [--run-only-serial]
