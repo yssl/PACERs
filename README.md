@@ -29,6 +29,8 @@ You can open the report in MS Word or MS Excel to grade each submission.
 - Unidecode  
     Install in Windows - ```pip install unidecode```  
     Install in Linux - ```sudo pip install unidecode``` or ```sudo apt-get install python-unidecode```
+- Chardet  
+    Install in Windows - ```pip install chardet```  
 
 ## Required environment setting
 - On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
