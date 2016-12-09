@@ -11,10 +11,10 @@ Requirements:
     cmake
     Pygments
         : Install in Windows - "pip install pygments"
-          Install in Linux - "sudo pip install pygments" or "sudo apt-get install python-pygments"
-    Unidecode (install via pip install unidecode)
+          Install in Linux - "sudo pip install pygments"
+    Unidecode
         : Install in Windows - "pip install unidecode"
-          Install in Linux - "sudo pip install unidecode" or "sudo apt-get install python-unidecode"
+          Install in Linux - "sudo pip install unidecode"
     chardet
         : Install in Windows - "pip install chardet"
           Install in Linux - "sudo pip install chardet"

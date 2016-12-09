@@ -25,12 +25,13 @@ You can open the report in MS Word or MS Excel to grade each submission.
 - CMake
 - Pygments  
     Install in Windows - ```pip install pygments```  
-    Install in Linux - ```sudo pip install pygments``` or ```sudo apt-get install python-pygments```
+    Install in Linux - ```sudo pip install pygments```
 - Unidecode  
     Install in Windows - ```pip install unidecode```  
-    Install in Linux - ```sudo pip install unidecode``` or ```sudo apt-get install python-unidecode```
+    Install in Linux - ```sudo pip install unidecode```
 - Chardet  
     Install in Windows - ```pip install chardet```  
+    Install in Linux - ```sudo pip install chardet```
 
 ## Required environment setting
 - On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
