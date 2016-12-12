@@ -895,6 +895,22 @@ def printBuildResult(processedCount, numAllProjs, projInfo, buildRetCode, buildL
     else:
         print '%s Build failed. A build error occurred.'%logPrefix
 
+def printBuildStart(processedCount, numAllProjs, projInfo):
+    submissionIndex = projInfo['submissionIndex']
+    submissionTitle = projInfo['submissionTitle']
+    submissionType = projInfo['submissionType']
+    numSubmission = projInfo['numSubmission']
+    projIndex = projInfo['projIndex']
+    numProjInSubmission = projInfo['numProjInSubmission']
+    projName = projInfo['projName']
+    submissionDir = projInfo['submissionDir']
+    filesInProj = projInfo['filesInProj']
+    userInputs = projInfo['userInputs']
+
+    logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
+
+    print '%s Starting build...'%logPrefix
+
 def printRunResult(processedCount, numAllProjs, projInfo, exitTypeList, stdoutStrList):
     submissionIndex = projInfo['submissionIndex']
     submissionTitle = projInfo['submissionTitle']
@@ -917,6 +933,22 @@ def printRunResult(processedCount, numAllProjs, projInfo, exitTypeList, stdoutSt
         print '%s Execution was stopped due to timeout.'%logPrefix
     else:
         raise NotImplementedError
+
+def printRunStart(processedCount, numAllProjs, projInfo):
+    submissionIndex = projInfo['submissionIndex']
+    submissionTitle = projInfo['submissionTitle']
+    submissionType = projInfo['submissionType']
+    numSubmission = projInfo['numSubmission']
+    projIndex = projInfo['projIndex']
+    numProjInSubmission = projInfo['numProjInSubmission']
+    projName = projInfo['projName']
+    submissionDir = projInfo['submissionDir']
+    filesInProj = projInfo['filesInProj']
+    userInputs = projInfo['userInputs']
+
+    logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
+
+    print '%s Starting execution...'%logPrefix
 
 if __name__=='__main__':
 
@@ -1117,6 +1149,7 @@ default: %s'''%opjoin('.', 'output'))
             print '%sBuilding projects in serial...'%gLogPrefix
             print
             for i in range(len(allProjInfos)):
+                printBuildStart(i+1, len(allProjInfos), allProjInfos[i])
                 buildRetCode, buildLog = buildOneProj(allProjInfos[i])
                 buildResults[i] = [buildRetCode, buildLog]
                 printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
@@ -1142,6 +1175,7 @@ default: %s'''%opjoin('.', 'output'))
             print '%sRunning projects in serial...'%gLogPrefix
             print
             for i in range(len(allProjInfos)):
+                printRunStart(i+1, len(allProjInfos), allProjInfos[i])
                 exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout)
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
                 printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
