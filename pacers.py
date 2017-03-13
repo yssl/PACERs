@@ -479,7 +479,7 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
 
 ############################################
 # functions for report
-def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes):
     htmlCode = ''
 
     # header
@@ -503,14 +503,16 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     Timeout: %f
     Run only: %s
     Build only: %s
+
+    'Source Files' means the relative path of each source file from the assignment directory.
 </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
         args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
     # main table
     htmlCode += '''<table border=1>
 <tr>
-<td>Submission Title</td>
-<td>Source Files (Relative path from Assignment directory)</td>
+<td>Submission Title<br>(Submission Type)</td>
+<td>Source Files</td>
 <td>Output</td>
 <td>Score</td>
 <td>Comment</td>
@@ -518,7 +520,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
 
     for i in range(len(submittedFileNames)):
         htmlCode += '<tr>\n'
-        htmlCode += '<td>%s</td>\n'%submittedFileNames[i]
+        htmlCode += '<td>%s<br>(%s)</td>\n'%(submittedFileNames[i], gSubmissionTypeName[submissionTypes[i]])
         htmlCode += '<td>%s</td>\n'%getSourcesTable(srcFileLists[i])
         htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], userInputLists[i], exitTypeLists[i], stdoutStrLists[i])
         htmlCode += '<td>%s</td>\n'%''
@@ -721,6 +723,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
     exitTypeLists = []
     stdoutStrLists = []
     userInputLists = []
+    submissionTypes = []
 
     for i in range(len(allProjInfos)):
         projInfo = allProjInfos[i]
@@ -758,8 +761,9 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
         exitTypeLists.append(exitTypeList)
         stdoutStrLists.append(stdoutStrList)
         userInputLists.append(userInputList)
+        submissionTypes.append(submissionType)
 
-    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists
+    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes
 
 def buildOneProj(projInfo):
     submissionType = projInfo['submissionType']
@@ -1184,7 +1188,7 @@ default: %s'''%opjoin('.', 'output'))
             runResults[i] = [[-1], [''], ['']]
 
     # generate report data
-    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists = \
+    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes = \
             generateReportDataForAllProjs(allProjInfos, buildResults, runResults)
 
     print
@@ -1192,7 +1196,7 @@ default: %s'''%opjoin('.', 'output'))
     if not gArgs.no_report:
         print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
         generateReport(gArgs, submittedFileNames, \
-                        srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists)
+                        srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes)
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix
