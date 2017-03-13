@@ -480,53 +480,144 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
 ############################################
 # functions for report
 def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes):
+
+    cssCode = HtmlFormatter().get_style_defs()
+
+    cssCode += '''table.type08 {
+    border-collapse: collapse;
+    text-align: left;
+    line-height: 1.5;
+    border-left: 1px solid #ccc;
+    margin: 20px 10px;
+}
+
+table.type08 thead th {
+    padding: 10px;
+    font-weight: bold;
+    border-top: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    border-bottom: 2px solid #c00;
+    background: #dcdcd1;
+}
+table.type08 tbody th {
+    /*width: 150px;*/
+    padding: 10px;
+    font-weight: bold;
+    vertical-align: top;
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    background: #ececec;
+}
+table.type08 td {
+    /*width: 350px;*/
+    padding: 10px;
+    vertical-align: top;
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+table.type04 {
+    border-collapse: collapse;
+    /*border-collapse: separate;*/
+    /*border-spacing: 1px;*/
+    text-align: left;
+    line-height: 1.5;
+    border-top: 1px solid #ccc;
+  margin : 20px 10px;
+}
+table.type04 thead th {
+    padding: 10px;
+    font-weight: bold;
+    border-top: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    border-bottom: 2px solid #c00;
+    background: #dcdcd1;
+}
+table.type04 tbody th {
+    padding: 10px;
+    font-weight: bold;
+    vertical-align: top;
+    border-bottom: 1px solid #ccc;
+}
+table.type04 td {
+    padding: 10px;
+    vertical-align: top;
+    border-bottom: 1px solid #ccc;
+}'''
+
     htmlCode = ''
 
     # header
     htmlCode += '''<html>
 <head>
-<title>Assignment %s Report</title>
+<title>%s - PACERs Assignment Report</title>
 <style type="text/css">
 %s
 </style>
 </head>
-<body>'''%(args.assignment_alias, HtmlFormatter().get_style_defs())
+<body>
+<h2>%s - PACERs Assignment Report</h2>'''%(args.assignment_alias, cssCode, args.assignment_alias)
 
     # beginning
-    htmlCode += '''<pre>
-    Assignment %s Report
+    htmlCode += '''<table class="type04">
+    <thead>
+    <tr><th colspan=2>PACERs Options</th></tr>
+    </thead>
 
-    Assignment directory: %s
-    Output directory: %s
-    User input: %s
-    User dict: %s
-    Timeout: %f
-    Run only: %s
-    Build only: %s
-
-    'Source Files' means the relative path of each source file from the assignment directory.
-</pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
+    <tbody>
+    <tr><th>Assignment directory</th> <td>%s</td></tr>
+    <tr><th>Output directory</th> <td>%s</td></tr>
+    <tr><th>User input</th> <td>%s</td></tr>
+    <!--<tr><th>User dict</th> <td>%s</td></tr>-->
+    <tr><th>Timeout</th> <td>%f</td></tr>
+    <tr><th>Run only</th> <td>%s</td></tr>
+    <tr><th>Build only</th> <td>%s</td></tr>
+    </tbody>
+</table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
         args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
+    # # beginning
+    # htmlCode += '''<pre>
+    # Assignment %s Report
+
+    # Assignment directory: %s
+    # Output directory: %s
+    # User input: %s
+    # User dict: %s
+    # Timeout: %f
+    # Run only: %s
+    # Build only: %s
+
+    # 'Source Files' means the relative path of each source file from the assignment directory.
+# </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
+        # args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
+
     # main table
-    htmlCode += '''<table border=1>
+    htmlCode += '''
+<!--'Source Files' means the relative path of each source file from the assignment directory.-->
+<table class="type08">
+<thead>
 <tr>
-<td>Submission Title<br>(Submission Type)</td>
-<td>Source Files</td>
-<td>Output</td>
-<td>Score</td>
-<td>Comment</td>
-</tr>'''
+<th>Submission Title<br>(Submission Type)</th>
+<th>Source Files</th>
+<th>Output</th>
+<th>Score</th>
+<th>Comment</th>
+</tr>
+</thead>'''
+
+    htmlCode += '<tbody>\n'
 
     for i in range(len(submittedFileNames)):
         htmlCode += '<tr>\n'
-        htmlCode += '<td>%s<br>(%s)</td>\n'%(submittedFileNames[i], gSubmissionTypeName[submissionTypes[i]])
+        htmlCode += '<th>%s<br>(%s)</th>\n'%(submittedFileNames[i], gSubmissionTypeName[submissionTypes[i]])
         htmlCode += '<td>%s</td>\n'%getSourcesTable(srcFileLists[i])
         htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], userInputLists[i], exitTypeLists[i], stdoutStrLists[i])
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '</tr>\n'
 
+    htmlCode += '</tbody>\n'
     htmlCode += '</table>\n'
 
     # footer
