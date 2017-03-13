@@ -501,10 +501,10 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
     User input: %s
     User dict: %s
     Timeout: %f
-    Run only: %d
-    Build only: %d
+    Run only: %s
+    Build only: %s
 </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
-        args.user_input, args.user_dict, args.timeout, args.run_only, args.build_only)
+        args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
     # main table
     htmlCode += '''<table border=1>
