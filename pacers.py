@@ -134,6 +134,7 @@ from pygments.formatters import HtmlFormatter
 from unidecode import unidecode
 import chardet
 import multiprocessing as mp
+import platform
 
 if os.name=='nt':
     reload(sys)
@@ -144,20 +145,23 @@ elif os.name=='posix':
 
 ############################################
 # build functions
-# return buildRetCode, buildLog
+# return buildRetCode, buildLog, buildVersion
 # buildRetCode:
 #   -1 - build failed due to internal error, not because build error (not supported extension, etc)
 #   0 - build succeeded
 #   else - build failed due to build error
+# buildVersion:
+#   cmake-version
+#   visual-cpp-version
 
 def buildProj(submissionType, submissionDir, projName, projSrcFileNames):
     if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-        buildRetCode, buildLog = build_single_source(submissionDir, projName, projSrcFileNames[0])
+        buildRetCode, buildLog, buildVersion = build_single_source(submissionDir, projName, projSrcFileNames[0])
     elif submissionType==CMAKE_PROJECT:
-        buildRetCode, buildLog = build_cmake(submissionDir, projName)
+        buildRetCode, buildLog, buildVersion = build_cmake(submissionDir, projName)
     elif submissionType==VISUAL_CPP_PROJECT:
-        buildRetCode, buildLog = build_vcxproj(submissionDir, projName)
-    return buildRetCode, buildLog
+        buildRetCode, buildLog, buildVersion = build_vcxproj(submissionDir, projName)
+    return buildRetCode, buildLog, buildVersion
 
 ####
 # build_single functions
@@ -181,7 +185,7 @@ def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
 
 def build_single_else(extension):
     errorMsg = 'Building %s is not supported.'%extension
-    return -1, errorMsg 
+    return -1, errorMsg, ''
 
 ####
 # build_cmake functions
@@ -194,9 +198,9 @@ def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
         buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
-        return e.returncode, e.output
+        return e.returncode, e.output, 'cmake-version'
     else:
-        return 0, buildLog
+        return 0, buildLog, 'cmake-version'
 
 # return CMakeLists.txt code
 def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
@@ -216,7 +220,7 @@ def build_vcxproj(srcRootDir, projName):
     # do not need to make buildDir. msbuild.exe automatically makes the outdir.
     # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     # os.makedirs(buildDir)
-    
+
     vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
     vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcproj')))
     for i in range(len(vcxprojNames)-1, -1, -1):
@@ -233,9 +237,9 @@ def build_vcxproj(srcRootDir, projName):
         buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
                 %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
-        return e.returncode, e.output
+        return e.returncode, e.output, 'visual-cpp-version'
     else:
-        return 0, buildLog
+        return 0, buildLog, 'visual-cpp-version'
 
 ############################################
 # run functions
@@ -359,6 +363,60 @@ def onTimeOut(proc):
 
 
 ############################################
+# version functions
+def getCMakeVersionWindows():
+    versionStrs = []
+    # cmake
+    try: versionStr = subprocess.check_output('vcvars32.bat && cmake --version', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[1])
+
+    # nmake
+    try: versionStr = subprocess.check_output('vcvars32.bat && nmake /help', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[2])
+
+    # cl
+    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[1])
+
+    return versionStrs
+
+def getCMakeVersionPosix():
+    versionStrs = []
+    # cmake
+    try: versionStr = subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[0])
+
+    # nmake
+    try: versionStr = subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[0])
+
+    # cl
+    try: versionStr = subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[0])
+
+    return versionStrs
+
+def getVisulCppVersionWindows():
+    versionStrs = []
+    # msbuild
+    try: versionStr = subprocess.check_output('vcvars32.bat && msbuild /help', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[1])
+
+    # cl
+    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split('\r\n')[1])
+
+    return versionStrs
+
+############################################
 # pre-defined
 
 # submission type
@@ -376,6 +434,10 @@ gBuildDirPrefix = 'pacers-build-'
 gOSEnv = {'nt':{}, 'posix':{}}
 gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
 gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
+
+gOSEnv['nt']['cmake-version'] = getCMakeVersionWindows
+gOSEnv['posix']['cmake-version'] = getCMakeVersionPosix
+gOSEnv['nt']['visual-cpp-version'] = getVisulCppVersionWindows
 
 # gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 gSourceExt = {'.c':{}, '.cpp':{}}
@@ -409,6 +471,10 @@ gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
 gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
 gSubmissionPatterns[SOURCE_FILES]          = ['*']
 gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
+
+gVersionDescription                        = {}
+gVersionDescription['cmake-version']       = 'CMake & C/C++ Compiler'
+gVersionDescription['visual-cpp-version']  = 'Visual C/C++ Compiler'
 
 ############################################
 # utility functions
@@ -479,7 +545,7 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
 
 ############################################
 # functions for report
-def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet):
 
     cssCode = HtmlFormatter().get_style_defs()
 
@@ -549,16 +615,34 @@ table.type04 td {
 
     # header
     htmlCode += '''<html>
-<head>
-<title>%s - PACERs Assignment Report</title>
-<style type="text/css">
-%s
-</style>
-</head>
-<body>
-<h2>%s - PACERs Assignment Report</h2>'''%(args.assignment_alias, cssCode, args.assignment_alias)
+    <head>
+    <title>%s - PACERs Assignment Report</title>
+    <style type="text/css">
+    %s
+    </style>
+    </head>
+    <body>
+    <h2>%s - PACERs Assignment Report</h2>'''%(args.assignment_alias, cssCode, args.assignment_alias)
 
-    # beginning
+    # system information
+    htmlCode += '''<table class="type04">
+    <thead>
+    <tr><th colspan=2>System Information</th></tr>
+    </thead>
+
+    <tbody>
+    <tr><th>Operating System</th> <td>%s</td></tr>'''%(platform.platform())
+
+    for buildVersion in buildVersionSet:
+        htmlCode +='<tr><th>%s</th><td>'%gVersionDescription[buildVersion]
+        for versionText in gOSEnv[os.name][buildVersion]():
+            htmlCode +='%s<br>'%versionText
+        htmlCode +='</td></tr>'
+
+    htmlCode += '''</tbody>
+    </table>'''
+
+    # pacers options
     htmlCode += '''<table class="type04">
     <thead>
     <tr><th colspan=2>PACERs Options</th></tr>
@@ -573,38 +657,22 @@ table.type04 td {
     <tr><th>Run only</th> <td>%s</td></tr>
     <tr><th>Build only</th> <td>%s</td></tr>
     </tbody>
-</table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
+    </table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
         args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
-
-    # # beginning
-    # htmlCode += '''<pre>
-    # Assignment %s Report
-
-    # Assignment directory: %s
-    # Output directory: %s
-    # User input: %s
-    # User dict: %s
-    # Timeout: %f
-    # Run only: %s
-    # Build only: %s
-
-    # 'Source Files' means the relative path of each source file from the assignment directory.
-# </pre>'''%(args.assignment_alias, os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
-        # args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
     # main table
     htmlCode += '''
-<!--'Source Files' means the relative path of each source file from the assignment directory.-->
-<table class="type08">
-<thead>
-<tr>
-<th>Submission Title<br>(Submission Type)</th>
-<th>Source Files</th>
-<th>Output</th>
-<th>Score</th>
-<th>Comment</th>
-</tr>
-</thead>'''
+    <!--'Source Files' means the relative path of each source file from the assignment directory.-->
+    <table class="type08">
+    <thead>
+    <tr>
+    <th>Submission Title<br>(Submission Type)</th>
+    <th>Source Files</th>
+    <th>Output</th>
+    <th>Score</th>
+    <th>Comment</th>
+    </tr>
+    </thead>'''
 
     htmlCode += '<tbody>\n'
 
@@ -622,7 +690,7 @@ table.type04 td {
 
     # footer
     htmlCode += '''</body>
-</html>'''
+    </html>'''
 
     # write html
     with open(getReportFilePath(args), 'w') as f:
@@ -815,6 +883,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
     stdoutStrLists = []
     userInputLists = []
     submissionTypes = []
+    buildVersionSet = set()
 
     for i in range(len(allProjInfos)):
         projInfo = allProjInfos[i]
@@ -823,7 +892,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
         filesInProj = projInfo['filesInProj']
         submissionType = projInfo['submissionType']
 
-        buildRetCode, buildLog = buildResults[i]
+        buildRetCode, buildLog, buildVersion = buildResults[i]
 
         exitTypeList, stdoutStrList, userInputList = runResults[i]
 
@@ -853,8 +922,9 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
         stdoutStrLists.append(stdoutStrList)
         userInputLists.append(userInputList)
         submissionTypes.append(submissionType)
+        buildVersionSet.add(buildVersion)
 
-    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes
+    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet
 
 def buildOneProj(projInfo):
     submissionType = projInfo['submissionType']
@@ -862,9 +932,9 @@ def buildOneProj(projInfo):
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
 
-    buildRetCode, buildLog = buildProj(submissionType, submissionDir, projName, filesInProj)
+    buildRetCode, buildLog, buildVersion = buildProj(submissionType, submissionDir, projName, filesInProj)
 
-    return buildRetCode, buildLog
+    return buildRetCode, buildLog, buildVersion
 
 def runOneProj(projInfo, timeOut):
     submissionType = projInfo['submissionType']
@@ -944,8 +1014,8 @@ def getUserInputsFromUserDict(userDict, projName):
 # multi processing worker functions
 def worker_build(params):
     numAllProjs, i, projInfo, q = params
-    buildRetCode, buildLog = buildOneProj(projInfo)
-    q.put([i, buildRetCode, buildLog])
+    buildRetCode, buildLog, buildVersion = buildOneProj(projInfo)
+    q.put([i, buildRetCode, buildLog, buildVersion])
     printBuildResult(q.qsize(), numAllProjs, projInfo, buildRetCode, buildLog)
 
 def worker_run(params):
@@ -1237,20 +1307,20 @@ default: %s'''%opjoin('.', 'output'))
             q = mp.Manager().Queue()
             p.map(worker_build, [(len(allProjInfos), i, allProjInfos[i], q) for i in range(len(allProjInfos))])
             while not q.empty():
-                i, buildRetCode, buildLog = q.get()
-                buildResults[i] = [buildRetCode, buildLog]
+                i, buildRetCode, buildLog, buildVersion = q.get()
+                buildResults[i] = [buildRetCode, buildLog, buildVersion]
         else:
             print 
             print '%sBuilding projects in serial...'%gLogPrefix
             print
             for i in range(len(allProjInfos)):
                 printBuildStart(i+1, len(allProjInfos), allProjInfos[i])
-                buildRetCode, buildLog = buildOneProj(allProjInfos[i])
-                buildResults[i] = [buildRetCode, buildLog]
+                buildRetCode, buildLog, buildVersion = buildOneProj(allProjInfos[i])
+                buildResults[i] = [buildRetCode, buildLog, buildVersion]
                 printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
     else:
         for i in range(len(allProjInfos)):
-            buildResults[i] = [0, '']
+            buildResults[i] = [0, '', '']
 
     # run projects one by one
     runResults = [None]*len(allProjInfos)
@@ -1279,15 +1349,15 @@ default: %s'''%opjoin('.', 'output'))
             runResults[i] = [[-1], [''], ['']]
 
     # generate report data
-    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes = \
+    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet = \
             generateReportDataForAllProjs(allProjInfos, buildResults, runResults)
 
     print
 
     if not gArgs.no_report:
         print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
-        generateReport(gArgs, submittedFileNames, \
-                        srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes)
+        generateReport(gArgs, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists,
+                userInputLists, submissionTypes, buildVersionSet)
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix
