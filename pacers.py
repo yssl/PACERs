@@ -185,7 +185,7 @@ def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
 
 def build_single_else(extension):
     errorMsg = 'Building %s is not supported.'%extension
-    return -1, errorMsg, ''
+    return -1, errorMsg, 'no-build-version'
 
 ####
 # build_cmake functions
@@ -299,7 +299,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         # return 2, runcmd
-        return -1, 'Cannot find %s (May not be built yet).'%os.path.basename(runcmd)
+        return -1, 'Cannot find %s (May has not been built yet).'%os.path.basename(runcmd)
 
     if timeOut != 0:
         # call onTimeOut() after timeOut seconds
@@ -635,10 +635,11 @@ table.type04 td {
     <tr><th>Operating System</th> <td>%s</td></tr>'''%(platform.platform())
 
     for buildVersion in buildVersionSet:
-        htmlCode +='<tr><th>%s</th><td>'%gVersionDescription[buildVersion]
-        for versionText in gOSEnv[os.name][buildVersion]():
-            htmlCode +='%s<br>'%versionText
-        htmlCode +='</td></tr>'
+        if buildVersion != 'no-build-version':
+            htmlCode +='<tr><th>%s</th><td>'%gVersionDescription[buildVersion]
+            for versionText in gOSEnv[os.name][buildVersion]():
+                htmlCode +='%s<br>'%versionText
+            htmlCode +='</td></tr>'
 
     htmlCode += '''</tbody>
     </table>'''
