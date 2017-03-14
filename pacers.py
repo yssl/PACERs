@@ -196,7 +196,7 @@ def build_cmake(srcRootDir, projName):
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = subprocess.check_output(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir), cwd=buildDir, stderr=subprocess.STDOUT)
+        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output, 'cmake-version'
     else:
@@ -235,7 +235,7 @@ def build_vcxproj(srcRootDir, projName):
         # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
                 # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
         buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
-                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT)
+                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         return e.returncode, e.output, 'visual-cpp-version'
     else:
@@ -367,17 +367,17 @@ def onTimeOut(proc):
 def getCMakeVersionWindows():
     versionStrs = []
     # cmake
-    try: versionStr = subprocess.check_output('vcvars32.bat && cmake --version', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('vcvars32.bat && cmake --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # nmake
-    try: versionStr = subprocess.check_output('vcvars32.bat && nmake /help', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('vcvars32.bat && nmake /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[2])
 
     # cl
-    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
@@ -386,17 +386,17 @@ def getCMakeVersionWindows():
 def getCMakeVersionPosix():
     versionStrs = []
     # cmake
-    try: versionStr = subprocess.check_output('cmake --version', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = subprocess.check_output('make -v', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = subprocess.check_output('gcc --version', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -405,12 +405,12 @@ def getCMakeVersionPosix():
 def getVisulCppVersionWindows():
     versionStrs = []
     # msbuild
-    try: versionStr = subprocess.check_output('vcvars32.bat && msbuild /help', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('vcvars32.bat && msbuild /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # cl
-    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT)
+    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
