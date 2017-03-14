@@ -36,7 +36,7 @@ You can open the report in MS Word or MS Excel to edit it (to grade each submiss
     Install in Windows - ```pip install chardet```  
     Install in Linux - ```sudo pip install chardet```
 
-## Required environment setting
+## Note for Windows
 - On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
 - If you have installed multiple versions of Visual Studio and want to use one of them for PACERs, just add path of that version to the system path.  
 - Currently, PACERs only supports Visual Studio for C/C++ complier on Windows.  

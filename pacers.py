@@ -19,7 +19,7 @@ Requirements:
         : Install in Windows - "pip install chardet"
           Install in Linux - "sudo pip install chardet"
 
-Required environment setting:
+Note for Windows:
     On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
         C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
 
