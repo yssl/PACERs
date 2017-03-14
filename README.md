@@ -21,7 +21,7 @@ Programming Assignments Compiling, Executing, and Reporting system
 Open the generated report with your favorite browser.  
 
 ![example-result](https://cloud.githubusercontent.com/assets/5915359/23886079/4e0da5b6-08bb-11e7-8ec2-15ec263a0ff4.png)
-You can open the report in MS Word or MS Excel to edit it(to grade each submission).  
+You can open the report in MS Word or MS Excel to edit it (to grade each submission).  
 
 ## Requirements
 - Python 2.x
