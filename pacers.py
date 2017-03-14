@@ -1322,7 +1322,7 @@ default: %s'''%opjoin('.', 'output'))
                 printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
     else:
         for i in range(len(allProjInfos)):
-            buildResults[i] = [0, '', '']
+            buildResults[i] = [0, '', 'no-build-version']
 
     # run projects one by one
     runResults = [None]*len(allProjInfos)
