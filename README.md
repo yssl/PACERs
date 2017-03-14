@@ -75,9 +75,9 @@ The tested envirionments for each submission type are shown in the table.
 ./pacers.py test-assignments/c-assignment-1
 ./pacers.py test-assignments/c-assignment-2 --user-input "3 5"
 ./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
-./pacers.py test-assignments/c-assignment-3 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-./pacers.py test-assignments/c-assignment-4 --user-dict "{'1':[''], '2':['2 5', '10 20']}"
-```
+./pacers.py test-assignments/c-assignment-3 --user-input "2 5" "10 20"
+./pacers.py test-assignments/c-assignment-4 --user-input "2 5" "10 20"
+.```
 - text file
 ```
 ./pacers.py test-assignments/txt-assignment-1
