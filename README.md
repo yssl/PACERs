@@ -17,9 +17,10 @@ Programming Assignments Compiling, Executing, and Reporting system
 - On Linux: ```./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"```
 
 *3. Open the generated HTML report: ```<CWD>/output/c-assignment-2/report-c-assignment-2.html```*  
-Open the generated report with your favorite browser.  
-![example-result](https://cloud.githubusercontent.com/assets/5915359/23886079/4e0da5b6-08bb-11e7-8ec2-15ec263a0ff4.png)
 
+Open the generated report with your favorite browser.  
+
+![example-result](https://cloud.githubusercontent.com/assets/5915359/23886079/4e0da5b6-08bb-11e7-8ec2-15ec263a0ff4.png)
 You can open the report in MS Word or MS Excel to edit it(to grade each submission).  
 
 ## Requirements
