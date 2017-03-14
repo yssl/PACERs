@@ -437,7 +437,7 @@ gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && ma
 gOSEnv['nt']['cmake-version'] = getCMakeVersionWindows
 gOSEnv['posix']['cmake-version'] = getCMakeVersionPosix
 gOSEnv['nt']['visual-cpp-version'] = getVisulCppVersionWindows
-gOSEnv['posix']['visual-cpp-version'] = lambda: ['No Visual C/C++ Compiler available in this platform.']
+gOSEnv['posix']['visual-cpp-version'] = lambda: ['No Visual C/C++ compiler available in this platform.']
 
 # gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 gSourceExt = {'.c':{}, '.cpp':{}}
@@ -473,8 +473,8 @@ gSubmissionPatterns[SOURCE_FILES]          = ['*']
 gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
 
 gVersionDescription                        = {}
-gVersionDescription['cmake-version']       = 'CMake & C/C++ Compiler'
-gVersionDescription['visual-cpp-version']  = 'Visual C/C++ Compiler'
+gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
+gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 
 ############################################
 # utility functions
@@ -631,7 +631,7 @@ table.type04 td {
     </thead>
 
     <tbody>
-    <tr><th>Operating System</th> <td>%s</td></tr>'''%(platform.platform())
+    <tr><th>Operating system</th> <td>%s</td></tr>'''%(platform.platform())
 
     for buildVersion in buildVersionSet:
         if buildVersion != 'no-build-version':
