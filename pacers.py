@@ -22,7 +22,6 @@ Requirements:
 Required environment setting:
     On MS Windows, please add following paths to the system path. XX.X means your Visual Studio version.
         C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin
-        C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 
 Quick start:
     1) Run: git clone https://github.com/yssl/PACERs.git
@@ -367,19 +366,19 @@ def onTimeOut(proc):
 def getCMakeVersionWindows():
     versionStrs = []
     # cmake
-    try: versionStr = subprocess.check_output('vcvars32.bat && cmake --version', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split(os.linesep)[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = subprocess.check_output('vcvars32.bat && nmake /help', stderr=subprocess.STDOUT, shell=True)
-    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split(os.linesep)[2])
-
-    # cl
-    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && nmake /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
+
+    # cl
+    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     return versionStrs
 
@@ -405,14 +404,14 @@ def getCMakeVersionPosix():
 def getVisulCppVersionWindows():
     versionStrs = []
     # msbuild
-    try: versionStr = subprocess.check_output('vcvars32.bat && msbuild /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split(os.linesep)[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split(os.linesep)[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     return versionStrs
 

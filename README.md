@@ -38,9 +38,10 @@ You can open the report in MS Word or MS Excel to edit it (to grade each submiss
 
 ## Required environment setting
 - On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
+- If you have installed multiple versions of Visual Studio and want to use one of them for PACERs, just add path of that version to the system path.  
+- Currently, PACERs only supports Visual Studio for C/C++ complier on Windows.  
 ```
 C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin  
-C:\Program Files (x86)\Microsoft Visual Studio XX.X\Common7\IDE
 ```
 
 ## Quick start
