@@ -369,17 +369,17 @@ def getCMakeVersionWindows():
     # cmake
     try: versionStr = subprocess.check_output('vcvars32.bat && cmake --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # nmake
     try: versionStr = subprocess.check_output('vcvars32.bat && nmake /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[2])
+    else: versionStrs.append(versionStr.split(os.linesep)[2])
 
     # cl
     try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     return versionStrs
 
@@ -388,17 +388,17 @@ def getCMakeVersionPosix():
     # cmake
     try: versionStr = subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[0])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
     try: versionStr = subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[0])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
     try: versionStr = subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[0])
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     return versionStrs
 
@@ -407,12 +407,12 @@ def getVisulCppVersionWindows():
     # msbuild
     try: versionStr = subprocess.check_output('vcvars32.bat && msbuild /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # cl
     try: versionStr = subprocess.check_output('vcvars32.bat && cl /help', stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
-    else: versionStrs.append(versionStr.split('\r\n')[1])
+    else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     return versionStrs
 
@@ -438,6 +438,7 @@ gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && ma
 gOSEnv['nt']['cmake-version'] = getCMakeVersionWindows
 gOSEnv['posix']['cmake-version'] = getCMakeVersionPosix
 gOSEnv['nt']['visual-cpp-version'] = getVisulCppVersionWindows
+gOSEnv['posix']['visual-cpp-version'] = lambda: ['No Visual C/C++ Compiler available in this platform.']
 
 # gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
 gSourceExt = {'.c':{}, '.cpp':{}}
