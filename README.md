@@ -37,12 +37,22 @@ You can open the report in MS Word or MS Excel to edit it (to grade each submiss
     Install in Linux - ```sudo pip install chardet```
 
 ## Note for Windows
-- On MS Windows, please add the following paths to the system path. XX.X means your Visual Studio version.  
-- If you have installed multiple versions of Visual Studio and want to use one of them for PACERs, just add path of that version to the system path.  
-- Currently, PACERs only supports Visual Studio for C/C++ complier on Windows.  
+On MS Windows, please add the path to `vcvars32.bat` to the system path. For example:
+- Visual Studio 2010
 ```
-C:\Program Files (x86)\Microsoft Visual Studio XX.X\VC\bin  
+C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin  
 ```
+- Visual Studio 2015
+```
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin  
+```
+- Visual Studio 2017
+```
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build  
+```
+If you have installed multiple versions of Visual Studio and want to use one of them for PACERs, just add path of that version to the system path.  
+Currently, PACERs only supports Visual Studio for C/C++ complier on Windows.  
+
 
 ## Quick start
 1) Run: ```git clone https://github.com/yssl/PACERs.git```  
