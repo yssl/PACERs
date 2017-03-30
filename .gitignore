@@ -1,3 +1,4 @@
 output/
 *.bat
 *.pyc
+*r.py
