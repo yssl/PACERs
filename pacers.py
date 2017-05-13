@@ -317,7 +317,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         timer.start()
 
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(userInput)
+        stdoutStr, stderrStr = proc.communicate(userInput+'\n')
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -326,7 +326,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
             return 1, stdoutStr # 1 means 'forced kill due to timeout'
     else:
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(userInput)
+        stdoutStr, stderrStr = proc.communicate(userInput+'\n')
         return 0, stdoutStr
 
 def runcmd_single_c_cpp(srcRootDir, projName):
