@@ -560,7 +560,16 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
 
     cssCode = HtmlFormatter().get_style_defs()
 
-    cssCode += '''table.type08 {
+    cssCode += '''
+pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+table.type08 {
     border-collapse: collapse;
     text-align: left;
     line-height: 1.5;
@@ -620,7 +629,8 @@ table.type04 td {
     padding: 10px;
     vertical-align: top;
     border-bottom: 1px solid #ccc;
-}'''
+}
+'''
 
     htmlCode = ''
 
