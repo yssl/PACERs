@@ -302,8 +302,15 @@ def run_vcxproj(srcRootDir, projName, userInput, timeOut):
     return __run(runcmd, runcwd, userInput, timeOut)
 
 def __run(runcmd, runcwd, userInput, timeOut):
-    # if runcmd == '':
-        # return 3, ''
+    # append newline to finish stdin user input and flush input buffer
+    realInput = userInput+'\n'
+
+    # # insert newline character after each single character in userInput 
+    # # for example, for a user input for scanf("%c", ...);
+    # # TODO: make this as cmd argument
+    # realInput = ''
+    # for i in range(len(userInput)):
+        # realInput += userInput[i]+'\n'
 
     try:
         proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
@@ -317,7 +324,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         timer.start()
 
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(userInput+'\n')
+        stdoutStr, stderrStr = proc.communicate(realInput)
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -326,7 +333,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
             return 1, stdoutStr # 1 means 'forced kill due to timeout'
     else:
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(userInput+'\n')
+        stdoutStr, stderrStr = proc.communicate(realInput)
         return 0, stdoutStr
 
 def runcmd_single_c_cpp(srcRootDir, projName):
