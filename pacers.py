@@ -141,6 +141,7 @@ import pygments
 from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
+from pygments.lexers.special import TextLexer
 from unidecode import unidecode
 import chardet
 import multiprocessing as mp
@@ -325,7 +326,10 @@ def __run(runcmd, runcwd, userInput, timeOut):
         timer.start()
 
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(realInput)
+        try:
+            stdoutStr, stderrStr = proc.communicate(realInput)
+        except Exception as e:
+            return -1, str(type(e)) + ' ' + str(e)
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -798,9 +802,9 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             if exitType == 0:
                 s += '(user input: %s)\n'%userInput
                 success, unistr = getUnicodeStr(stdoutStr)
-                s += unistr
+                s += highlight(unistr, TextLexer(), HtmlFormatter())
             elif exitType == -1:
-                s += stdoutStr
+                s += highlight(stdoutStr, TextLexer(), HtmlFormatter())
             elif exitType == 1:   # time out
                 s += '(user input: %s)\n'%userInput
                 s += 'Timeout'
