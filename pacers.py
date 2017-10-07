@@ -145,6 +145,7 @@ from unidecode import unidecode
 import chardet
 import multiprocessing as mp
 import platform
+import urllib
 
 if os.name=='nt':
     reload(sys)
@@ -728,6 +729,9 @@ table.type04 td {
 def getReportFilePath(args):
     return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s.html'%args.assignment_alias)
 
+def getReportResourceDir(args):
+    return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s'%args.assignment_alias)
+
 def getSourcesTable(srcPaths):
     renderedSrcPaths = []
     renderedSource = []
@@ -766,8 +770,18 @@ def getRenderedSource(srcPath):
             try:
                 lexer = guess_lexer_for_filename(srcPath, unistr)
             except pygments.util.ClassNotFound as e:
-                # return '<p></p>'+'<pre>'+format(e)+'</pre>'
-                return False, 'No lexer found for:'
+                IMG_EXTS = ['.jpg', '.jpeg', '.gif', '.png', '.bmp']
+                if os.path.splitext(srcPath)[1].lower() in IMG_EXTS:
+                    resourceDir = getReportResourceDir(gArgs)
+                    if not os.path.isdir(resourceDir):
+                        os.makedirs(resourceDir)
+                    shutil.copy(srcPath, resourceDir)
+                    newImgPath = opjoin(os.path.basename(resourceDir), os.path.basename(srcPath))
+                    newImgPath = urllib.quote(newImgPath.encode('utf-8'))
+                    return True, '<p></p><img src="%s">'%newImgPath
+                else:
+                    # return '<p></p>'+'<pre>'+format(e)+'</pre>'
+                    return False, 'No lexer found for:'
             return True, highlight(unistr, lexer, HtmlFormatter())
         else:
             return False, '<p></p>'+'<pre>'+unistr+'</pre>'

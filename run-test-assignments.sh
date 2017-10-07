@@ -6,3 +6,5 @@
 ./pacers.py test-assignments/txt-assignment-1
 
 ./pacers.py test-assignments/cmake-assignment-1
+
+./pacers.py test-assignments/img-assignment-1
