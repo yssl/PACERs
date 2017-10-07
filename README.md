@@ -78,9 +78,10 @@ The tested envirionments for each submission type are shown in the table.
 
 | Submission types | Language | Tested environment      |
 |-------------------------|--------------------------|-------------------------|
-| SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor) |
+| SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng) |
 | SINGLE_SOURCE_FILE or SOURCE_FILES | text file                     | N/A (just showing the text) |    
-| CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
+| SINGLE_SOURCE_FILE or SOURCE_FILES | image file                     | N/A (just showing the image, '.jpg', '.jpeg', '.gif', '.png', '.bmp' are supported.) |    
+| CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng)  |    
 | VISUAL_CPP_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
 
 ## Try other test-assignments
@@ -95,6 +96,10 @@ The tested envirionments for each submission type are shown in the table.
 - text file
 ```
 ./pacers.py test-assignments/txt-assignment-1
+```
+- image file
+```
+./pacers.py test-assignments/img-assignment-1
 ```
 - CMake project
 ```
