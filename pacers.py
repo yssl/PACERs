@@ -763,28 +763,28 @@ def getSourcesTable(srcPaths):
     return htmlCode 
 
 def getRenderedSource(srcPath):
-    with open(srcPath, 'r') as f:
-        sourceCode = f.read()
-        success, unistr = getUnicodeStr(sourceCode)
-        if success:
-            try:
-                lexer = guess_lexer_for_filename(srcPath, unistr)
-            except pygments.util.ClassNotFound as e:
-                IMG_EXTS = ['.jpg', '.jpeg', '.gif', '.png', '.bmp']
-                if os.path.splitext(srcPath)[1].lower() in IMG_EXTS:
-                    resourceDir = getReportResourceDir(gArgs)
-                    if not os.path.isdir(resourceDir):
-                        os.makedirs(resourceDir)
-                    shutil.copy(srcPath, resourceDir)
-                    newImgPath = opjoin(os.path.basename(resourceDir), os.path.basename(srcPath))
-                    newImgPath = urllib.quote(newImgPath.encode('utf-8'))
-                    return True, '<p></p><img src="%s">'%newImgPath
-                else:
+    IMG_EXTS = ['.jpg', '.jpeg', '.gif', '.png', '.bmp']
+    if os.path.splitext(srcPath)[1].lower() in IMG_EXTS:
+        resourceDir = getReportResourceDir(gArgs)
+        if not os.path.isdir(resourceDir):
+            os.makedirs(resourceDir)
+        shutil.copy(srcPath, resourceDir)
+        newImgPath = opjoin(os.path.basename(resourceDir), os.path.basename(srcPath))
+        newImgPath = urllib.quote(newImgPath.encode('utf-8'))
+        return True, '<p></p><img src="%s">'%newImgPath
+    else:
+        with open(srcPath, 'r') as f:
+            sourceCode = f.read()
+            success, unistr = getUnicodeStr(sourceCode)
+            if success:
+                try:
+                    lexer = guess_lexer_for_filename(srcPath, unistr)
+                except pygments.util.ClassNotFound as e:
                     # return '<p></p>'+'<pre>'+format(e)+'</pre>'
                     return False, 'No lexer found for:'
-            return True, highlight(unistr, lexer, HtmlFormatter())
-        else:
-            return False, '<p></p>'+'<pre>'+unistr+'</pre>'
+                return True, highlight(unistr, lexer, HtmlFormatter())
+            else:
+                return False, '<p></p>'+'<pre>'+unistr+'</pre>'
 
 def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
