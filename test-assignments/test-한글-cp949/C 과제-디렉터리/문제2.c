@@ -1,6 +1,7 @@
 #include <stdio.h>
 int main()
 {
-    printf("안녕하세요\n");
+    int a, b;
+    printf("문제2\n");
     return 0;
 }
