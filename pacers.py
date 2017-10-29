@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
 
 ################################################################################
 # PACERs: Programming Assignments Compiling, Executing, and Reporting system
@@ -167,12 +166,12 @@ import multiprocessing as mp
 import platform
 import urllib
 
-if os.name=='nt':
-    reload(sys)
-    sys.setdefaultencoding('cp949')
-elif os.name=='posix':
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
+# if os.name=='nt':
+    # reload(sys)
+    # sys.setdefaultencoding('cp949')
+# elif os.name=='posix':
+    # reload(sys)
+    # sys.setdefaultencoding('utf-8')
 
 ############################################
 # build functions
@@ -215,7 +214,7 @@ def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
     # return 0, ''
 
 def build_single_else(extension):
-    errorMsg = 'Building %s is not supported.'%extension
+    errorMsg = u'Building %s is not supported.'%extension
     return -1, errorMsg, 'no-build-version'
 
 ####
@@ -227,9 +226,9 @@ def build_cmake(srcRootDir, projName):
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True)
+        buildLog = unicode_multiplatform(subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
-        return e.returncode, e.output, 'cmake-version'
+        return e.returncode, unicode_multiplatform(e.output), 'cmake-version'
     else:
         return 0, buildLog, 'cmake-version'
 
@@ -259,16 +258,16 @@ def build_vcxproj(srcRootDir, projName):
             del vcxprojNames[i]
 
     if len(vcxprojNames)==0:
-        errorMsg = 'Cannot find .vcxproj or .vcproj file.'
+        errorMsg = u'Cannot find .vcxproj or .vcproj file.'
         return -1, errorMsg 
 
     try:
         # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
                 # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
-        buildLog = subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
-                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True)
+        buildLog = unicode_multiplatform(subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
+                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
-        return e.returncode, e.output, 'visual-cpp-version'
+        return e.returncode, unicode_multiplatform(e.output), 'visual-cpp-version'
     else:
         return 0, buildLog, 'visual-cpp-version'
 
@@ -347,8 +346,9 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # block until proc is finished
         try:
             stdoutStr, stderrStr = proc.communicate(realInput)
+            stdoutStr = unicode_multiplatform(stdoutStr)
         except Exception as e:
-            return -1, str(type(e)) + ' ' + str(e)
+            return -1, type(e) + ' ' + unicode_multiplatform(e)
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -358,6 +358,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
     else:
         # block until proc is finished
         stdoutStr, stderrStr = proc.communicate(realInput)
+        stdoutStr = unicode_multiplatform(stdoutStr)
         return 0, stdoutStr
 
 def runcmd_single_c_cpp(srcRootDir, projName):
@@ -408,17 +409,17 @@ def onTimeOut(proc):
 def getCMakeVersionWindows():
     versionStrs = []
     # cmake
-    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && nmake /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && nmake /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # cl
-    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -427,17 +428,17 @@ def getCMakeVersionWindows():
 def getCMakeVersionPosix():
     versionStrs = []
     # cmake
-    try: versionStr = subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -446,12 +447,12 @@ def getCMakeVersionPosix():
 def getVisulCppVersionWindows():
     versionStrs = []
     # msbuild
-    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True)
+    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -520,6 +521,16 @@ gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 
 ############################################
 # utility functions
+
+def unicode_multiplatform(str):
+    try:
+        retstr = unicode(str, sys.getfilesystemencoding())
+    except UnicodeDecodeError as e:
+        retstr = unicode(str, chardet.detect(str))
+        return retstr
+    else:
+        return retstr
+
 def unico2decoPath(unicoPath, deco2unicoMap):
     unicoTokens = os.path.normpath(unicoPath).split(os.sep)
 
@@ -570,6 +581,7 @@ def deco2unicoPath(decoPath, deco2unicoMap):
 def unzipInAssignDir(assignDir):
     zipFileNames = []
     unzipDirNames = []
+    assignDir = assignDir.encode(sys.getfilesystemencoding())
     for name in os.listdir(assignDir):
         filePath = opjoin(assignDir, name)
         if zipfile.is_zipfile(filePath):
@@ -591,7 +603,7 @@ def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildL
 
     cssCode = HtmlFormatter().get_style_defs()
 
-    cssCode += '''
+    cssCode += u'''
 pre {
     white-space: pre-wrap;       /* Since CSS 2.1 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
@@ -663,7 +675,7 @@ table.type04 td {
 }
 '''
 
-    htmlCode = ''
+    htmlCode = u''
 
     # header
     htmlCode += '''<html>
@@ -710,7 +722,7 @@ table.type04 td {
     <tr><th>Run only</th> <td>%s</td></tr>
     <tr><th>Build only</th> <td>%s</td></tr>
     </tbody>
-    </table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(unicode(args.assignment_alias))), 
+    </table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(args.assignment_alias)), 
         args.user_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
     # main table
@@ -750,10 +762,10 @@ table.type04 td {
         f.write(htmlCode.encode('utf-8'))
         
 def getReportFilePath(args):
-    return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s.html'%args.assignment_alias)
+    return opjoin(opjoin(args.output_dir, unidecode(args.assignment_alias)),'report-%s.html'%args.assignment_alias)
 
 def getReportResourceDir(args):
-    return opjoin(opjoin(args.output_dir, unidecode(unicode(args.assignment_alias))),'report-%s'%args.assignment_alias)
+    return opjoin(opjoin(args.output_dir, unidecode(args.assignment_alias)),'report-%s'%args.assignment_alias)
 
 def getSourcesTable(srcPaths):
     renderedSrcPaths = []
@@ -798,16 +810,23 @@ def getRenderedSource(srcPath):
     else:
         with open(srcPath, 'r') as f:
             sourceCode = f.read()
-            success, unistr = getUnicodeStr(sourceCode)
-            if success:
-                try:
-                    lexer = guess_lexer_for_filename(srcPath, unistr)
-                except pygments.util.ClassNotFound as e:
-                    # return '<p></p>'+'<pre>'+format(e)+'</pre>'
-                    return False, 'No lexer found for:'
-                return True, highlight(unistr, lexer, HtmlFormatter())
-            else:
-                return False, '<p></p>'+'<pre>'+unistr+'</pre>'
+            sourceCode = unicode_multiplatform(sourceCode)
+            try:
+                lexer = guess_lexer_for_filename(srcPath, sourceCode)
+            except pygments.util.ClassNotFound as e:
+                return False, 'No lexer found for:'
+            return True, highlight(sourceCode, lexer, HtmlFormatter())
+
+            # success, unistr = getUnicodeStr(sourceCode)
+            # if success:
+                # try:
+                    # lexer = guess_lexer_for_filename(srcPath, unistr)
+                # except pygments.util.ClassNotFound as e:
+                    # # return '<p></p>'+'<pre>'+format(e)+'</pre>'
+                    # return False, 'No lexer found for:'
+                # return True, highlight(unistr, lexer, HtmlFormatter())
+            # else:
+                # return False, '<p></p>'+'<pre>'+unistr+'</pre>'
 
 def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
@@ -820,8 +839,9 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             stdoutStr = stdoutStrList[i]
             if exitType == 0:
                 s += '(user input: %s)\n'%userInput
-                success, unistr = getUnicodeStr(stdoutStr)
-                s += highlight(unistr, TextLexer(), HtmlFormatter())
+                # success, unistr = getUnicodeStr(stdoutStr)
+                # s += highlight(unistr, TextLexer(), HtmlFormatter())
+                s += highlight(stdoutStr, TextLexer(), HtmlFormatter())
             elif exitType == -1:
                 s += highlight(stdoutStr, TextLexer(), HtmlFormatter())
             elif exitType == 1:   # time out
@@ -830,31 +850,31 @@ def getOutput(buildRetCode, buildLog, userInputList, exitTypeList, stdoutStrList
             s += '\n'
     return s
  
-def getUnicodeStr(str):
-    success = True
-    encodingStrs = ['utf-8', sys.getfilesystemencoding(), '(chardet)']
-    try:
-        detected = chardet.detect(str)
-    except ValueError as e:
-        retstr = format(e)
-        success = False
-        return success, retstr
+# def getUnicodeStr(str):
+    # success = True
+    # encodingStrs = ['utf-8', sys.getfilesystemencoding(), '(chardet)']
+    # try:
+        # detected = chardet.detect(str)
+    # except ValueError as e:
+        # retstr = format(e)
+        # success = False
+        # return success, retstr
 
-    for encodingStr in encodingStrs:
-        if encodingStr=='(chardet)':
-            encoding = detected['encoding']
-        else:
-            encoding = encodingStr
+    # for encodingStr in encodingStrs:
+        # if encodingStr=='(chardet)':
+            # encoding = detected['encoding']
+        # else:
+            # encoding = encodingStr
 
-        try:
-            retstr = unicode(str, encoding)
-            success = True
-            break
-        except UnicodeDecodeError as e:
-            retstr = format(e)+'\n(chardet detects %s with the confidence level of %f)'%(detected['encoding'], detected['confidence'])
-            success = False
+        # try:
+            # retstr = unicode(str, encoding)
+            # success = True
+            # break
+        # except UnicodeDecodeError as e:
+            # retstr = format(e)+'\n(chardet detects %s with the confidence level of %f)'%(detected['encoding'], detected['confidence'])
+            # success = False
 
-    return success, retstr
+    # return success, retstr
         
 ############################################
 # main functions
@@ -876,10 +896,10 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
 
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
-                projSrcFileNames = [[unico2decoPath(unicode(submissionTitle), deco2unicoMap)]]
+                projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
 
             elif submissionType==SOURCE_FILES:
-                submissionDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+                submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
 
                 # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
                 projSrcFileNames = []
@@ -1033,7 +1053,7 @@ def detectSubmissionType(submissionPath):
 
 def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
     origSubDir = opjoin(destDir, submissionTitle)
-    newSubDir = opjoin(destDir, unico2decoPath(unicode(submissionTitle), deco2unicoMap))
+    newSubDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
 
     # if --run-only mode, os.rename() will throw an exception, which is expected behavior.
     try:
@@ -1043,26 +1063,17 @@ def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap
 
     for root, dirs, files in os.walk(newSubDir, topdown=False):
         for name in dirs:
-            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            decoName = unico2decoPath(name, deco2unicoMap)
             try:
                 os.rename(opjoin(root, name), opjoin(root, decoName))
             except:
                 pass
         for name in files:
-            decoName = unico2decoPath(unicode(name), deco2unicoMap)
+            decoName = unico2decoPath(name, deco2unicoMap)
             try:
                 os.rename(opjoin(root, name), opjoin(root, decoName))
             except:
                 pass
-
-def decodeDestDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
-    for root, dirs, files in os.walk(destDir, topdown=False):
-        for name in dirs:
-            decoName = unico2decoPath(unicode(name), deco2unicoMap)
-            os.rename(opjoin(root, name), opjoin(root, decoName))
-        for name in files:
-            decoName = unico2decoPath(unicode(name), deco2unicoMap)
-            os.rename(opjoin(root, name), opjoin(root, decoName))
 
 def getUserInputsFromUserDict(userDict, projName):
     userInputs = None
@@ -1311,6 +1322,12 @@ default: %s'''%opjoin('.', 'output'))
         gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
     ############################################
+    # unicode arguments
+    gArgs.assignment_dir = unicode_multiplatform(gArgs.assignment_dir)
+    gArgs.assignment_alias = unicode_multiplatform(gArgs.assignment_alias)
+    gArgs.output_dir = unicode_multiplatform(gArgs.output_dir)
+
+    ############################################
     # main routine
 
     print
@@ -1331,7 +1348,7 @@ default: %s'''%opjoin('.', 'output'))
 
     # copy assignment_dir to destDir(output_dir/assignment_alias)
     deco2unicoMap = {'':''}
-    decodeAlias = unico2decoPath(unicode(gArgs.assignment_alias), deco2unicoMap)
+    decodeAlias = unico2decoPath(gArgs.assignment_alias, deco2unicoMap)
     destDir = opjoin(gArgs.output_dir, decodeAlias)
 
     if not gArgs.run_only:
