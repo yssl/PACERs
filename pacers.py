@@ -234,7 +234,7 @@ def __build_cmake(buildDir, cmakeLocationFromBuildDir):
 
 # return CMakeLists.txt code
 def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
-    code = ''
+    code = u''
     code += 'cmake_minimum_required(VERSION 2.6)\n'
     code += 'project(%s)\n'%projName
     code += 'add_executable(%s '%projName
@@ -242,7 +242,7 @@ def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
     code += ')\n'
 
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
-        f.write(code)
+        f.write(code.encode(sys.getfilesystemencoding()))
 
 ####
 # build_vcxproj functions
@@ -348,7 +348,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
             stdoutStr, stderrStr = proc.communicate(realInput)
             stdoutStr = unicode_multiplatform(stdoutStr)
         except Exception as e:
-            return -1, type(e) + ' ' + unicode_multiplatform(e)
+            return -1, unicode_multiplatform(str(type(e)) + ' ' + str(e))
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -469,7 +469,7 @@ SOURCE_FILES          = 3
 SINGLE_SOURCE_FILE    = 4
 END_SUBMISSION_TYPE   = 5
 
-opjoin = os.path.join
+# opjoin = os.path.join
 gLogPrefix = '# '
 gBuildDirPrefix = 'pacers-build-'
 
@@ -522,11 +522,20 @@ gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 ############################################
 # utility functions
 
+def opjoin(a, b):
+    if os.name=='posix':
+        # Convert paths for os.path.join to byte string only for posix os (due to python bug?)
+        return unicode_multiplatform(os.path.join(a.encode(sys.getfilesystemencoding()), b.encode(sys.getfilesystemencoding())))
+    else:
+        return os.path.join(a, b)
+
 def unicode_multiplatform(str):
+    if isinstance(str, unicode):
+        return str
     try:
         retstr = unicode(str, sys.getfilesystemencoding())
     except UnicodeDecodeError as e:
-        retstr = unicode(str, chardet.detect(str))
+        retstr = unicode(str, chardet.detect(str)['encoding'])
         return retstr
     else:
         return retstr
@@ -581,13 +590,13 @@ def deco2unicoPath(decoPath, deco2unicoMap):
 def unzipInAssignDir(assignDir):
     zipFileNames = []
     unzipDirNames = []
-    assignDir = assignDir.encode(sys.getfilesystemencoding())
     for name in os.listdir(assignDir):
         filePath = opjoin(assignDir, name)
         if zipfile.is_zipfile(filePath):
             with zipfile.ZipFile(filePath, 'r') as z:
                 unzipDir = os.path.splitext(filePath)[0]
                 unzipDir = unzipDir.strip()
+                unzipDir = unzipDir.encode(sys.getfilesystemencoding())
                 z.extractall(unzipDir)
                 zipFileNames.append(name)
                 unzipDirNames.append(unzipDir)
@@ -903,10 +912,20 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
 
                 # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
                 projSrcFileNames = []
-                for root, dirs, files in os.walk(submissionDir):
-                    if gBuildDirPrefix not in root:
-                        for name in files:
-                            projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
+
+                # Convert paths for os.walk to byte string only for posix os (due to python bug?)
+                if os.name=='posix':
+                    for root, dirs, files in os.walk(submissionDir.encode(sys.getfilesystemencoding())):
+                        if gBuildDirPrefix not in root:
+                            for name in files:
+                                root = unicode_multiplatform(root)
+                                name = unicode_multiplatform(name)
+                                projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
+                else:
+                    for root, dirs, files in os.walk(submissionDir):
+                        if gBuildDirPrefix not in root:
+                            for name in files:
+                                projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
 
             projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
@@ -1044,8 +1063,13 @@ def detectSubmissionType(submissionPath):
         # print 'dir'
         for submissionType in range(BEGIN_SUBMISSION_TYPE+1, END_SUBMISSION_TYPE):
             for pattern in gSubmissionPatterns[submissionType]:
-                if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
-                    return submissionType
+                # Convert paths for glob to byte string only for posix os (due to python bug?)
+                if os.name=='posix':
+                    if len(glob.glob(opjoin(submissionPath, pattern).encode(sys.getfilesystemencoding()))) > 0:
+                        return submissionType
+                else:
+                    if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
+                        return submissionType
         return SOURCE_FILES
     else:
         # print 'file'
@@ -1061,14 +1085,27 @@ def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap
     except:
         pass
 
+    # Convert paths for os.walk to byte string only for posix os (due to python bug?)
+    if os.name=='posix':
+        newSubDir = newSubDir.encode(sys.getfilesystemencoding())
+
     for root, dirs, files in os.walk(newSubDir, topdown=False):
         for name in dirs:
+
+            if os.name=='posix':
+                name = unicode_multiplatform(name)
+
             decoName = unico2decoPath(name, deco2unicoMap)
             try:
                 os.rename(opjoin(root, name), opjoin(root, decoName))
             except:
                 pass
+
         for name in files:
+            
+            if os.name=='posix':
+                name = unicode_multiplatform(name)
+
             decoName = unico2decoPath(name, deco2unicoMap)
             try:
                 os.rename(opjoin(root, name), opjoin(root, decoName))
@@ -1282,7 +1319,7 @@ ASSIGNMENT_ALIAS is used when making a sub-directory
 in OUTPUT_DIR and the final report file. 
 default: "basename" of assignment_dir (bar if 
 assignment_dir is /foo/bar/).''')
-    parser.add_argument('--output-dir', default=opjoin('.', 'output'),
+    parser.add_argument('--output-dir', default=opjoin(u'.', u'output'),
                         help='''Specify OUTPUT_DIR in which the final report file 
 and build output files to be generated. 
 Avoid including hangul characters in its full path.
@@ -1325,7 +1362,6 @@ default: %s'''%opjoin('.', 'output'))
     # unicode arguments
     gArgs.assignment_dir = unicode_multiplatform(gArgs.assignment_dir)
     gArgs.assignment_alias = unicode_multiplatform(gArgs.assignment_alias)
-    gArgs.output_dir = unicode_multiplatform(gArgs.output_dir)
 
     ############################################
     # main routine
@@ -1355,10 +1391,18 @@ default: %s'''%opjoin('.', 'output'))
         print '%sCopying all submissions from \'%s\' to \'%s\'...'%(gLogPrefix, gArgs.assignment_dir, destDir)
         # delete exsting one
         if os.path.exists(destDir):
-            shutil.rmtree(destDir)
+            # Convert paths for shutil to byte string only for posix os (due to python bug?)
+            if os.name=='posix':
+                shutil.rmtree(destDir.encode(sys.getfilesystemencoding()))
+            else:
+                shutil.rmtree(destDir)
             time.sleep(.01)
         # copy tree
-        shutil.copytree(gArgs.assignment_dir, destDir)
+        if os.name=='posix':
+            # Convert paths for shutil to byte string only for posix os (due to python bug?)
+            shutil.copytree(gArgs.assignment_dir.encode(sys.getfilesystemencoding()), destDir.encode(sys.getfilesystemencoding()))
+        else:
+            shutil.copytree(gArgs.assignment_dir, destDir)
     else:
         # delete report file only
         try:
