@@ -226,7 +226,7 @@ def build_cmake(srcRootDir, projName):
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = unicode_multiplatform(subprocess.check_output('cd %s && %s'%(buildDir, gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True))
+        buildLog = unicode_multiplatform(subprocess.check_output('cd %s && %s'%(buildDir.encode(sys.getfilesystemencoding()), gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
         return e.returncode, unicode_multiplatform(e.output), 'cmake-version'
     else:
@@ -333,7 +333,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # realInput += userInput[i]+'\n'
 
     try:
-        proc = subprocess.Popen([runcmd], cwd=runcwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        proc = subprocess.Popen([runcmd.encode(sys.getfilesystemencoding())], cwd=runcwd.encode(sys.getfilesystemencoding()), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         # return 2, runcmd
         return -1, 'Cannot find %s (May has not been built yet).'%os.path.basename(runcmd)
@@ -521,6 +521,14 @@ gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 
 ############################################
 # utility functions
+def copytree2(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = opjoin(src, item)
+        d = opjoin(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
 
 def opjoin(a, b):
     if os.name=='posix':
@@ -914,6 +922,7 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
                 projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
+                projNames = [os.path.splitext(unico2decoPath(submissionTitle, deco2unicoMap))[0]]
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
@@ -935,11 +944,30 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
                             for name in files:
                                 projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
 
-            projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
+                projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
-        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+        elif submissionType==CMAKE_PROJECT:
+            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+            submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+            projNames = [unico2decoPath(submissionTitle, deco2unicoMap)]
+
+            projSrcFileNames = [[]]
+            for root, dirs, files in os.walk(submissionDir):
+                if gBuildDirPrefix not in root:
+                    for name in files:
+                        fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
+
+                        isSrcFile = True
+                        for pattern in gArgs.exclude_patterns:
+                            if fnmatch.fnmatch(fileName, pattern):
+                                isSrcFile = False
+                                break
+
+                        if isSrcFile:
+                            projSrcFileNames[0].append(fileName)
+
+        elif submissionType==VISUAL_CPP_PROJECT:
             # No need of decodeDestSubmissionDirPathRecursive(), 
-            # because CMAKE_PROJECT should not include multibyte characters in its file paths already (due to cmake restriction)
             # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
             submissionDir = opjoin(destDir, submissionTitle)
             projNames = [submissionTitle]
@@ -1021,7 +1049,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults):
             if gArgs.run_only:
                 projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
             else:
-                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES or submissionType==CMAKE_PROJECT:
                     # deco2unico src file paths to properly display in the report
                     origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
                 else:
@@ -1082,6 +1110,16 @@ def detectSubmissionType(submissionPath):
     else:
         # print 'file'
         return SINGLE_SOURCE_FILE
+
+def decodeDestSubmissionDirPath(destDir, submissionTitle, deco2unicoMap):
+    origSubDir = opjoin(destDir, submissionTitle)
+    newSubDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+
+    # if --run-only mode, os.rename() will throw an exception, which is expected behavior.
+    try:
+        os.rename(origSubDir, newSubDir)
+    except:
+        pass
 
 def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
     origSubDir = opjoin(destDir, submissionTitle)
@@ -1425,6 +1463,24 @@ default: %s'''%opjoin('.', 'output'))
         if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
             continue
         submissionTitles.append(name)
+
+    # tidy submission dir up if submission dir has only one subdir and no files
+    # ex)
+    # submissionTitle/
+    #   - dir1
+    #     - file1
+    #     - file2
+    # =>
+    # submissionTitle/
+    #   - file1
+    #   - file2
+    for i in range(len(submissionTitles)):
+        submissionPath = opjoin(gArgs.assignment_dir, submissionTitles[i])
+        if os.path.isdir(submissionPath):
+            ls = os.listdir(submissionPath)
+            if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):
+                copytree2(opjoin(submissionPath, ls[0]), submissionPath)
+                shutil.rmtree(opjoin(submissionPath, ls[0]))
 
     # collect all project info
     allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, destDir, deco2unicoMap)
