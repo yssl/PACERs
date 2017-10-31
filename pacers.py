@@ -588,18 +588,26 @@ def deco2unicoPath(decoPath, deco2unicoMap):
 ############################################
 # functions for unzipping
 def unzipInAssignDir(assignDir):
-    zipFileNames = []
     unzipDirNames = []
     for name in os.listdir(assignDir):
         filePath = opjoin(assignDir, name)
         if zipfile.is_zipfile(filePath):
-            with zipfile.ZipFile(filePath, 'r') as z:
-                unzipDir = os.path.splitext(filePath)[0]
-                unzipDir = unzipDir.strip()
-                unzipDir = unzipDir.encode(sys.getfilesystemencoding())
-                z.extractall(unzipDir)
-                zipFileNames.append(name)
-                unzipDirNames.append(unzipDir)
+            if os.name=='posix':
+                # Use unzip command instead of python zipfile module only for posix os (due to python bug?)
+                try:
+                    unzipDir = os.path.splitext(filePath)[0]
+                    subprocess.check_output('unzip "%s" -d "%s"'%(filePath, unzipDir), stderr=subprocess.STDOUT, shell=True)
+                except subprocess.CalledProcessError as e:
+                    print e.output
+                else:
+                    unzipDirNames.append(unzipDir)
+            else:
+                with zipfile.ZipFile(filePath, 'r') as z:
+                    unzipDir = os.path.splitext(filePath)[0]
+                    unzipDir = unzipDir.strip()
+                    unzipDir = unzipDir.encode(sys.getfilesystemencoding())
+                    z.extractall(unzipDir)
+                    unzipDirNames.append(unzipDir)
     return unzipDirNames
 
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
