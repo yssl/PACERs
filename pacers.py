@@ -219,9 +219,9 @@ def build_cmake(srcRootDir, projName):
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = unicode_multiplatform(subprocess.check_output('cd %s && %s'%(buildDir.encode(sys.getfilesystemencoding()), gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir)), stderr=subprocess.STDOUT, shell=True))
+        buildLog = toUnicode(subprocess.check_output('cd %s && %s'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
-        return e.returncode, unicode_multiplatform(e.output), 'cmake-version'
+        return e.returncode, toUnicode(e.output), 'cmake-version'
     else:
         return 0, buildLog, 'cmake-version'
 
@@ -235,7 +235,7 @@ def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
     code += ')\n'
 
     with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
-        f.write(code.encode(sys.getfilesystemencoding()))
+        f.write(toString(code))
 
 ####
 # build_vcxproj functions
@@ -257,10 +257,10 @@ def build_vcxproj(srcRootDir, projName):
     try:
         # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
                 # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
-        buildLog = unicode_multiplatform(subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
+        buildLog = toUnicode(subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
                 %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
-        return e.returncode, unicode_multiplatform(e.output), 'visual-cpp-version'
+        return e.returncode, toUnicode(e.output), 'visual-cpp-version'
     else:
         return 0, buildLog, 'visual-cpp-version'
 
@@ -326,7 +326,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # realInput += userInput[i]+'\n'
 
     try:
-        proc = subprocess.Popen([runcmd.encode(sys.getfilesystemencoding())], cwd=runcwd.encode(sys.getfilesystemencoding()), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        proc = subprocess.Popen([toString(runcmd)], cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         # return 2, runcmd
         return -1, 'Cannot find %s (May has not been built yet).'%os.path.basename(runcmd)
@@ -339,9 +339,9 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # block until proc is finished
         try:
             stdoutStr, stderrStr = proc.communicate(realInput)
-            stdoutStr = unicode_multiplatform(stdoutStr)
+            stdoutStr = toUnicode(stdoutStr)
         except Exception as e:
-            return -1, unicode_multiplatform(str(type(e)) + ' ' + str(e))
+            return -1, toUnicode(str(type(e)) + ' ' + str(e))
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut()
             timer.cancel()
@@ -351,7 +351,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
     else:
         # block until proc is finished
         stdoutStr, stderrStr = proc.communicate(realInput)
-        stdoutStr = unicode_multiplatform(stdoutStr)
+        stdoutStr = toUnicode(stdoutStr)
         return 0, stdoutStr
 
 def runcmd_single_c_cpp(srcRootDir, projName):
@@ -402,17 +402,17 @@ def onTimeOut(proc):
 def getCMakeVersionWindows():
     versionStrs = []
     # cmake
-    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && nmake /help', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && nmake /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[1])
 
     # cl
-    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -421,17 +421,17 @@ def getCMakeVersionWindows():
 def getCMakeVersionPosix():
     versionStrs = []
     # cmake
-    try: versionStr = unicode_multiplatform(subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # nmake
-    try: versionStr = unicode_multiplatform(subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = unicode_multiplatform(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -440,12 +440,12 @@ def getCMakeVersionPosix():
 def getVisulCppVersionWindows():
     versionStrs = []
     # msbuild
-    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
     # cl
-    try: versionStr = unicode_multiplatform(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
+    try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && cl /help', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -456,17 +456,22 @@ def getVisulCppVersionWindows():
 def opjoin(a, b):
     if os.name=='posix':
         # Convert paths for os.path.join to byte string only for posix os (due to python bug?)
-        return unicode_multiplatform(os.path.join(a.encode(sys.getfilesystemencoding()), b.encode(sys.getfilesystemencoding())))
+        return toUnicode(os.path.join(toString(a), toString(b)))
     else:
         return os.path.join(a, b)
 
-def unicode_multiplatform(str):
-    if isinstance(str, unicode):
-        return str
+def toString(unistr):
+    if isinstance(unistr, str):
+        return unistr
+    return unistr.encode(sys.getfilesystemencoding())
+
+def toUnicode(string):
+    if isinstance(string, unicode):
+        return string
     try:
-        retstr = unicode(str, sys.getfilesystemencoding())
+        retstr = unicode(string, sys.getfilesystemencoding())
     except UnicodeDecodeError as e:
-        retstr = unicode(str, chardet.detect(str)['encoding'])
+        retstr = unicode(string, chardet.detect(string)['encoding'])
         return retstr
     else:
         return retstr
@@ -547,7 +552,7 @@ def unzipInAssignDir(assignDir):
                 with zipfile.ZipFile(filePath, 'r') as z:
                     unzipDir = os.path.splitext(filePath)[0]
                     unzipDir = unzipDir.strip()
-                    unzipDir = unzipDir.encode(sys.getfilesystemencoding())
+                    unzipDir = toString(unzipDir)
                     z.extractall(unzipDir)
                     unzipDirNames.append(unzipDir)
     return unzipDirNames
@@ -769,7 +774,7 @@ def getRenderedSource(srcPath):
     else:
         with open(srcPath, 'r') as f:
             sourceCode = f.read()
-            sourceCode = unicode_multiplatform(sourceCode)
+            sourceCode = toUnicode(sourceCode)
             try:
                 lexer = guess_lexer_for_filename(srcPath, sourceCode)
             except pygments.util.ClassNotFound as e:
@@ -866,11 +871,11 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
 
                 # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                 if os.name=='posix':
-                    for root, dirs, files in os.walk(submissionDir.encode(sys.getfilesystemencoding())):
+                    for root, dirs, files in os.walk(toString(submissionDir)):
                         if gBuildDirPrefix not in root:
                             for name in files:
-                                root = unicode_multiplatform(root)
-                                name = unicode_multiplatform(name)
+                                root = toUnicode(root)
+                                name = toUnicode(name)
                                 projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
                 else:
                     for root, dirs, files in os.walk(submissionDir):
@@ -1034,7 +1039,7 @@ def detectSubmissionType(submissionPath):
             for pattern in gSubmissionPatterns[submissionType]:
                 # Convert paths for glob to byte string only for posix os (due to python bug?)
                 if os.name=='posix':
-                    if len(glob.glob(opjoin(submissionPath, pattern).encode(sys.getfilesystemencoding()))) > 0:
+                    if len(toString(glob.glob(opjoin(submissionPath, pattern)))) > 0:
                         return submissionType
                 else:
                     if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
@@ -1056,13 +1061,13 @@ def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap
 
     # Convert paths for os.walk to byte string only for posix os (due to python bug?)
     if os.name=='posix':
-        newSubDir = newSubDir.encode(sys.getfilesystemencoding())
+        newSubDir = toString(newSubDir)
 
     for root, dirs, files in os.walk(newSubDir, topdown=False):
         for name in dirs:
 
             if os.name=='posix':
-                name = unicode_multiplatform(name)
+                name = toUnicode(name)
 
             decoName = unico2decoPath(name, deco2unicoMap)
             try:
@@ -1073,7 +1078,7 @@ def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap
         for name in files:
             
             if os.name=='posix':
-                name = unicode_multiplatform(name)
+                name = toUnicode(name)
 
             decoName = unico2decoPath(name, deco2unicoMap)
             try:
@@ -1390,8 +1395,8 @@ default: %s'''%opjoin('.', 'output'))
 
     ############################################
     # unicode arguments
-    gArgs.assignment_dir = unicode_multiplatform(gArgs.assignment_dir)
-    gArgs.assignment_alias = unicode_multiplatform(gArgs.assignment_alias)
+    gArgs.assignment_dir = toUnicode(gArgs.assignment_dir)
+    gArgs.assignment_alias = toUnicode(gArgs.assignment_alias)
 
     ############################################
     # main routine
@@ -1423,14 +1428,14 @@ default: %s'''%opjoin('.', 'output'))
         if os.path.exists(destDir):
             # Convert paths for shutil to byte string only for posix os (due to python bug?)
             if os.name=='posix':
-                shutil.rmtree(destDir.encode(sys.getfilesystemencoding()))
+                shutil.rmtree(toString(destDir))
             else:
                 shutil.rmtree(destDir)
             time.sleep(.01)
         # copy tree
         if os.name=='posix':
             # Convert paths for shutil to byte string only for posix os (due to python bug?)
-            shutil.copytree(gArgs.assignment_dir.encode(sys.getfilesystemencoding()), destDir.encode(sys.getfilesystemencoding()))
+            shutil.copytree(toString(gArgs.assignment_dir), toString(destDir))
         else:
             shutil.copytree(gArgs.assignment_dir, destDir)
     else:
