@@ -860,69 +860,76 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
 
             if submissionType==SINGLE_SOURCE_FILE:
                 submissionDir = destDir
+
+                # [[u'student01.c']]
                 projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
+
+                # [u'student01']
                 projNames = [os.path.splitext(unico2decoPath(submissionTitle, deco2unicoMap))[0]]
 
             elif submissionType==SOURCE_FILES:
                 submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
 
-                # projSrcFileNames = [[fileName] for fileName in os.listdir(submissionDir) if gBuildDirPrefix not in name]
+                # [[u'prob1.c'], [u'prob2.c']]
                 projSrcFileNames = []
 
                 # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                 if os.name=='posix':
-                    for root, dirs, files in os.walk(toString(submissionDir)):
-                        if gBuildDirPrefix not in root:
-                            for name in files:
+                    tempSubDir = toString(submissionDir)
+                else:
+                    tempSubDir = submissionDir
+                for root, dirs, files in os.walk(tempSubDir):
+                    if gBuildDirPrefix not in root:
+                        for name in files:
+                            # Convert paths for os.walk to byte string only for posix os (due to python bug?)
+                            if os.name=='posix':
                                 root = toUnicode(root)
                                 name = toUnicode(name)
-                                projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
-                else:
-                    for root, dirs, files in os.walk(submissionDir):
-                        if gBuildDirPrefix not in root:
-                            for name in files:
-                                projSrcFileNames.append([opjoin(root, name).replace(submissionDir+os.sep, '')])
+                            fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
+                            isSrcFile = True
+                            for pattern in gArgs.exclude_patterns:
+                                if fnmatch.fnmatch(fileName, pattern):
+                                    isSrcFile = False
+                                    break
+                            if isSrcFile:
+                                projSrcFileNames.append([fileName])
 
+                # [u'prob1', u'prob2']
                 projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
-        elif submissionType==CMAKE_PROJECT:
-            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
-            submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
-            projNames = [unico2decoPath(submissionTitle, deco2unicoMap)]
+        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+            if submissionType==CMAKE_PROJECT:
+                decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+                submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+                projNames = [unico2decoPath(submissionTitle, deco2unicoMap)]    # ['student01']
 
+            elif submissionType==VISUAL_CPP_PROJECT:
+                # No need of decodeDestSubmissionDirPathRecursive(), 
+                # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
+                submissionDir = opjoin(destDir, submissionTitle)
+                projNames = [submissionTitle]
+
+            # [[u'CMakeLists.txt', u'student01.c', u'utility.c', u'utility.h']]
             projSrcFileNames = [[]]
-            for root, dirs, files in os.walk(submissionDir):
+            
+            # Convert paths for os.walk to byte string only for posix os (due to python bug?)
+            if os.name=='posix':
+                tempSubDir = toString(submissionDir)
+            else:
+                tempSubDir = submissionDir
+            for root, dirs, files in os.walk(tempSubDir):
                 if gBuildDirPrefix not in root:
                     for name in files:
+                        # Convert paths for os.walk to byte string only for posix os (due to python bug?)
+                        if os.name=='posix':
+                            root = toUnicode(root)
+                            name = toUnicode(name)
                         fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
-
                         isSrcFile = True
                         for pattern in gArgs.exclude_patterns:
                             if fnmatch.fnmatch(fileName, pattern):
                                 isSrcFile = False
                                 break
-
-                        if isSrcFile:
-                            projSrcFileNames[0].append(fileName)
-
-        elif submissionType==VISUAL_CPP_PROJECT:
-            # No need of decodeDestSubmissionDirPathRecursive(), 
-            # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
-            submissionDir = opjoin(destDir, submissionTitle)
-            projNames = [submissionTitle]
-
-            projSrcFileNames = [[]]
-            for root, dirs, files in os.walk(submissionDir):
-                if gBuildDirPrefix not in root:
-                    for name in files:
-                        fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
-
-                        isSrcFile = True
-                        for pattern in gArgs.exclude_patterns:
-                            if fnmatch.fnmatch(fileName, pattern):
-                                isSrcFile = False
-                                break
-
                         if isSrcFile:
                             projSrcFileNames[0].append(fileName)
 
