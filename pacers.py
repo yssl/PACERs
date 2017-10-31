@@ -1417,6 +1417,32 @@ default: %s'''%opjoin('.', 'output'))
     # unzip in .zip files in assignment_dir
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
 
+    # get submission titles
+    submissionTitles = []
+    for name in os.listdir(gArgs.assignment_dir):
+        # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
+        if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
+            continue
+        submissionTitles.append(name)
+
+    # tidy submission dir up if submission dir has only one subdir and no files
+    # ex)
+    # submissionTitle/
+    #   - dir1
+    #     - file1
+    #     - file2
+    # =>
+    # submissionTitle/
+    #   - file1
+    #   - file2
+    for i in range(len(submissionTitles)):
+        submissionPath = opjoin(gArgs.assignment_dir, submissionTitles[i])
+        if os.path.isdir(submissionPath):
+            ls = os.listdir(submissionPath)
+            if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):
+                copytree2(opjoin(submissionPath, ls[0]), submissionPath)
+                shutil.rmtree(opjoin(submissionPath, ls[0]))
+
     # copy assignment_dir to destDir(output_dir/assignment_alias)
     deco2unicoMap = {'':''}
     decodeAlias = unico2decoPath(gArgs.assignment_alias, deco2unicoMap)
@@ -1444,32 +1470,6 @@ default: %s'''%opjoin('.', 'output'))
             os.remove(getReportFilePath(gArgs))
         except OSError:
             pass
-
-    # get submission titles
-    submissionTitles = []
-    for name in os.listdir(gArgs.assignment_dir):
-        # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
-        if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
-            continue
-        submissionTitles.append(name)
-
-    # tidy submission dir up if submission dir has only one subdir and no files
-    # ex)
-    # submissionTitle/
-    #   - dir1
-    #     - file1
-    #     - file2
-    # =>
-    # submissionTitle/
-    #   - file1
-    #   - file2
-    for i in range(len(submissionTitles)):
-        submissionPath = opjoin(gArgs.assignment_dir, submissionTitles[i])
-        if os.path.isdir(submissionPath):
-            ls = os.listdir(submissionPath)
-            if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):
-                copytree2(opjoin(submissionPath, ls[0]), submissionPath)
-                shutil.rmtree(opjoin(submissionPath, ls[0]))
 
     # collect all project info
     allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, destDir, deco2unicoMap)
