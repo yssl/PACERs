@@ -543,6 +543,10 @@ def unzipInAssignDir(assignDir):
                 # Use unzip command instead of python zipfile module only for posix os (due to python bug?)
                 try:
                     unzipDir = os.path.splitext(filePath)[0]
+                    try:
+                        shutil.rmtree(unzipDir)
+                    except OSError:
+                        pass
                     subprocess.check_output('unzip "%s" -d "%s"'%(filePath, unzipDir), stderr=subprocess.STDOUT, shell=True)
                 except subprocess.CalledProcessError as e:
                     print e.output
@@ -1046,7 +1050,7 @@ def detectSubmissionType(submissionPath):
             for pattern in gSubmissionPatterns[submissionType]:
                 # Convert paths for glob to byte string only for posix os (due to python bug?)
                 if os.name=='posix':
-                    if len(toString(glob.glob(opjoin(submissionPath, pattern)))) > 0:
+                    if len(glob.glob(toString(opjoin(submissionPath, pattern)))) > 0:
                         return submissionType
                 else:
                     if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
