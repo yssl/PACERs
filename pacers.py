@@ -166,13 +166,6 @@ import multiprocessing as mp
 import platform
 import urllib
 
-# if os.name=='nt':
-    # reload(sys)
-    # sys.setdefaultencoding('cp949')
-# elif os.name=='posix':
-    # reload(sys)
-    # sys.setdefaultencoding('utf-8')
-
 ############################################
 # build functions
 # return buildRetCode, buildLog, buildVersion
@@ -459,77 +452,7 @@ def getVisulCppVersionWindows():
     return versionStrs
 
 ############################################
-# pre-defined
-
-# submission type
-BEGIN_SUBMISSION_TYPE = 0
-CMAKE_PROJECT         = 1
-VISUAL_CPP_PROJECT    = 2
-SOURCE_FILES          = 3
-SINGLE_SOURCE_FILE    = 4
-END_SUBMISSION_TYPE   = 5
-
-# opjoin = os.path.join
-gLogPrefix = '# '
-gBuildDirPrefix = 'pacers-build-'
-
-gOSEnv = {'nt':{}, 'posix':{}}
-gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
-gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
-
-gOSEnv['nt']['cmake-version'] = getCMakeVersionWindows
-gOSEnv['posix']['cmake-version'] = getCMakeVersionPosix
-gOSEnv['nt']['visual-cpp-version'] = getVisulCppVersionWindows
-gOSEnv['posix']['visual-cpp-version'] = lambda: ['No Visual C/C++ compiler available in this platform.']
-
-# gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
-gSourceExt = {'.c':{}, '.cpp':{}}
-
-gSourceExt['.c']['build-single-source-func'] = build_single_c_cpp
-gSourceExt['.c']['runcmd-single-source-func'] = runcmd_single_c_cpp
-gSourceExt['.c']['runcwd-single-source-func'] = runcwd_single_c_cpp
-
-gSourceExt['.cpp']['build-single-source-func'] = build_single_c_cpp
-gSourceExt['.cpp']['runcmd-single-source-func'] = runcmd_single_c_cpp
-gSourceExt['.cpp']['runcwd-single-source-func'] = runcwd_single_c_cpp
-
-# gSourceExt['.txt']['build-single-source-func'] = build_single_dummy
-# gSourceExt['.txt']['runcmd-single-source-func'] = runcmd_single_dummy
-# gSourceExt['.txt']['runcwd-single-source-func'] = runcwd_single_dummy
-
-gSubmissionTypeDescrption                        = {}
-gSubmissionTypeDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
-gSubmissionTypeDescrption[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
-gSubmissionTypeDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
-gSubmissionTypeDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
-
-gSubmissionTypeName                        = {}
-gSubmissionTypeName[CMAKE_PROJECT]         = 'CMAKE_PROJECT'
-gSubmissionTypeName[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT'
-gSubmissionTypeName[SOURCE_FILES]          = 'SOURCE_FILES'
-gSubmissionTypeName[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE'
-
-gSubmissionPatterns                        = {}
-gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
-gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
-gSubmissionPatterns[SOURCE_FILES]          = ['*']
-gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
-
-gVersionDescription                        = {}
-gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
-gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
-
-############################################
-# utility functions
-def copytree2(src, dst, symlinks=False, ignore=None):
-    for item in os.listdir(src):
-        s = opjoin(src, item)
-        d = opjoin(dst, item)
-        if os.path.isdir(s):
-            shutil.copytree(s, d, symlinks, ignore)
-        else:
-            shutil.copy2(s, d)
-
+# unicode functions
 def opjoin(a, b):
     if os.name=='posix':
         # Convert paths for os.path.join to byte string only for posix os (due to python bug?)
@@ -548,6 +471,8 @@ def unicode_multiplatform(str):
     else:
         return retstr
 
+############################################
+# unidecode functions
 def unico2decoPath(unicoPath, deco2unicoMap):
     unicoTokens = os.path.normpath(unicoPath).split(os.sep)
 
@@ -594,7 +519,16 @@ def deco2unicoPath(decoPath, deco2unicoMap):
     return unicoPath
 
 ############################################
-# functions for unzipping
+# file manipulation functions
+def copytree2(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = opjoin(src, item)
+        d = opjoin(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
 def unzipInAssignDir(assignDir):
     unzipDirNames = []
     for name in os.listdir(assignDir):
@@ -623,7 +557,7 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
         shutil.rmtree(d)
 
 ############################################
-# functions for report
+# report functions
 def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet):
 
     cssCode = HtmlFormatter().get_style_defs()
@@ -1093,7 +1027,6 @@ def runOneProj(projInfo, timeOut):
 
 ############################################
 # project type detection
-
 def detectSubmissionType(submissionPath):
     if os.path.isdir(submissionPath):
         # print 'dir'
@@ -1110,16 +1043,6 @@ def detectSubmissionType(submissionPath):
     else:
         # print 'file'
         return SINGLE_SOURCE_FILE
-
-def decodeDestSubmissionDirPath(destDir, submissionTitle, deco2unicoMap):
-    origSubDir = opjoin(destDir, submissionTitle)
-    newSubDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
-
-    # if --run-only mode, os.rename() will throw an exception, which is expected behavior.
-    try:
-        os.rename(origSubDir, newSubDir)
-    except:
-        pass
 
 def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
     origSubDir = opjoin(destDir, submissionTitle)
@@ -1274,6 +1197,67 @@ def printRunStart(processedCount, numAllProjs, projInfo):
     logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
 
     print '%s Starting execution...'%logPrefix
+
+############################################
+# pre-defined
+
+# submission type
+BEGIN_SUBMISSION_TYPE = 0
+CMAKE_PROJECT         = 1
+VISUAL_CPP_PROJECT    = 2
+SOURCE_FILES          = 3
+SINGLE_SOURCE_FILE    = 4
+END_SUBMISSION_TYPE   = 5
+
+# opjoin = os.path.join
+gLogPrefix = '# '
+gBuildDirPrefix = 'pacers-build-'
+
+gOSEnv = {'nt':{}, 'posix':{}}
+gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
+gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
+
+gOSEnv['nt']['cmake-version'] = getCMakeVersionWindows
+gOSEnv['posix']['cmake-version'] = getCMakeVersionPosix
+gOSEnv['nt']['visual-cpp-version'] = getVisulCppVersionWindows
+gOSEnv['posix']['visual-cpp-version'] = lambda: ['No Visual C/C++ compiler available in this platform.']
+
+# gSourceExt = {'.c':{}, '.cpp':{}, '.txt':{}}
+gSourceExt = {'.c':{}, '.cpp':{}}
+
+gSourceExt['.c']['build-single-source-func'] = build_single_c_cpp
+gSourceExt['.c']['runcmd-single-source-func'] = runcmd_single_c_cpp
+gSourceExt['.c']['runcwd-single-source-func'] = runcwd_single_c_cpp
+
+gSourceExt['.cpp']['build-single-source-func'] = build_single_c_cpp
+gSourceExt['.cpp']['runcmd-single-source-func'] = runcmd_single_c_cpp
+gSourceExt['.cpp']['runcwd-single-source-func'] = runcwd_single_c_cpp
+
+# gSourceExt['.txt']['build-single-source-func'] = build_single_dummy
+# gSourceExt['.txt']['runcmd-single-source-func'] = runcmd_single_dummy
+# gSourceExt['.txt']['runcwd-single-source-func'] = runcwd_single_dummy
+
+gSubmissionTypeDescrption                        = {}
+gSubmissionTypeDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
+gSubmissionTypeDescrption[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
+gSubmissionTypeDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
+gSubmissionTypeDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
+
+gSubmissionTypeName                        = {}
+gSubmissionTypeName[CMAKE_PROJECT]         = 'CMAKE_PROJECT'
+gSubmissionTypeName[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT'
+gSubmissionTypeName[SOURCE_FILES]          = 'SOURCE_FILES'
+gSubmissionTypeName[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE'
+
+gSubmissionPatterns                        = {}
+gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
+gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
+gSubmissionPatterns[SOURCE_FILES]          = ['*']
+gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
+
+gVersionDescription                        = {}
+gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
+gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 
 if __name__=='__main__':
 
