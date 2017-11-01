@@ -777,8 +777,8 @@ def getRenderedSource(srcPath):
             os.makedirs(resourceDir)
         shutil.copy(srcPath, resourceDir)
         newImgPath = opjoin(os.path.basename(resourceDir), os.path.basename(srcPath))
-        newImgPath = urllib.quote(newImgPath.encode('utf-8'))
-        return True, '<p></p><img src="%s">'%newImgPath
+        newImgPath = urllib.pathname2url(newImgPath.encode('utf-8'))
+        return True, u'<p></p><img src="%s">'%newImgPath
     else:
         with open(srcPath, 'r') as f:
             sourceCode = f.read()
