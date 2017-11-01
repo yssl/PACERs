@@ -219,7 +219,10 @@ def build_cmake(srcRootDir, projName):
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
     try:
-        buildLog = toUnicode(subprocess.check_output('cd %s && %s'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
+        if os.name=='posix':
+            buildLog = toUnicode(subprocess.check_output('cd "%s" && %s'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
+        else:
+            buildLog = toUnicode(subprocess.check_output('pushd "%s" && %s && popd'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
         return e.returncode, toUnicode(e.output), 'cmake-version'
     else:
@@ -553,6 +556,7 @@ def unzipInAssignDir(assignDir):
                 else:
                     unzipDirNames.append(unzipDir)
             else:
+                # print filePath
                 with zipfile.ZipFile(filePath, 'r') as z:
                     unzipDir = os.path.splitext(filePath)[0]
                     unzipDir = unzipDir.strip()
