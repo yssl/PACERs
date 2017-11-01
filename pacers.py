@@ -261,7 +261,8 @@ def build_vcxproj(srcRootDir, projName):
         # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
                 # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
         buildLog = toUnicode(subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
-                %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName), stderr=subprocess.STDOUT, shell=True))
+                %(toString(vcxprojNames[0]), toString(gBuildDirPrefix+projName), toString(gBuildDirPrefix+projName)),
+                stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e:
         return e.returncode, toUnicode(e.output), 'visual-cpp-version'
     else:
