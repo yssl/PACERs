@@ -562,13 +562,19 @@ def unzipInAssignDir(assignDir):
                     unzipDir = os.path.splitext(filePath)[0]
                     unzipDir = unzipDir.strip()
                     unzipDir = toString(unzipDir)
-                    z.extractall(unzipDir)
+                    try:
+                        z.extractall(unzipDir)
+                    except Exception as e:
+                        print '!!!Error when unzipping %s - %s'%(filePath, type(e))
                     unzipDirNames.append(unzipDir)
     return unzipDirNames
 
 def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
     for d in unzipDirNames:
-        shutil.rmtree(d)
+        try:
+            shutil.rmtree(d)
+        except:
+            pass
 
 ############################################
 # report functions
