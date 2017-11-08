@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, chardet
 from unidecode import unidecode
 
 ############################################
