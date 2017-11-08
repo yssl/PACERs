@@ -181,7 +181,7 @@ def worker_run(params):
         exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut)
     else:
         exitTypeList = [-1]
-        stdoutStrList = ['Due to build error.']
+        stdoutStrList = ['Due to the build error.']
         userInputList = ['']
     q.put([i, exitTypeList, stdoutStrList, userInputList])
     printRunResult(q.qsize(), numAllProjs, projInfo, exitTypeList, stdoutStrList)
