@@ -1,0 +1,123 @@
+import os, subprocess, glob
+from global_const import *
+from unicode import *
+
+def buildOneProj(projInfo):
+    submissionType = projInfo['submissionType']
+    projName = projInfo['projName']
+    submissionDir = projInfo['submissionDir']
+    filesInProj = projInfo['filesInProj']
+
+    buildRetCode, buildLog, buildVersion = buildProj(submissionType, submissionDir, projName, filesInProj)
+
+    return buildRetCode, buildLog, buildVersion
+
+############################################
+# build functions
+# return buildRetCode, buildLog, buildVersion
+# buildRetCode:
+#   -1 - build failed due to internal error, not because build error (not supported extension, etc)
+#   0 - build succeeded
+#   else - build failed due to build error
+# buildVersion:
+#   cmake-version
+#   visual-cpp-version
+
+def buildProj(submissionType, submissionDir, projName, projSrcFileNames):
+    if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
+        buildRetCode, buildLog, buildVersion = build_single_source(submissionDir, projName, projSrcFileNames[0])
+    elif submissionType==CMAKE_PROJECT:
+        buildRetCode, buildLog, buildVersion = build_cmake(submissionDir, projName)
+    elif submissionType==VISUAL_CPP_PROJECT:
+        buildRetCode, buildLog, buildVersion = build_vcxproj(submissionDir, projName)
+    return buildRetCode, buildLog, buildVersion
+
+####
+# build_single functions
+def build_single_source(srcRootDir, projName, singleSrcFileName):
+    extension = os.path.splitext(singleSrcFileName)[1].lower()
+    if extension in gSourceExt:
+        return eval(gSourceExt[extension]['build-single-source-func'])(srcRootDir, projName, singleSrcFileName)
+    else:
+        return build_single_else(extension)
+
+def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    try:
+        os.makedirs(buildDir)
+    except Exception as e:
+        return -1, toUnicode(str(e)), 'cmake-version'
+
+    makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir)
+
+    return __build_cmake(buildDir, './')
+
+# def build_single_dummy(srcRootDir, projName, srcFileNames):
+    # return 0, ''
+
+def build_single_else(extension):
+    errorMsg = u'Building %s is not supported.'%extension
+    return -1, errorMsg, 'no-build-version'
+
+####
+# build_cmake functions
+def build_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    try:
+        os.makedirs(buildDir)
+    except Exception as e:
+        return -1, toUnicode(str(e)), 'cmake-version'
+    return __build_cmake(buildDir, '../')
+
+def __build_cmake(buildDir, cmakeLocationFromBuildDir):
+    try:
+        if os.name=='posix':
+            buildLog = toUnicode(subprocess.check_output('cd "%s" && %s'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
+        else:
+            buildLog = toUnicode(subprocess.check_output('pushd "%s" && %s && popd'%(toString(buildDir), toString(gOSEnv[os.name]['cmake-cmd'](cmakeLocationFromBuildDir))), stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e:
+        return e.returncode, toUnicode(e.output), 'cmake-version'
+    else:
+        return 0, buildLog, 'cmake-version'
+
+# return CMakeLists.txt code
+def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):
+    code = u''
+    code += 'cmake_minimum_required(VERSION 2.6)\n'
+    code += 'project(%s)\n'%projName
+    code += 'add_executable(%s '%projName
+    code += '../%s'%singleSrcFileName
+    code += ')\n'
+
+    with open(opjoin(buildDir,'CMakeLists.txt'), 'w') as f:
+        f.write(toString(code))
+
+####
+# build_vcxproj functions
+def build_vcxproj(srcRootDir, projName):
+    # do not need to make buildDir. msbuild.exe automatically makes the outdir.
+    # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    # os.makedirs(buildDir)
+
+    vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
+    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcproj')))
+    for i in range(len(vcxprojNames)-1, -1, -1):
+        if os.path.isdir(vcxprojNames[i]):
+            del vcxprojNames[i]
+
+    if len(vcxprojNames)==0:
+        errorMsg = u'Cannot find .vcxproj or .vcproj file.'
+        return -1, errorMsg 
+
+    try:
+        # print 'vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'\
+                # %(vcxprojNames[0], gBuildDirPrefix+projName, gBuildDirPrefix+projName)
+        buildLog = toUnicode(subprocess.check_output('vcvars32.bat && msbuild.exe "%s" /property:OutDir="%s/";IntDir="%s/"'
+                %(toString(vcxprojNames[0]), toString(gBuildDirPrefix+projName), toString(gBuildDirPrefix+projName)),
+                stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e:
+        return e.returncode, toUnicode(e.output), 'visual-cpp-version'
+    else:
+        return 0, buildLog, 'visual-cpp-version'
+
+
