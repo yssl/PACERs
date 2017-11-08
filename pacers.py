@@ -1129,8 +1129,13 @@ def worker_build(params):
     printBuildResult(q.qsize(), numAllProjs, projInfo, buildRetCode, buildLog)
 
 def worker_run(params):
-    numAllProjs, i, projInfo, timeOut, q = params
-    exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut)
+    buildRetCode, numAllProjs, i, projInfo, timeOut, q = params
+    if buildRetCode==0:
+        exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut)
+    else:
+        exitTypeList = [-1]
+        stdoutStrList = ['Due to build error.']
+        userInputList = ['']
     q.put([i, exitTypeList, stdoutStrList, userInputList])
     printRunResult(q.qsize(), numAllProjs, projInfo, exitTypeList, stdoutStrList)
 
@@ -1533,7 +1538,7 @@ default: %s'''%opjoin('.', 'output'))
             print
             p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
-            p.map(worker_run, [(len(allProjInfos), i, allProjInfos[i], gArgs.timeout, q) for i in range(len(allProjInfos))])
+            p.map(worker_run, [(buildResults[i][0], len(allProjInfos), i, allProjInfos[i], gArgs.timeout, q) for i in range(len(allProjInfos))])
             while not q.empty():
                 i, exitTypeList, stdoutStrList, userInputList = q.get()
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
@@ -1543,7 +1548,12 @@ default: %s'''%opjoin('.', 'output'))
             print
             for i in range(len(allProjInfos)):
                 printRunStart(i+1, len(allProjInfos), allProjInfos[i])
-                exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout)
+                if buildResults[i][0]==0:
+                    exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout)
+                else:
+                    exitTypeList = [-1]
+                    stdoutStrList = ['Due to build error.']
+                    userInputList = ['']
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
                 printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
     else:
