@@ -482,7 +482,11 @@ def toUnicode(string):
         retstr = unicode(string, sys.getfilesystemencoding())
     except UnicodeDecodeError as e:
         try:
-            retstr = unicode(string, chardet.detect(string)['encoding'])
+            detectedEncoding = chardet.detect(string)['encoding']
+            if detectedEncoding!=None:
+                retstr = unicode(string, chardet.detect(string)['encoding'])
+            else:
+                retstr = 'chardet fails to detect encoding'
         except UnicodeDecodeError as e:
             return toUnicode(str(e))
         return retstr
