@@ -481,7 +481,10 @@ def toUnicode(string):
     try:
         retstr = unicode(string, sys.getfilesystemencoding())
     except UnicodeDecodeError as e:
-        retstr = unicode(string, chardet.detect(string)['encoding'])
+        try:
+            retstr = unicode(string, chardet.detect(string)['encoding'])
+        except UnicodeDecodeError as e:
+            return toUnicode(str(e))
         return retstr
     else:
         return retstr
