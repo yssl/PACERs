@@ -51,7 +51,7 @@ assignment_dir is /foo/bar/).''')
                         help='''Specify OUTPUT_DIR in which the final report file 
 and build output files to be generated. 
 Avoid including hangul characters in its full path.
-default: %s'''%opjoin('.', 'output'))
+default: %s'''%opjoin('.', 'output-cmd'))
 
     parser.add_argument('--external-cmds', nargs='+', default=[''],
                         help='''external cmds''')
