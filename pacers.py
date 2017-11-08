@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 ################################################################################
-# PACERs: Programming Assignments Compiling, Executing, and Reporting system
+# pacers.py
+
 # Copyright (C) 2016-2017 Yoonsang Lee
 
 # This program is free software: you can redistribute it and/or modify
