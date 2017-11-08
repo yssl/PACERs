@@ -197,7 +197,10 @@ def build_single_source(srcRootDir, projName, singleSrcFileName):
 
 def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    os.makedirs(buildDir)
+    try:
+        os.makedirs(buildDir)
+    except Exception as e:
+        return -1, toUnicode(str(e)), 'cmake-version'
 
     makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir)
 
@@ -214,7 +217,10 @@ def build_single_else(extension):
 # build_cmake functions
 def build_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    os.makedirs(buildDir)
+    try:
+        os.makedirs(buildDir)
+    except Exception as e:
+        return -1, toUnicode(str(e)), 'cmake-version'
     return __build_cmake(buildDir, '../')
 
 def __build_cmake(buildDir, cmakeLocationFromBuildDir):
