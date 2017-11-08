@@ -165,7 +165,7 @@ from pacerslib.run import *
 from pacerslib.unicode import *
 from pacerslib.version import *
 from pacerslib.process import *
-from pacerslib.globals import *
+from pacerslib.global_const import *
 
 ############################################
 # multi processing worker functions
