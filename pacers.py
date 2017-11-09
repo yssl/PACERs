@@ -375,7 +375,7 @@ default: %s'''%opjoin('.', 'output'))
             pass
 
     # collect all project info
-    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, destDir, deco2unicoMap, gArgs.exclude_patterns, gArgs.user_input)
+    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, gArgs.exclude_patterns, gArgs.user_input, destDir, deco2unicoMap)
 
     printLogPrefixDescription()
 

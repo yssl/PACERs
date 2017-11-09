@@ -23,7 +23,7 @@ from submission import *
 
 ############################################
 # main functions
-def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir, deco2unicoMap, exclude_patterns=[], user_input=[], user_dict=None):
+def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude_patterns=[], user_input=[], destDir=None, deco2unicoMap=None, user_dict=None):
     allProjInfos = []
 
     # process each submission
@@ -36,11 +36,15 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
         # projNames : ['proj1', 'proj2']
         # projSrcFileNames: [['proj1.c','proj1.h'], ['proj2.c','proj2.h']]
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            # unidecode destSubmissionDir
-            decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+            if destDir!=None:
+                # unidecode destSubmissionDir
+                decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
 
             if submissionType==SINGLE_SOURCE_FILE:
-                submissionDir = destDir
+                if destDir!=None:
+                    submissionDir = destDir 
+                else:
+                    submissionDir = assignmentDir
 
                 # [[u'student01.c']]
                 projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
@@ -49,7 +53,10 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
                 projNames = [os.path.splitext(unico2decoPath(submissionTitle, deco2unicoMap))[0]]
 
             elif submissionType==SOURCE_FILES:
-                submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+                if destDir!=None:
+                    submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+                else:
+                    submissionDir = opjoin(assignmentDir, submissionTitle)
 
                 # [[u'prob1.c'], [u'prob2.c']]
                 projSrcFileNames = []
@@ -79,15 +86,23 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
                 projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
         elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+
             if submissionType==CMAKE_PROJECT:
-                decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
-                submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
-                projNames = [unico2decoPath(submissionTitle, deco2unicoMap)]    # ['student01']
+                if destDir!=None:
+                    decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
+                    submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
+                    projNames = [unico2decoPath(submissionTitle, deco2unicoMap)]    # ['student01']
+                else:
+                    submissionDir = opjoin(assignmentDir, submissionTitle)
+                    projNames = [submissionTitle]
 
             elif submissionType==VISUAL_CPP_PROJECT:
                 # No need of decodeDestSubmissionDirPathRecursive(), 
                 # and VISUAL_CPP_PROJECT can include multibyte characters as MSVC compiler supports it.
-                submissionDir = opjoin(destDir, submissionTitle)
+                if destDir!=None:
+                    submissionDir = opjoin(destDir, submissionTitle)
+                else:
+                    submissionDir = opjoin(assignmentDir, submissionTitle)
                 projNames = [submissionTitle]
 
             # [[u'CMakeLists.txt', u'student01.c', u'utility.c', u'utility.h']]
