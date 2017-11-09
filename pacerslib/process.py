@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
-import fnmatch, glob
-from unicode import *
+import fnmatch
 from global_const import *
+from unicode import *
+from submission import *
 
 ############################################
 # main functions
@@ -196,23 +197,6 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
 
 ############################################
 # project type detection
-def detectSubmissionType(submissionPath):
-    if os.path.isdir(submissionPath):
-        # print 'dir'
-        for submissionType in range(BEGIN_SUBMISSION_TYPE+1, END_SUBMISSION_TYPE):
-            for pattern in gSubmissionPatterns[submissionType]:
-                # Convert paths for glob to byte string only for posix os (due to python bug?)
-                if os.name=='posix':
-                    if len(glob.glob(toString(opjoin(submissionPath, pattern)))) > 0:
-                        return submissionType
-                else:
-                    if len(glob.glob(opjoin(submissionPath, pattern))) > 0:
-                        return submissionType
-        return SOURCE_FILES
-    else:
-        # print 'file'
-        return SINGLE_SOURCE_FILE
-
 def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap):
     origSubDir = opjoin(destDir, submissionTitle)
     newSubDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))

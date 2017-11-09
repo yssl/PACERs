@@ -158,6 +158,7 @@ optional arguments:
 import os, shutil, time, argparse, glob
 import multiprocessing as mp
 
+from pacerslib.global_const import *
 from pacerslib.build import *
 from pacerslib.file import *
 from pacerslib.log import *
@@ -166,7 +167,7 @@ from pacerslib.run import *
 from pacerslib.unicode import *
 from pacerslib.version import *
 from pacerslib.process import *
-from pacerslib.global_const import *
+from pacerslib.submission import *
 
 ############################################
 # multi processing worker functions
@@ -339,16 +340,8 @@ default: %s'''%opjoin('.', 'output'))
         print 'PACERs: Unable to access \'%s\'. Please check the assignment_dir again.'%gArgs.assignment_dir
         exit()
 
-    # unzip in .zip files in assignment_dir
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
-
-    # get submission titles
-    submissionTitles = []
-    for name in os.listdir(gArgs.assignment_dir):
-        # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
-        if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
-            continue
-        submissionTitles.append(name)
+    submissionTitles = getSubmissionTitles(gArgs.assignment_dir)
 
     # tidy submission dir up if submission dir has only one subdir and no files
     # ex)

@@ -30,11 +30,10 @@ import os, shutil, argparse, glob
 
 from pacerslib.unicode import *
 from pacerslib.file import *
+from pacerslib.submission import *
 
 def getOutputDir(args):
     return opjoin(args.output_dir, args.assignment_alias)
-
-# pacers-cmd.py test-assignments\zip-assignment-1 --external-cmds "ls" "ls -al"
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(prog='pacers-cmd.py',
@@ -64,16 +63,8 @@ default: %s'''%opjoin('.', 'output-cmd'))
     if not gArgs.assignment_alias:
         gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
-    # unzip in .zip files in assignment_dir
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
-
-    # get submission titles
-    submissionTitles = []
-    for name in os.listdir(gArgs.assignment_dir):
-        # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
-        if not os.path.isdir(opjoin(gArgs.assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
-            continue
-        submissionTitles.append(name)
+    submissionTitles = getSubmissionTitles(gArgs.assignment_dir)
 
     # tidy submission dir up if submission dir has only one subdir and no files
     # ex)
