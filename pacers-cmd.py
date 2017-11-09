@@ -76,7 +76,7 @@ default: %s'''%opjoin('.', 'output-cmd'))
 
     for i in range(len(submissionTitles)):
         print 'Processing '+submissionTitles[i]+'...'
-        submissionPath = opjoin(gArgs.assignment_dir, submissionTitles[i])
+        submissionPath = submissionPaths[i]
         resultStr = ''
 
         for cmd in gArgs.external_cmds:
