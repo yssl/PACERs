@@ -98,3 +98,4 @@ default: %s'''%opjoin('.', 'output-cmd'))
             f.write(resultStr)
     
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
+    print 'Done.'

@@ -43,14 +43,14 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
             if submissionType==SINGLE_SOURCE_FILE:
                 if destDir!=None:
                     submissionDir = destDir 
+                    # [[u'student01.c']]
+                    projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
+                    # [u'student01']
+                    projNames = [os.path.splitext(unico2decoPath(submissionTitle, deco2unicoMap))[0]]
                 else:
                     submissionDir = assignmentDir
-
-                # [[u'student01.c']]
-                projSrcFileNames = [[unico2decoPath(submissionTitle, deco2unicoMap)]]
-
-                # [u'student01']
-                projNames = [os.path.splitext(unico2decoPath(submissionTitle, deco2unicoMap))[0]]
+                    projSrcFileNames = [[submissionTitle]]
+                    projNames = [os.path.splitext(submissionTitle)[0]]
 
             elif submissionType==SOURCE_FILES:
                 if destDir!=None:
