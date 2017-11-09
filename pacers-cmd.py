@@ -64,25 +64,10 @@ default: %s'''%opjoin('.', 'output-cmd'))
         gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
+
     submissionTitles, submissionPaths = getSubmissionTitlesAndPaths(gArgs.assignment_dir)
 
-    # tidy submission dir up if submission dir has only one subdir and no files
-    # ex)
-    # submissionTitle/
-    #   - dir1
-    #     - file1
-    #     - file2
-    # =>
-    # submissionTitle/
-    #   - file1
-    #   - file2
-    for i in range(len(submissionPaths)):
-        submissionPath = submissionPaths[i]
-        if os.path.isdir(submissionPath):
-            ls = os.listdir(submissionPath)
-            if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):
-                copytree2(opjoin(submissionPath, ls[0]), submissionPath)
-                shutil.rmtree(opjoin(submissionPath, ls[0]))
+    TidyUpSingleSubdirSubmissionDirs(submissionPaths)
 
     # run external cmds and write stdout to a file
     outputDir = getOutputDir(gArgs)

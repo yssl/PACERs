@@ -19,8 +19,6 @@
 import os, zipfile, shutil, subprocess
 from unicode import *
 
-###########################################
-# file manipulation functions
 def copytree2(src, dst, symlinks=False, ignore=None):
     for item in os.listdir(src):
         s = opjoin(src, item)
@@ -31,6 +29,8 @@ def copytree2(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 def unzipInAssignDir(assignDir):
+    # if assignDir has zip files, then extract them and make directories
+    # The extracted directories would be considered as submissionPaths
     unzipDirNames = []
     for name in os.listdir(assignDir):
         filePath = opjoin(assignDir, name)
@@ -68,4 +68,21 @@ def removeUnzipDirsInAssignDir(assignDir, unzipDirNames):
         except:
             pass
 
-
+def TidyUpSingleSubdirSubmissionDirs(submissionPaths):
+    # tidy submission dir up if submission dir has only one subdir and no files
+    # ex)
+    # submissionTitle/
+    #   - dir1
+    #     - file1
+    #     - file2
+    # =>
+    # submissionTitle/
+    #   - file1
+    #   - file2
+    for i in range(len(submissionPaths)):
+        submissionPath = submissionPaths[i]
+        if os.path.isdir(submissionPath):
+            ls = os.listdir(submissionPath)
+            if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):
+                copytree2(opjoin(submissionPath, ls[0]), submissionPath)
+                shutil.rmtree(opjoin(submissionPath, ls[0]))
