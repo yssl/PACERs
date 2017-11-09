@@ -1,5 +1,4 @@
-output/
-output-cmd/
+output*/
 *.pyc
 *r.py
 *.bat
