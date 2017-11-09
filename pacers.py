@@ -341,7 +341,7 @@ default: %s'''%opjoin('.', 'output'))
         exit()
 
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
-    submissionTitles = getSubmissionTitles(gArgs.assignment_dir)
+    submissionTitles, submissionPaths = getSubmissionTitlesAndPaths(gArgs.assignment_dir)
 
     # tidy submission dir up if submission dir has only one subdir and no files
     # ex)
@@ -353,8 +353,8 @@ default: %s'''%opjoin('.', 'output'))
     # submissionTitle/
     #   - file1
     #   - file2
-    for i in range(len(submissionTitles)):
-        submissionPath = opjoin(gArgs.assignment_dir, submissionTitles[i])
+    for i in range(len(submissionPaths)):
+        submissionPath = submissionPaths[i]
         if os.path.isdir(submissionPath):
             ls = os.listdir(submissionPath)
             if len(ls)==1 and os.path.isdir(opjoin(submissionPath, ls[0])):

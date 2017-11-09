@@ -20,15 +20,16 @@ import glob
 from global_const import *
 from unicode import *
 
-def getSubmissionTitles(assignment_dir):
-    # get submission titles
+def getSubmissionTitlesAndPaths(assignment_dir):
     submissionTitles = []
+    submissionPaths = []
     for name in os.listdir(assignment_dir):
         # to exclude .zip files - submissionTitle will be from unzipDirNames by unzipInAssignDir() in assignment_dir
         if not os.path.isdir(opjoin(assignment_dir, name)) and os.path.splitext(name)[1].lower()=='.zip':
             continue
         submissionTitles.append(name)
-    return submissionTitles
+        submissionPaths.append(opjoin(assignment_dir, name))
+    return submissionTitles, submissionPaths
 
 def detectSubmissionType(submissionPath):
     if os.path.isdir(submissionPath):
