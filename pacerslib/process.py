@@ -131,11 +131,12 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
             projInfo['filesInProj'] = projSrcFileNames[i]
 
             # set userInputs
-            if args.user_dict!=None:
+            if 'user_dict' in args.__dict__ and args.user_dict!=None:
                 userInputs = getUserInputsFromUserDict(args.user_dict, projNames[i])
-            else:
+                projInfo['userInputs'] = userInputs
+            elif 'user_input' in args.__dict__:
                 userInputs = args.user_input
-            projInfo['userInputs'] = userInputs
+                projInfo['userInputs'] = userInputs
 
             allProjInfos.append(projInfo)
 
