@@ -23,7 +23,7 @@ from submission import *
 
 ############################################
 # main functions
-def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir, deco2unicoMap, args):
+def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir, deco2unicoMap, exclude_patterns=[], user_input=[], user_dict=None):
     allProjInfos = []
 
     # process each submission
@@ -68,7 +68,7 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
                                 name = toUnicode(name)
                             fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
                             isSrcFile = True
-                            for pattern in args.exclude_patterns:
+                            for pattern in exclude_patterns:
                                 if fnmatch.fnmatch(fileName, pattern):
                                     isSrcFile = False
                                     break
@@ -107,7 +107,7 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
                             name = toUnicode(name)
                         fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
                         isSrcFile = True
-                        for pattern in args.exclude_patterns:
+                        for pattern in exclude_patterns:
                             if fnmatch.fnmatch(fileName, pattern):
                                 isSrcFile = False
                                 break
@@ -132,11 +132,11 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, destDir
             projInfo['filesInProj'] = projSrcFileNames[i]
 
             # set userInputs
-            if 'user_dict' in args.__dict__ and args.user_dict!=None:
-                userInputs = getUserInputsFromUserDict(args.user_dict, projNames[i])
+            if user_dict!=None:
+                userInputs = getUserInputsFromUserDict(user_dict, projNames[i])
                 projInfo['userInputs'] = userInputs
-            elif 'user_input' in args.__dict__:
-                userInputs = args.user_input
+            else:
+                userInputs = user_input
                 projInfo['userInputs'] = userInputs
 
             allProjInfos.append(projInfo)
