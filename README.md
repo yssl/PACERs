@@ -134,8 +134,8 @@ PACERs supports various encodings for file name, directory name, and source file
 Please try test-assignments for encodings:
 ```
 ./pacers.py test-assignments/test-encoding
-./pacers.py test-assignments/test-ÇÑ±Û-cp949
-./pacers.py test-assignments/test-ÇÑ±Û-utf8
+./pacers.py test-assignments/test-í•œê¸€-cp949
+./pacers.py test-assignments/test-í•œê¸€-utf8
 ```
 
 # pacers-cmd.py
