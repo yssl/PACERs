@@ -3,12 +3,12 @@ Programming Assignments Compiling, Executing, and Reporting system
 
 ## Quick start
 
-*0. Download PACERs.*  
+**0. Download PACERs.**  
 
-Run: ```git clone https://github.com/yssl/PACERs.git```  
+Run ```git clone https://github.com/yssl/PACERs.git``` and ```cd PACERs```,  
 or Releases > Latest release > Download source code, extract it, and ```cd``` to the extracted directory..
 
-*1. Collect submitted source files.*  
+**1. Collect submitted source files.**  
 
 For example:
 ```
@@ -19,13 +19,13 @@ For example:
 ```
 ![example-source]
 
-*2. Run PACERs.*  
+**2. Run PACERs.**  
 - On Windows: ```pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"```
 - On Linux: ```./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"```
 
-*3. Open the generated HTML report: ```<CWD>/output/c-assignment-2/report-c-assignment-2.html```*  
+**3. Open the generated HTML report**  
 
-Open the generated report with your favorite browser.  
+Open the generated report ```<CWD>/output/c-assignment-2/report-c-assignment-2.html``` with your favorite browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please change the browser text encoding option to unicode or utf-8.
 
 ![example-result]
@@ -127,6 +127,26 @@ If you checked all the test-assignments are working correctly in your PC, please
 
 ## Usage
 Please read [help-pacers.txt] for detailed usage.
+
+## Support for encodings
+
+PACERs supports various encodings for file name, directory name, and source file contents with ```chardet``` and ```unidecode``` modules.  
+Please try test-assignments for encodings:
+```
+./pacers.py test-assignments/test-encoding
+./pacers.py test-assignments/test-한글-cp949
+./pacers.py test-assignments/test-한글-utf8
+```
+
+# pacers-cmd.py
+```pacers-cmd.py``` is a PACERs script for capturing shell command output for each submission as a text file.  
+Please try:
+```
+./pacers-cmd.py test-assignments/zip-assignment-1 --cmds "ls" "ls -al"
+```
+Please read [help-pacers-cmd.txt] for detailed usage.
+
+
 
 [example-source]: https://cloud.githubusercontent.com/assets/5915359/15735192/82744a64-28d1-11e6-85e6-fa958f96e758.png
 [example-result]: https://cloud.githubusercontent.com/assets/5915359/23886079/4e0da5b6-08bb-11e7-8ec2-15ec263a0ff4.png
