@@ -1,0 +1,16 @@
+usage: pacers-cmd.py [-h] [--cmds CMDS [CMDS ...]] [--output-dir OUTPUT_DIR]
+                     assignment_dir
+
+pacers-cmd.py
+    : PACERs script for capturing shell command output for each submission as a text file
+
+positional arguments:
+  assignment_dir        A direcory that has submissions.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --cmds CMDS [CMDS ...]
+                        Shell commands to be executed for each submission directory.
+  --output-dir OUTPUT_DIR
+                        Specify OUTPUT_DIR in which the captured text files to be generated.
+                        default: ./output-cmd

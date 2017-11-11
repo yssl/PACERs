@@ -20,10 +20,12 @@
 ################################################################################
 '''
 pacers-cmd.py
-    : PACERs script for capturing shell command output executed in each submission dir as a txt file
+    : PACERs script for capturing shell command output for each submission as a text file
 
 Usage example:
-    ./pacers-cmd.py test-assignments/zip-assignment-1 --external-cmds "ls" "ls -al"
+    ./pacers-cmd.py test-assignments/zip-assignment-1 --cmds "ls" "ls -al"
+
+Please see https://github.com/yssl/PACERs for more information.
 '''
 
 import os, shutil, argparse, glob
@@ -36,32 +38,22 @@ def getOutputDir(args):
     return opjoin(args.output_dir, args.assignment_alias)
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser(prog='pacers-cmd.py',
-            description='pacers to capture shell command output in each submission dir as txt file', 
-            formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('assignment_dir')
-    parser.add_argument('--assignment-alias',
-                        help='''Specify ASSIGNMENT_ALIAS for each assignment_dir. 
-ASSIGNMENT_ALIAS is used when making a sub-directory 
-in OUTPUT_DIR and the final report file. 
-default: "basename" of assignment_dir (bar if 
-assignment_dir is /foo/bar/).''')
+    parser = argparse.ArgumentParser(prog='pacers-cmd.py', formatter_class=argparse.RawTextHelpFormatter,
+            description='''pacers-cmd.py
+    : PACERs script for capturing shell command output for each submission as a text file''')
+    parser.add_argument('assignment_dir',
+                        help='''A direcory that has submissions.''')
+    parser.add_argument('--cmds', nargs='+', default=[''],
+                        help='''Shell commands to be executed for each submission directory.''')
     parser.add_argument('--output-dir', default=opjoin('.', 'output-cmd'),
-                        help='''Specify OUTPUT_DIR in which the final report file 
-and build output files to be generated. 
-Avoid including hangul characters in its full path.
-default: %s'''%opjoin('.', 'output-cmd'))
+                        help='''Specify OUTPUT_DIR in which the captured text files to be generated. 
+default: %s'''%'./output-cmd')
 
-    parser.add_argument('--external-cmds', nargs='+', default=[''],
-                        help='''external cmds''')
 
     gArgs = parser.parse_args()
 
-    # print gArgs.external_cmds
+    # print gArgs.cmds
     # exit()
-
-    if not gArgs.assignment_alias:
-        gArgs.assignment_alias = os.path.basename(os.path.abspath(gArgs.assignment_dir))
 
     unzipDirNames = unzipInAssignDir(gArgs.assignment_dir)
 
@@ -79,16 +71,14 @@ default: %s'''%opjoin('.', 'output-cmd'))
         submissionPath = submissionPaths[i]
         resultStr = ''
 
-        for cmd in gArgs.external_cmds:
+        for cmd in gArgs.cmds:
             resultStr += '===================================\n'
             resultStr += '(cmd: '+cmd+')\n'
             try:
-                # posix
-                # stdoutStr = subprocess.check_output('cd "%s" && %s'%(toString(submissionPath), cmd), stderr=subprocess.STDOUT, shell=True)
-
-                # window
-                stdoutStr = subprocess.check_output('pushd "%s" && %s && popd'%(toString(submissionPath), cmd), stderr=subprocess.STDOUT, shell=True)
-
+                if os.name=='posix':
+                    stdoutStr = subprocess.check_output('cd "%s" && %s'%(toString(submissionPath), cmd), stderr=subprocess.STDOUT, shell=True)
+                else:
+                    stdoutStr = subprocess.check_output('pushd "%s" && %s && popd'%(toString(submissionPath), cmd), stderr=subprocess.STDOUT, shell=True)
             except subprocess.CalledProcessError as e:
                 resultStr += e.output
             else:
