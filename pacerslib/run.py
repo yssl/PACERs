@@ -20,7 +20,7 @@ import os, subprocess, threading, glob, re
 from global_const import *
 from unicode import *
 
-def runOneProj(projInfo, timeOut):
+def runOneProj(projInfo, timeOut, interpreterCmd):
     submissionType = projInfo['submissionType']
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
@@ -30,7 +30,7 @@ def runOneProj(projInfo, timeOut):
     exitTypeList = []
     stdoutStrList = []
     userInputList = userInputs
-    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, timeOut)
+    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, timeOut, interpreterCmd)
 
     return exitTypeList, stdoutStrList, userInputList
 
@@ -43,14 +43,14 @@ def runOneProj(projInfo, timeOut):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 
-def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut):
+def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut, interpreterCmd):
     exitTypeList = []
     stdoutStrList = []
 
     for userInput in userInputs:
 
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut)
+            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut, interpreterCmd)
         elif submissionType==CMAKE_PROJECT:
             exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut)
         elif submissionType==VISUAL_CPP_PROJECT:
@@ -63,10 +63,12 @@ def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInput
 
 ####
 # run_single functions
-def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut):
+def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut, interpreterCmd):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
         runcmd = eval(gSourceExt[extension]['runcmd-single-source-func'])(srcRootDir, projName)
+        if interpreterCmd!='':
+            runcmd = interpreterCmd + ' ' + runcmd
         runcwd = eval(gSourceExt[extension]['runcwd-single-source-func'])(srcRootDir, projName)
         return __run(runcmd, runcwd, userInput, timeOut)
     else:
@@ -84,7 +86,7 @@ def runcwd_single_c_cpp(srcRootDir, projName):
     # return buildDir
 
 def runcmd_single_py(srcRootDir, projName):
-    return 'py -2 ' + os.path.abspath(opjoin(srcRootDir, '%s.py'%projName))
+    return os.path.abspath(opjoin(srcRootDir, '%s.py'%projName))
 
 def runcwd_single_py(srcRootDir, projName):
     # run output executable from srcRootDir
@@ -140,7 +142,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         proc = subprocess.Popen(toString(runcmd).split(), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         # return 2, runcmd
-        return -1, 'Cannot execute \'%s\' \n(Maybe it has not been built yet or running cmd is wrong).'%runcmd
+        return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created from source code in compiled languages or \nthe argument INTERPRETER_CMD has not been specified for interpreted languages)'%runcmd
 
     if timeOut != 0:
         # call onTimeOut() after timeOut seconds

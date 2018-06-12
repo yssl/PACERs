@@ -21,7 +21,7 @@ from unicode import *
 
 ############################################
 # version functions
-def getCMakeVersionWindows():
+def getCMakeVersionWindows(ignored):
     versionStrs = []
     # cmake
     try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True))
@@ -40,7 +40,7 @@ def getCMakeVersionWindows():
 
     return versionStrs
 
-def getCMakeVersionPosix():
+def getCMakeVersionPosix(ignored):
     versionStrs = []
     # cmake
     try: versionStr = toUnicode(subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True))
@@ -59,7 +59,7 @@ def getCMakeVersionPosix():
 
     return versionStrs
 
-def getVisulCppVersionWindows():
+def getVisulCppVersionWindows(ignored):
     versionStrs = []
     # msbuild
     try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True))
@@ -73,8 +73,8 @@ def getVisulCppVersionWindows():
 
     return versionStrs
 
-def getPythonVersion():
-    pythonCmd = 'py -2'
+def getPythonVersion(interpreterCmd):
+    pythonCmd = interpreterCmd
 
     versionStrs = []
     # python
