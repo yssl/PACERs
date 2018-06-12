@@ -73,4 +73,13 @@ def getVisulCppVersionWindows():
 
     return versionStrs
 
+def getPythonVersion():
+    pythonCmd = 'py -2'
 
+    versionStrs = []
+    # python
+    try: versionStr = toUnicode(subprocess.check_output('%s --version'%pythonCmd, stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
+
+    return versionStrs

@@ -51,10 +51,11 @@ gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
 gVersionDescription                        = {}
 gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
 gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
+gVersionDescription['python-version']      = 'Python'
 
 ############################################
-# gSourceExt
-gSourceExt = {'.c':{}, '.cpp':{}}
+# gSourceExt - used only for build & run single source
+gSourceExt = {'.c':{}, '.cpp':{}, '.py':{}}
 
 gSourceExt['.c']['build-single-source-func'] = 'build_single_c_cpp'
 gSourceExt['.c']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
@@ -63,6 +64,10 @@ gSourceExt['.c']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
 gSourceExt['.cpp']['build-single-source-func'] = 'build_single_c_cpp'
 gSourceExt['.cpp']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
 gSourceExt['.cpp']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
+
+gSourceExt['.py']['build-single-source-func'] = 'build_single_py'
+gSourceExt['.py']['runcmd-single-source-func'] = 'runcmd_single_py'
+gSourceExt['.py']['runcwd-single-source-func'] = 'runcwd_single_py'
 
 ############################################
 # gOSEnv
@@ -75,5 +80,7 @@ gOSEnv['nt']['cmake-version'] = 'getCMakeVersionWindows'
 gOSEnv['posix']['cmake-version'] = 'getCMakeVersionPosix'
 gOSEnv['nt']['visual-cpp-version'] = 'getVisulCppVersionWindows'
 gOSEnv['posix']['visual-cpp-version'] = '''lambda: ['No Visual C/C++ compiler available in this platform.']'''
+gOSEnv['nt']['python-version'] = 'getPythonVersion'
+gOSEnv['posix']['python-version'] = 'getPythonVersion'
 
 

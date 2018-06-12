@@ -55,9 +55,10 @@ def buildProj(submissionType, submissionDir, projName, projSrcFileNames):
 def build_single_source(srcRootDir, projName, singleSrcFileName):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
-        return eval(gSourceExt[extension]['build-single-source-func'])(srcRootDir, projName, singleSrcFileName)
+        build_single_func = eval(gSourceExt[extension]['build-single-source-func'])
     else:
-        return build_single_else(extension)
+        build_single_func = build_single_else
+    return build_single_func(srcRootDir, projName, singleSrcFileName)
 
 def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -70,10 +71,11 @@ def build_single_c_cpp(srcRootDir, projName, singleSrcFileName):
 
     return __build_cmake(buildDir, './')
 
-# def build_single_dummy(srcRootDir, projName, srcFileNames):
-    # return 0, ''
+def build_single_py(srcRootDir, projName, singleSrcFileName):
+    return 0, '', 'python-version'
 
-def build_single_else(extension):
+def build_single_else(srcRootDir, projName, singleSrcFileName):
+    extension = os.path.splitext(singleSrcFileName)[1].lower()
     errorMsg = u'Building %s is not supported.'%extension
     return -1, errorMsg, 'no-build-version'
 

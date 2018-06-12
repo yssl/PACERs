@@ -128,7 +128,7 @@ table.type04 td {
         if buildVersion != 'no-build-version':
             htmlCode +='<tr><th>%s</th><td>'%gVersionDescription[buildVersion]
             for versionText in eval(gOSEnv[os.name][buildVersion])():
-                htmlCode +='%s<br>'%versionText
+                htmlCode +='%s<br>'%toUnicode(versionText)
             htmlCode +='</td></tr>'
 
     htmlCode += '''</tbody>

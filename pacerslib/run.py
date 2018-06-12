@@ -61,6 +61,8 @@ def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInput
 
     return exitTypeList, stdoutStrList
 
+####
+# run_single functions
 def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
@@ -70,19 +72,58 @@ def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOu
     else:
         return run_single_else(extension)
 
+def runcmd_single_c_cpp(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    return os.path.abspath(opjoin(buildDir, '%s'%projName))
+
+def runcwd_single_c_cpp(srcRootDir, projName):
+    # run output executable from srcRootDir
+    return srcRootDir
+    # run output executable from buildDir
+    # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    # return buildDir
+
+def runcmd_single_py(srcRootDir, projName):
+    return 'py -2 ' + os.path.abspath(opjoin(srcRootDir, '%s.py'%projName))
+
+def runcwd_single_py(srcRootDir, projName):
+    # run output executable from srcRootDir
+    return srcRootDir
+
 def run_single_else(extension):
     errorMsg = 'Running %s is not supported.'%extension
     return -1, errorMsg 
 
+####
+# run_cmake functions
 def run_cmake(srcRootDir, projName, userInput, timeOut):
     runcmd = runcmd_cmake(srcRootDir, projName)
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
     return __run(runcmd, runcwd, userInput, timeOut)
 
+def runcmd_cmake(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    execName = projName
+    with open(opjoin(srcRootDir,'CMakeLists.txt'), 'r') as f:
+        tokens = re.split(' |\n|\(|\)', f.read())
+        for i in range(len(tokens)):
+            if tokens[i].lower()=='add_executable' and i < len(tokens)-1:
+                execName = tokens[i+1]
+    return os.path.abspath(opjoin(buildDir, execName))
+
+####
+# run_vcxproj functions
 def run_vcxproj(srcRootDir, projName, userInput, timeOut):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
     return __run(runcmd, runcwd, userInput, timeOut)
+
+def runcmd_vcxproj(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
+    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcxproj')))
+    execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
+    return os.path.abspath(opjoin(buildDir, execName))
 
 def __run(runcmd, runcwd, userInput, timeOut):
     # append newline to finish stdin user input and flush input buffer
@@ -96,10 +137,10 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # realInput += userInput[i]+'\n'
 
     try:
-        proc = subprocess.Popen([toString(runcmd)], cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        proc = subprocess.Popen(toString(runcmd).split(), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
         # return 2, runcmd
-        return -1, 'Cannot find %s (May has not been built yet).'%os.path.basename(runcmd)
+        return -1, 'Cannot execute \'%s\' \n(Maybe it has not been built yet or running cmd is wrong).'%runcmd
 
     if timeOut != 0:
         # call onTimeOut() after timeOut seconds
@@ -123,35 +164,6 @@ def __run(runcmd, runcwd, userInput, timeOut):
         stdoutStr, stderrStr = proc.communicate(realInput)
         stdoutStr = toUnicode(stdoutStr)
         return 0, stdoutStr
-
-def runcmd_single_c_cpp(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    return os.path.abspath(opjoin(buildDir, '%s'%projName))
-
-def runcwd_single_c_cpp(srcRootDir, projName):
-    # run output executable from srcRootDir
-    return srcRootDir
-
-    # run output executable from buildDir
-    # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    # return buildDir
-
-def runcmd_cmake(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    execName = projName
-    with open(opjoin(srcRootDir,'CMakeLists.txt'), 'r') as f:
-        tokens = re.split(' |\n|\(|\)', f.read())
-        for i in range(len(tokens)):
-            if tokens[i].lower()=='add_executable' and i < len(tokens)-1:
-                execName = tokens[i+1]
-    return os.path.abspath(opjoin(buildDir, execName))
-
-def runcmd_vcxproj(srcRootDir, projName):
-    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
-    vcxprojNames = glob.glob(opjoin(srcRootDir, '*.vcxproj'))
-    vcxprojNames.extend(glob.glob(opjoin(srcRootDir, '*.vcxproj')))
-    execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
-    return os.path.abspath(opjoin(buildDir, execName))
 
 # def runcmd_single_dummy(srcRootDir, projName):
     # return ''
