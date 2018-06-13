@@ -89,3 +89,7 @@ optional arguments:
                         and build output files to be generated.
                         Avoid including hangul characters in its full path.
                         default: ./output
+  --interpreter-cmd INTERPRETER_CMD
+                        Specify INTERPRETER_CMD that can execute an interpreter
+                        for interpreted languages such as python.
+                        default: ''
