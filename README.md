@@ -130,6 +130,23 @@ You can run all test-assignments at once by the run-test-assignments script.
 If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project so that I could update the "Tested language, compiler(or interpreter), OS" section in this page :).
 -->
 
+## Note for Interpreted Languages
+PACERs runs a default interpreter command based on the source file extension.  
+For example, the following command would execute `python test-assignments/python3-assignment-1/<a python file>.py` for each .py file in the assignment directory:
+```
+./pacers.py test-assignments/python2-assignment-1
+```
+For some cases, you may need to run other interpreter commands rather than default one.  
+For example, if you want to use Python 3 on a Windows system with both Python 2 and Python 3 installed, you can use:
+```
+python pacers.py --interpreter-cmd "py -3" test-assignments/python2-assignment-1
+```
+If you need to run some shell command before running the target script, you can use `--pre-shell-cmd` argument.  
+For example, if you want to specify the Python virtual environment for .py files different from the environment where PACERs runs, you can use (using [virtualenvwrapper]):
+```
+./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2-assignment-1
+```
+
 ## Usage
 Please read [help-pacers.txt] for detailed usage.
 
@@ -157,3 +174,4 @@ Please read [help-pacers-cmd.txt] for detailed usage.
 [example-result]: https://cloud.githubusercontent.com/assets/5915359/23886079/4e0da5b6-08bb-11e7-8ec2-15ec263a0ff4.png
 [help-pacers.txt]: help-pacers.txt
 [help-pacers-cmd.txt]: help-pacers-cmd.txt
+[virtualenvwrapper]: https://virtualenvwrapper.readthedocs.io/en/latest/
