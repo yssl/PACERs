@@ -91,7 +91,7 @@ The tested envirionments for each submission type are shown in the table.
 ```
 - Python source file
 ```
-./pacers.py --interpreter-cmd "python" test-assignments/python3-assignment-1
+./pacers.py test-assignments/python3-assignment-1
 ```
 - Text file
 ```

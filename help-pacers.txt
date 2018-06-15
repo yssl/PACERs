@@ -4,7 +4,8 @@ usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
                  [--num-cores NUM_CORES] [--no-report]
                  [--exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]]
                  [--assignment-alias ASSIGNMENT_ALIAS]
-                 [--output-dir OUTPUT_DIR]
+                 [--output-dir OUTPUT_DIR] [--interpreter-cmd INTERPRETER_CMD]
+                 [--pre-shell-cmd PRE_SHELL_CMD]
                  assignment_dir
 
 PACERs
@@ -90,6 +91,10 @@ optional arguments:
                         Avoid including hangul characters in its full path.
                         default: ./output
   --interpreter-cmd INTERPRETER_CMD
-                        Specify INTERPRETER_CMD that can execute an interpreter
+                        Specify INTERPRETER_CMD that executes an interpreter
                         for interpreted languages such as python.
+                        default: 'python' for python
+  --pre-shell-cmd PRE_SHELL_CMD
+                        Specify PRE_SHELL_CMD that is executed before
+                        INTERPRETER_CMD or a target executable in the same shell.
                         default: ''

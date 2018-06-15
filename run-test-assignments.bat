@@ -1,6 +1,8 @@
 pacers.py test-assignments\c-assignment-1
 pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"
 
+pacers.py test-assignments\python2-assignment-1
+
 pacers.py test-assignments\txt-assignment-1
 
 pacers.py test-assignments\img-assignment-1
