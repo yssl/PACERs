@@ -145,11 +145,15 @@ def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
 
     try:
         if preShellCmd!='':
-            connector = ';' if os.name=='posix' else '&'
-            runcmd = 'cmd /c %s %s %s'%(preShellCmd, connector, runcmd)
-            print runcmd
+            if os.name=='posix':
+                shell = '/bin/bash -c'
+                connector = ';'
+            else:
+                shell = 'cmd /c'
+                connector = '&'
+            runcmd = '%s %s %s %s'%(shell, preShellCmd, connector, runcmd)
 
-        proc = subprocess.Popen(shlex.split(toString(runcmd), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        proc = subprocess.Popen(shlex.split(toString(runcmd), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     except OSError:
         return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created (compiled languages) or \n--interpreter-cmd should have been specified (interpreted languages))'%runcmd
 
@@ -161,25 +165,29 @@ def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
         # block until proc is finished
         try:
             stdoutStr, stderrStr = proc.communicate(realInput)
-            stdoutStr = toUnicode(stdoutStr)
         except Exception as e:
             return -1, toUnicode(str(type(e)) + ' ' + str(e))
 
         if timer.is_alive():    # if proc has finished without calling onTimeOut() (finished before timeOut)
             timer.cancel()
-            return 0, stdoutStr
+            if proc.returncode==0:
+                return 0, toUnicode(stdoutStr)
+            else:
+                return -1, toUnicode(stderrStr)
         else:
-            return 1, stdoutStr # 1 means 'forced kill due to timeout'
+            return 1, toUnicode(stdoutStr) # 1 means 'forced kill due to timeout'
     else:
         # block until proc is finished
         stdoutStr, stderrStr = proc.communicate(realInput)
-        stdoutStr = toUnicode(stdoutStr)
-        return 0, stdoutStr
+        if proc.returncode==0:
+            return 0, toUnicode(stdoutStr)
+        else:
+            return -1, toUnicode(stderrStr)
 
 def onTimeOut(proc):
     if os.name=='posix':
         proc.kill()
     else:
-        # windows specific - to kill cmd and its subprocess (required when --pre-shell-cmd is specified)
+        # windows specific - to kill both cmd.exe and its subprocess (required when --pre-shell-cmd is specified)
         # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
         subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
