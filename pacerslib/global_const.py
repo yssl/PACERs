@@ -60,14 +60,17 @@ gSourceExt = {'.c':{}, '.cpp':{}, '.py':{}}
 gSourceExt['.c']['build-single-source-func'] = 'build_single_c_cpp'
 gSourceExt['.c']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
 gSourceExt['.c']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
+gSourceExt['.c']['default-interpreter-cmd'] = ''
 
 gSourceExt['.cpp']['build-single-source-func'] = 'build_single_c_cpp'
 gSourceExt['.cpp']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
 gSourceExt['.cpp']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
+gSourceExt['.cpp']['default-interpreter-cmd'] = ''
 
 gSourceExt['.py']['build-single-source-func'] = 'build_single_py'
 gSourceExt['.py']['runcmd-single-source-func'] = 'runcmd_single_py'
 gSourceExt['.py']['runcwd-single-source-func'] = 'runcwd_single_py'
+gSourceExt['.py']['default-interpreter-cmd'] = 'python'
 
 ############################################
 # gOSEnv

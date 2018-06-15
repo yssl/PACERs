@@ -159,9 +159,9 @@ and build output files to be generated.
 Avoid including hangul characters in its full path.
 default: %s'''%'./output')
     parser.add_argument('--interpreter-cmd', default='',
-                        help='''Specify INTERPRETER_CMD that can execute an interpreter
+                        help='''Specify INTERPRETER_CMD that executes an interpreter
 for interpreted languages such as python.
-default: \'\' ''')
+default: \'python\' for python''')
     parser.add_argument('--pre-shell-cmd', default='',
                         help='''Specify PRE_SHELL_CMD that is executed before
 INTERPRETER_CMD or a target executable in the same shell.

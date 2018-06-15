@@ -68,7 +68,12 @@ def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOu
     if extension in gSourceExt:
         runcmd = eval(gSourceExt[extension]['runcmd-single-source-func'])(srcRootDir, projName)
         if interpreterCmd!='':
-            runcmd = interpreterCmd + ' ' + runcmd
+            runcmd = interpreterCmd + ' ' + runcmd  # python with specified command
+        else:
+            if 'default-interpreter-cmd' in gSourceExt[extension]:
+                runcmd = gSourceExt[extension]['default-interpreter-cmd'] + ' ' + runcmd  # python with default command
+            else:
+                pass    # c & c++
         runcwd = eval(gSourceExt[extension]['runcwd-single-source-func'])(srcRootDir, projName)
         return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
     else:
@@ -146,7 +151,7 @@ def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
 
         proc = subprocess.Popen(shlex.split(toString(runcmd), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
-        return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created from source code in compiled languages or \nthe argument INTERPRETER_CMD has not been specified for interpreted languages)'%runcmd
+        return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created (compiled languages) or \n--interpreter-cmd should have been specified (interpreted languages))'%runcmd
 
     if timeOut != 0:
         # call onTimeOut() after timeOut seconds
