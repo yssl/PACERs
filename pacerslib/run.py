@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
-import os, subprocess, threading, glob, re
+import os, subprocess, threading, glob, re, shlex
 from global_const import *
 from unicode import *
 
-def runOneProj(projInfo, timeOut, interpreterCmd):
+def runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd):
     submissionType = projInfo['submissionType']
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
@@ -30,7 +30,7 @@ def runOneProj(projInfo, timeOut, interpreterCmd):
     exitTypeList = []
     stdoutStrList = []
     userInputList = userInputs
-    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, timeOut, interpreterCmd)
+    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, timeOut, interpreterCmd, preShellCmd)
 
     return exitTypeList, stdoutStrList, userInputList
 
@@ -43,18 +43,18 @@ def runOneProj(projInfo, timeOut, interpreterCmd):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 
-def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut, interpreterCmd):
+def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut, interpreterCmd, preShellCmd):
     exitTypeList = []
     stdoutStrList = []
 
     for userInput in userInputs:
 
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut, interpreterCmd)
+            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut, interpreterCmd, preShellCmd)
         elif submissionType==CMAKE_PROJECT:
-            exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut)
+            exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut, preShellCmd)
         elif submissionType==VISUAL_CPP_PROJECT:
-            exitType, stdoutStr = run_vcxproj(submissionDir, projName, userInput, timeOut)
+            exitType, stdoutStr = run_vcxproj(submissionDir, projName, userInput, timeOut, preShellCmd)
 
         exitTypeList.append(exitType)
         stdoutStrList.append(stdoutStr)
@@ -63,14 +63,14 @@ def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInput
 
 ####
 # run_single functions
-def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut, interpreterCmd):
+def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut, interpreterCmd, preShellCmd):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
         runcmd = eval(gSourceExt[extension]['runcmd-single-source-func'])(srcRootDir, projName)
         if interpreterCmd!='':
             runcmd = interpreterCmd + ' ' + runcmd
         runcwd = eval(gSourceExt[extension]['runcwd-single-source-func'])(srcRootDir, projName)
-        return __run(runcmd, runcwd, userInput, timeOut)
+        return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
     else:
         return run_single_else(extension)
 
@@ -98,10 +98,10 @@ def run_single_else(extension):
 
 ####
 # run_cmake functions
-def run_cmake(srcRootDir, projName, userInput, timeOut):
+def run_cmake(srcRootDir, projName, userInput, timeOut, preShellCmd):
     runcmd = runcmd_cmake(srcRootDir, projName)
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
-    return __run(runcmd, runcwd, userInput, timeOut)
+    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
 
 def runcmd_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -115,10 +115,10 @@ def runcmd_cmake(srcRootDir, projName):
 
 ####
 # run_vcxproj functions
-def run_vcxproj(srcRootDir, projName, userInput, timeOut):
+def run_vcxproj(srcRootDir, projName, userInput, timeOut, preShellCmd):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
     runcwd = runcwd_single_c_cpp(srcRootDir, projName)
-    return __run(runcmd, runcwd, userInput, timeOut)
+    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
 
 def runcmd_vcxproj(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -127,7 +127,7 @@ def runcmd_vcxproj(srcRootDir, projName):
     execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
     return os.path.abspath(opjoin(buildDir, execName))
 
-def __run(runcmd, runcwd, userInput, timeOut):
+def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
     # append newline to finish stdin user input and flush input buffer
     realInput = userInput+'\n'
 
@@ -139,9 +139,13 @@ def __run(runcmd, runcwd, userInput, timeOut):
         # realInput += userInput[i]+'\n'
 
     try:
-        proc = subprocess.Popen(toString(runcmd).split(), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+        if preShellCmd!='':
+            connector = ';' if os.name=='posix' else '&'
+            runcmd = 'cmd /c %s %s %s'%(preShellCmd, connector, runcmd)
+            print runcmd
+
+        proc = subprocess.Popen(shlex.split(toString(runcmd), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
     except OSError:
-        # return 2, runcmd
         return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created from source code in compiled languages or \nthe argument INTERPRETER_CMD has not been specified for interpreted languages)'%runcmd
 
     if timeOut != 0:
@@ -156,7 +160,7 @@ def __run(runcmd, runcwd, userInput, timeOut):
         except Exception as e:
             return -1, toUnicode(str(type(e)) + ' ' + str(e))
 
-        if timer.is_alive():    # if proc has finished without calling onTimeOut()
+        if timer.is_alive():    # if proc has finished without calling onTimeOut() (finished before timeOut)
             timer.cancel()
             return 0, stdoutStr
         else:
@@ -167,17 +171,10 @@ def __run(runcmd, runcwd, userInput, timeOut):
         stdoutStr = toUnicode(stdoutStr)
         return 0, stdoutStr
 
-# def runcmd_single_dummy(srcRootDir, projName):
-    # return ''
-# def runcwd_single_dummy(srcRootDir, projName):
-    # return ''
-
-
 def onTimeOut(proc):
-    proc.kill()
-
-# def kill_windows(proc):
-    # # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-    # subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))
-
-
+    if os.name=='posix':
+        proc.kill()
+    else:
+        # windows specific - to kill cmd and its subprocess (required when --pre-shell-cmd is specified)
+        # http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+        subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=proc.pid))

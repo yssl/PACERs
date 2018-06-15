@@ -49,9 +49,9 @@ def worker_build(params):
     printBuildResult(q.qsize(), numAllProjs, projInfo, buildRetCode, buildLog)
 
 def worker_run(params):
-    buildRetCode, numAllProjs, i, projInfo, timeOut, interpreterCmd, q = params
+    buildRetCode, numAllProjs, i, projInfo, timeOut, interpreterCmd, preShellCmd, q = params
     if buildRetCode==0:
-        exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut, interpreterCmd)
+        exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd)
     else:
         exitTypeList = [-1]
         stdoutStrList = ['Due to the build error.']
@@ -161,6 +161,10 @@ default: %s'''%'./output')
     parser.add_argument('--interpreter-cmd', default='',
                         help='''Specify INTERPRETER_CMD that can execute an interpreter
 for interpreted languages such as python.
+default: \'\' ''')
+    parser.add_argument('--pre-shell-cmd', default='',
+                        help='''Specify PRE_SHELL_CMD that is executed before
+INTERPRETER_CMD or a target executable in the same shell.
 default: \'\' ''')
 # parser.add_argument('--user-dict', default=None,
                     # help='''An alternative option to specify user input
@@ -291,7 +295,7 @@ default: \'\' ''')
             print
             p = mp.Pool(gArgs.num_cores)
             q = mp.Manager().Queue()
-            p.map(worker_run, [(buildResults[i][0], len(allProjInfos), i, allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, q) for i in range(len(allProjInfos))])
+            p.map(worker_run, [(buildResults[i][0], len(allProjInfos), i, allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd, q) for i in range(len(allProjInfos))])
             while not q.empty():
                 i, exitTypeList, stdoutStrList, userInputList = q.get()
                 runResults[i] = [exitTypeList, stdoutStrList, userInputList]
@@ -302,7 +306,7 @@ default: \'\' ''')
             for i in range(len(allProjInfos)):
                 printRunStart(i+1, len(allProjInfos), allProjInfos[i])
                 if buildResults[i][0]==0:
-                    exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd)
+                    exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd)
                 else:
                     exitTypeList = [-1]
                     stdoutStrList = ['Due to build error.']
