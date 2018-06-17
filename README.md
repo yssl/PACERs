@@ -139,10 +139,10 @@ For example, the following command would execute `python test-assignments/python
 For some cases, you may need to run other interpreter commands rather than default one.  
 For example, if you want to use Python 3 on a Windows system with both Python 2 and Python 3 installed, you can use:
 ```
-python pacers.py --interpreter-cmd "py -3" test-assignments/python2-assignment-1
+py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3-assignment-1
 ```
 If you need to run some shell command before running the target script, you can use `--pre-shell-cmd` argument.  
-For example, if you want to specify the Python virtual environment for .py files different from the environment where PACERs runs, you can use (using [virtualenvwrapper]):
+For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can use:
 ```
 ./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2-assignment-1
 ```
