@@ -173,7 +173,7 @@ def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
             if proc.returncode==0:
                 return 0, toUnicode(stdoutStr)
             else:
-                return -1, toUnicode(stderrStr)
+                return -1, toUnicode(stdoutStr) + toUnicode(stderrStr)
         else:
             return 1, toUnicode(stdoutStr) # 1 means 'forced kill due to timeout'
     else:
@@ -182,7 +182,7 @@ def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
         if proc.returncode==0:
             return 0, toUnicode(stdoutStr)
         else:
-            return -1, toUnicode(stderrStr)
+            return -1, toUnicode(stdoutStr) + toUnicode(stderrStr)
 
 def onTimeOut(proc):
     if os.name=='posix':
