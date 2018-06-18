@@ -18,10 +18,11 @@
 ################################################################################
 import os, subprocess
 from unicode import *
+import global_const
 
 ############################################
 # version functions
-def getCMakeVersionWindows(ignored):
+def getCMakeVersionWindows(temp1, temp2):
     versionStrs = []
     # cmake
     try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && cmake --version', stderr=subprocess.STDOUT, shell=True))
@@ -40,7 +41,7 @@ def getCMakeVersionWindows(ignored):
 
     return versionStrs
 
-def getCMakeVersionPosix(ignored):
+def getCMakeVersionPosix(temp1, temp2):
     versionStrs = []
     # cmake
     try: versionStr = toUnicode(subprocess.check_output('cmake --version', stderr=subprocess.STDOUT, shell=True))
@@ -59,7 +60,7 @@ def getCMakeVersionPosix(ignored):
 
     return versionStrs
 
-def getVisulCppVersionWindows(ignored):
+def getVisulCppVersionWindows(temp1, temp2):
     versionStrs = []
     # msbuild
     try: versionStr = toUnicode(subprocess.check_output('(vcvars32.bat > nul) && msbuild /help', stderr=subprocess.STDOUT, shell=True))
@@ -73,8 +74,18 @@ def getVisulCppVersionWindows(ignored):
 
     return versionStrs
 
-def getPythonVersion(interpreterCmd):
-    pythonCmd = interpreterCmd
+def getPythonVersion(interpreterCmd, preShellCmd):
+    if interpreterCmd=='':
+        interpreterCmd = global_const.gSourceExt['.py']['default-interpreter-cmd']
+
+    if preShellCmd!='':
+        if os.name=='posix':
+            connector = ';'
+        else:
+            connector = '&'
+        pythonCmd = '%s %s %s'%(preShellCmd, connector, interpreterCmd)
+    else:
+        pythonCmd = interpreterCmd
 
     versionStrs = []
     # python
