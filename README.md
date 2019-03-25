@@ -34,15 +34,9 @@ To score each submission, you can open the report in WYSIWYG HTML editors (e.g. 
 ## Requirements
 - Python 2.x
 - CMake
-- Pygments  
-    Install in Windows - ```pip install pygments```  
-    Install in Linux - ```sudo pip install pygments```
-- Unidecode  
-    Install in Windows - ```pip install unidecode```  
-    Install in Linux - ```sudo pip install unidecode```
-- Chardet  
-    Install in Windows - ```pip install chardet```  
-    Install in Linux - ```sudo pip install chardet```
+- Pygments - ```pip install pygments```  
+- Unidecode - ```pip install unidecode```  
+- Chardet - ```pip install chardet```  
 
 ## Note for Windows
 On MS Windows, please add the path to `vcvars32.bat` to the system path. For example:
