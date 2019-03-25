@@ -72,12 +72,12 @@ The type of each submission is auto-detected by PACERs.
 | CMAKE_PROJECT             | Each submission has CMakeLists.txt and constitutes a single project (and a program). |
 | VISUAL_CPP_PROJECT        | Each submission has *.vcxproj or *.vcproj and	constitutes a single project (and a program). |
 
-The tested envirionments for each submission type are shown in the table.
+The tested environments for each submission type are shown in the table.
 
 | Submission types | Language | Tested environment      |
 |-------------------------|--------------------------|-------------------------|
 | SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng) |
-| SINGLE_SOURCE_FILE or SOURCE_FILES  | Python                      | Python 2.7.14 - Windows 10 (Kor)<br> Python 3.5.4 - Windows 10 (Kor) |
+| SINGLE_SOURCE_FILE or SOURCE_FILES  | Python                      | Python 2.7.14 - Windows 10 (Kor)<br> Python 3.5.4 - Windows 10 (Kor)<br> Python 3.6.7 - Linux Mint 19.1 ("Tessa" Cinnamon)  |
 | SINGLE_SOURCE_FILE or SOURCE_FILES | text file                     | N/A (just showing the text) |    
 | SINGLE_SOURCE_FILE or SOURCE_FILES | image file                     | N/A (just showing the image, '.jpg', '.jpeg', '.gif', '.png', '.bmp' are supported.) |    
 | CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng)  |    
