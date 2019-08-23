@@ -53,6 +53,8 @@ def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInput
             exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut, interpreterCmd, preShellCmd)
         elif submissionType==CMAKE_PROJECT:
             exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut, preShellCmd)
+        elif submissionType==MAKE_PROJECT:
+            exitType, stdoutStr = run_make(submissionDir, projName, userInput, timeOut, preShellCmd)
         elif submissionType==VISUAL_CPP_PROJECT:
             exitType, stdoutStr = run_vcxproj(submissionDir, projName, userInput, timeOut, preShellCmd)
 
@@ -86,6 +88,7 @@ def runcmd_single_c_cpp(srcRootDir, projName):
 def runcwd_single_c_cpp(srcRootDir, projName):
     # run output executable from srcRootDir
     return srcRootDir
+
     # run output executable from buildDir
     # buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     # return buildDir
@@ -105,7 +108,7 @@ def run_single_else(extension):
 # run_cmake functions
 def run_cmake(srcRootDir, projName, userInput, timeOut, preShellCmd):
     runcmd = runcmd_cmake(srcRootDir, projName)
-    runcwd = runcwd_single_c_cpp(srcRootDir, projName)
+    runcwd = srcRootDir
     return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
 
 def runcmd_cmake(srcRootDir, projName):
@@ -119,10 +122,30 @@ def runcmd_cmake(srcRootDir, projName):
     return os.path.abspath(opjoin(buildDir, execName))
 
 ####
+# run_make functions
+def run_make(srcRootDir, projName, userInput, timeOut, preShellCmd):
+    runcmd = runcmd_make(srcRootDir, projName)
+    runcwd = srcRootDir
+    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
+
+def runcmd_make(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    execName = projName
+
+    try:
+        grepStr = subprocess.check_output("make -p --just-print | grep 'DEFAULT_GOAL'", cwd=srcRootDir, stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        execName = 'Failed to find the executable name in Makefile'
+    else: 
+        execName = grepStr.split()[2]
+
+    return os.path.abspath(opjoin(buildDir, execName))
+
+####
 # run_vcxproj functions
 def run_vcxproj(srcRootDir, projName, userInput, timeOut, preShellCmd):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
-    runcwd = runcwd_single_c_cpp(srcRootDir, projName)
+    runcwd = srcRootDir
     return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
 
 def runcmd_vcxproj(srcRootDir, projName):

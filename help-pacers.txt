@@ -18,17 +18,20 @@ positional arguments:
                         | Submission types   | Meaning                                               |
                         |--------------------|-------------------------------------------------------|
                         | SINGLE_SOURCE_FILE | Each submission has a single source or resource file  |
-                        |                    | which constitutes a single project (and a program).   |
+                        |                    | which constitutes a single project (program).         |
                         |--------------------|-------------------------------------------------------|
                         | SOURCE_FILES       | Each submission has source or resource files without  |
                         |                    | any kind of project files. A single source file in    |
                         |                    | a submission constitutes a single project (program).  |
                         |--------------------|-------------------------------------------------------|
                         | CMAKE_PROJECT      | Each submission has CMakeLists.txt and constitutes    |
-                        |                    | a single project (and a program).                     |
+                        |                    | a single project (program).                           |
                         |--------------------|-------------------------------------------------------|
                         | VISUAL_CPP_PROJECT | Each submission has *.vcxproj or *.vcproj and         |
-                        |                    | constitutes a single project (and a program).         |
+                        |                    | constitutes a single project (program).               |
+                        |--------------------|-------------------------------------------------------|
+                        | MAKE_PROJECT       | Each submission has Makefile and constitutes          |
+                        |                    | a single project (program).                           |
 
                         Each submission can have only one source file, or a zip file
                         or a directory including many files.

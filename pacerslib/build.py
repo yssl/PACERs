@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
-import os, subprocess, glob
+import os, subprocess, glob, shutil
 from global_const import *
 from unicode import *
 
@@ -46,6 +46,8 @@ def buildProj(submissionType, submissionDir, projName, projSrcFileNames):
         buildRetCode, buildLog, buildVersion = build_single_source(submissionDir, projName, projSrcFileNames[0])
     elif submissionType==CMAKE_PROJECT:
         buildRetCode, buildLog, buildVersion = build_cmake(submissionDir, projName)
+    elif submissionType==MAKE_PROJECT:
+        buildRetCode, buildLog, buildVersion = build_make(submissionDir, projName)
     elif submissionType==VISUAL_CPP_PROJECT:
         buildRetCode, buildLog, buildVersion = build_vcxproj(submissionDir, projName)
     return buildRetCode, buildLog, buildVersion
@@ -99,6 +101,28 @@ def __build_cmake(buildDir, cmakeLocationFromBuildDir):
         return e.returncode, toUnicode(e.output), 'cmake-version'
     else:
         return 0, buildLog, 'cmake-version'
+
+####
+# build_make functions
+def build_make(srcRootDir, projName):
+    buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
+    try:
+        # copy all copied files in output/assigndir to output/assigndir/pacers-assigndir
+        shutil.copytree(srcRootDir, buildDir)
+    except Exception as e:
+        return -1, toUnicode(str(e)), 'make-version'
+    return __build_make(buildDir, '../')
+
+def __build_make(buildDir, makeLocationFromBuildDir):
+    try:
+        if os.name=='posix':
+            buildLog = toUnicode(subprocess.check_output('cd "%s" && %s'%(toString(buildDir), 'make'), stderr=subprocess.STDOUT, shell=True))
+        else:
+            return -1, 'MAKE_PROJECT is not supported on Windows', 'make-version'
+    except subprocess.CalledProcessError as e:
+        return e.returncode, toUnicode(e.output), 'make-version'
+    else:
+        return 0, buildLog, 'make-version'
 
 # return CMakeLists.txt code
 def makeCMakeLists_single_c_cpp(projName, singleSrcFileName, buildDir):

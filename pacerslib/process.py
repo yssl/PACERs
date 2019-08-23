@@ -85,9 +85,9 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
                 # [u'prob1', u'prob2']
                 projNames = [os.path.splitext(srcFileNamesInProj[0])[0] for srcFileNamesInProj in projSrcFileNames]
 
-        elif submissionType==CMAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
+        elif submissionType==CMAKE_PROJECT or submissionType==MAKE_PROJECT or submissionType==VISUAL_CPP_PROJECT:
 
-            if submissionType==CMAKE_PROJECT:
+            if submissionType==CMAKE_PROJECT or submissionType==MAKE_PROJECT:
                 if destDir!=None:
                     decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap)
                     submissionDir = opjoin(destDir, unico2decoPath(submissionTitle, deco2unicoMap))
@@ -192,7 +192,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
             if args.run_only:
                 projOrigSrcFilePathsAfterAssignDir.append(opjoin(destDir, destSrcFilePathAfterDestDir))
             else:
-                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES or submissionType==CMAKE_PROJECT:
+                if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES or submissionType==CMAKE_PROJECT or submissionType==MAKE_PROJECT:
                     # deco2unico src file paths to properly display in the report
                     origSrcFilePathAfterAssignDir = deco2unicoPath(destSrcFilePathAfterDestDir, deco2unicoMap)
                 else:

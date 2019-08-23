@@ -48,7 +48,7 @@ def getCMakeVersionPosix(temp1, temp2):
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
-    # nmake
+    # make
     try: versionStr = toUnicode(subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
@@ -58,6 +58,24 @@ def getCMakeVersionPosix(temp1, temp2):
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
+    return versionStrs
+
+def getMakeVersionPosix(temp1, temp2):
+    versionStrs = []
+    # make
+    try: versionStr = toUnicode(subprocess.check_output('make -v', stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
+
+    # cl
+    try: versionStr = toUnicode(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
+
+    return versionStrs
+
+def getMakeVersionWindows(temp1, temp2):
+    versionStrs = []
     return versionStrs
 
 def getVisulCppVersionWindows(temp1, temp2):

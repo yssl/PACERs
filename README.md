@@ -61,21 +61,23 @@ The type of each submission is auto-detected by PACERs.
 
 | Submission types | Meaning      |
 |--------------------------|-------------------------|
-| SINGLE_SOURCE_FILE        | Each submission has a single source or resource file which constitutes a single project (and a program).	 |
+| SINGLE_SOURCE_FILE        | Each submission has a single source or resource file which constitutes a single project (program).	 |
 | SOURCE_FILES              | Each submission has source or resource files without any kind of project files. A single source file in a submission constitutes a single project (program).|
-| CMAKE_PROJECT             | Each submission has CMakeLists.txt and constitutes a single project (and a program). |
-| VISUAL_CPP_PROJECT        | Each submission has *.vcxproj or *.vcproj and	constitutes a single project (and a program). |
+| CMAKE_PROJECT             | Each submission has CMakeLists.txt and constitutes a single project (program). |
+| VISUAL_CPP_PROJECT        | Each submission has *.vcxproj or *.vcproj and	constitutes a single project (program). |
+| MAKE_PROJECT             | Each submission has Makefile and constitutes a single project (program). |
 
 The tested environments for each submission type are shown in the table.
 
 | Submission types | Language | Tested environment      |
 |-------------------------|--------------------------|-------------------------|
-| SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng) |
-| SINGLE_SOURCE_FILE or SOURCE_FILES  | Python                      | Python 2.7.14 - Windows 10 (Kor)<br> Python 3.5.4 - Windows 10 (Kor)<br> Python 3.6.7 - Linux Mint 19.1 ("Tessa" Cinnamon)  |
+| SINGLE_SOURCE_FILE or SOURCE_FILES  | C & C++                      | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> Microsoft Visual C++ 2010 Express - Windows 8.1 with Bing (Eng)<br> gcc 4.8.4 - Ubuntu 14.04 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng)<br> gcc 7.4.0 - Ubuntu 18.04 (Eng) |
+| SINGLE_SOURCE_FILE or SOURCE_FILES  | Python                      | Python 2.7.14 - Windows 10 (Kor)<br> Python 3.5.4 - Windows 10 (Kor)<br> Python 3.6.7 - Linux Mint 19.1 ("Tessa" Cinnamon)<br> Python 2.7.15+ - Ubuntu 18.04 (Eng)<br> Python 3.6.8 - Ubuntu 18.04 (Eng) |
 | SINGLE_SOURCE_FILE or SOURCE_FILES | text file                     | N/A (just showing the text) |    
 | SINGLE_SOURCE_FILE or SOURCE_FILES | image file                     | N/A (just showing the image, '.jpg', '.jpeg', '.gif', '.png', '.bmp' are supported.) |    
-| CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng)  |    
+| CMAKE_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor)<br> gcc 5.4.0 - Ubuntu 16.04 (Eng)<br> gcc 7.4.0 - Ubuntu 18.04 (Eng) |    
 | VISUAL_CPP_PROJECT | C & C++                     | Microsoft Visual Studio Community 2015 - Windows 10 (Kor)<br> Microsoft Visual Studio 2010 - Windows 10 (Kor) |    
+| MAKE_PROJECT | C & C++                     | gcc 7.4.0 - Ubuntu 18.04 (Eng) |    
 
 ## Try other test-assignments
 - C source file
@@ -85,7 +87,8 @@ The tested environments for each submission type are shown in the table.
 ```
 - Python source file
 ```
-./pacers.py test-assignments/python3-assignment-1
+./pacers.py --interpreter-cmd "python2" test-assignments/python2-assignment-1
+./pacers.py --interpreter-cmd "python3" test-assignments/python3-assignment-1
 ```
 - Text file
 ```
@@ -107,6 +110,10 @@ The tested environments for each submission type are shown in the table.
 - CMake project
 ```
 ./pacers.py test-assignments/cmake-assignment-1
+```
+- Make project
+```
+./pacers.py test-assignments/make-assignment-1
 ```
 - Visual C++ project (Windows only)
 ```
@@ -131,14 +138,32 @@ For example, the following command would execute `python test-assignments/python
 ./pacers.py test-assignments/python2-assignment-1
 ```
 For some cases, you may need to run other interpreter commands rather than default one.  
-For example, if you want to use Python 3 on a Windows system with both Python 2 and Python 3 installed, you can use:
+For example, if you want to use Python 3 on a system with both Python 2 and Python 3 installed, you can use:
+- On Windows:
 ```
 py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3-assignment-1
+```
+- On Linux:
+```
+python2 pacers.py --interpreter-cmd "python3" test-assignments/python3-assignment-1
 ```
 If you need to run some shell command before running the target script, you can use `--pre-shell-cmd` argument.  
 For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can use:
 ```
 ./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2-assignment-1
+```
+
+## Note for MAKE_PROJECT
+PACERs finds the final executable name from the target names in the Makefile.  
+So the generated executable name must match the target name like:
+```
+test: test.c
+     gcc -o test test.c
+```
+If they do not match (like the following case), PACERs will report an error complaining that the executable could not be found..
+```
+test: test.c
+     gcc -o test_executable test.c
 ```
 
 ## Usage

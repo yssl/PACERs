@@ -1,7 +1,8 @@
 pacers.py test-assignments\c-assignment-1
 pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"
 
-pacers.py test-assignments\python2-assignment-1
+pacers.py --interpreter-cmd "py -2" test-assignments\python2-assignment-1
+pacers.py --interpreter-cmd "py -3" test-assignments\python3-assignment-1
 
 pacers.py test-assignments\txt-assignment-1
 

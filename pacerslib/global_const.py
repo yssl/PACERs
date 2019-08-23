@@ -23,33 +23,38 @@ from version import *
 BEGIN_SUBMISSION_TYPE = 0
 CMAKE_PROJECT         = 1
 VISUAL_CPP_PROJECT    = 2
-SOURCE_FILES          = 3
-SINGLE_SOURCE_FILE    = 4
-END_SUBMISSION_TYPE   = 5
+MAKE_PROJECT          = 3
+SOURCE_FILES          = 4
+SINGLE_SOURCE_FILE    = 5
+END_SUBMISSION_TYPE   = 6
 
 gLogPrefix = '# '
 gBuildDirPrefix = 'pacers-build-'
 
 gSubmissionTypeDescrption                        = {}
 gSubmissionTypeDescrption[CMAKE_PROJECT]         = 'CMAKE_PROJECT - the submission has CMakeLists.txt.'
+gSubmissionTypeDescrption[MAKE_PROJECT]          = 'MAKE_PROJECT - the submission has Makefile.'
 gSubmissionTypeDescrption[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT - the submission has .vcxproj or .vcproj.'
 gSubmissionTypeDescrption[SOURCE_FILES]          = 'SOURCE_FILES - the submission has source or resource files without any project files.'
 gSubmissionTypeDescrption[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE - the submission has a single source or resource file.'
 
 gSubmissionTypeName                        = {}
 gSubmissionTypeName[CMAKE_PROJECT]         = 'CMAKE_PROJECT'
+gSubmissionTypeName[MAKE_PROJECT]          = 'MAKE_PROJECT'
 gSubmissionTypeName[VISUAL_CPP_PROJECT]    = 'VISUAL_CPP_PROJECT'
 gSubmissionTypeName[SOURCE_FILES]          = 'SOURCE_FILES'
 gSubmissionTypeName[SINGLE_SOURCE_FILE]    = 'SINGLE_SOURCE_FILE'
 
 gSubmissionPatterns                        = {}
 gSubmissionPatterns[CMAKE_PROJECT]         = ['CMakeLists.txt']
+gSubmissionPatterns[MAKE_PROJECT]          = ['Makefile', 'makefile']
 gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
 gSubmissionPatterns[SOURCE_FILES]          = ['*']
 gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
 
 gVersionDescription                        = {}
 gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
+gVersionDescription['make-version']        = 'Make & C/C++ compiler'
 gVersionDescription['visual-cpp-version']  = 'Visual C/C++ compiler'
 gVersionDescription['python-version']      = 'Python'
 
@@ -81,6 +86,8 @@ gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && ma
 
 gOSEnv['nt']['cmake-version'] = 'getCMakeVersionWindows'
 gOSEnv['posix']['cmake-version'] = 'getCMakeVersionPosix'
+gOSEnv['nt']['make-version'] = 'getMakeVersionWindows'
+gOSEnv['posix']['make-version'] = 'getMakeVersionPosix'
 gOSEnv['nt']['visual-cpp-version'] = 'getVisulCppVersionWindows'
 gOSEnv['posix']['visual-cpp-version'] = '''lambda: ['No Visual C/C++ compiler available in this platform.']'''
 gOSEnv['nt']['python-version'] = 'getPythonVersion'
