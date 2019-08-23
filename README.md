@@ -160,7 +160,7 @@ So the generated executable name must match the target name like:
 test: test.c
      gcc -o test test.c
 ```
-If they do not match (like the following case), PACERs will report an error complaining that the executable could not be found..
+If they do not match (like the following case), PACERs will report an error complaining that the executable could not be found.
 ```
 test: test.c
      gcc -o test_executable test.c
