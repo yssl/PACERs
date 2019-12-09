@@ -115,7 +115,7 @@ def runcmd_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     execName = projName
     with open(opjoin(srcRootDir,'CMakeLists.txt'), 'r') as f:
-        tokens = re.split(' |\n|\(|\)', f.read())
+        tokens = re.split(' |\t|\n|\(|\)', f.read())
         tokens = [x for x in tokens if x]   # remove empty strings
         for i in range(len(tokens)):
             if tokens[i].lower()=='add_executable' and i < len(tokens)-1:
