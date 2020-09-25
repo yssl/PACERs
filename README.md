@@ -12,7 +12,7 @@ or Releases > Latest release > Download source code, extract it, and ```cd``` to
 
 For example:
 ```
-<CWD>/test-assignments/c-assignment-2/
+<CWD>/test-assignments/c-2/
     |-student 01.c
     |-student 02.c
     |-student 03.c
@@ -20,8 +20,8 @@ For example:
 ![example-source]
 
 **2. Run PACERs.**  
-- On Windows: ```pacers.py test-assignments\c-assignment-2 --user-input "1 2" "3 4"```
-- On Linux: ```./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"```
+- On Windows: ```pacers.py test-assignments\c-2 --user-input "1 2" "3 4"```
+- On Linux: ```./pacers.py test-assignments/c-2 --user-input "1 2" "3 4"```
 
 **3. Open the generated HTML report**  
 
@@ -82,46 +82,46 @@ The tested environments for each submission type are shown in the table.
 ## Try other test-assignments
 - C source file
 ```
-./pacers.py test-assignments/c-assignment-1
-./pacers.py test-assignments/c-assignment-2 --user-input "1 2" "3 4"
+./pacers.py test-assignments/c-1
+./pacers.py test-assignments/c-2 --user-input "1 2" "3 4"
 ```
 - Python source file
 ```
-./pacers.py --interpreter-cmd "python2" test-assignments/python2-assignment-1
-./pacers.py --interpreter-cmd "python3" test-assignments/python3-assignment-1
+./pacers.py --interpreter-cmd "python2" test-assignments/python2
+./pacers.py --interpreter-cmd "python3" test-assignments/python3
 ```
 - Text file
 ```
-./pacers.py test-assignments/txt-assignment-1
+./pacers.py test-assignments/txt
 ```
 - Image file
 ```
-./pacers.py test-assignments/img-assignment-1
+./pacers.py test-assignments/img
 ```
 - Zip file
 ```
-./pacers.py test-assignments/zip-assignment-1 --user-input "2 5" "10 20"
+./pacers.py test-assignments/zip --user-input "2 5" "10 20"
 ./pacers.py test-assignments/zip-assignment-2 --user-input "2 5" "10 20"
 ```
 - Directory
 ```
-./pacers.py test-assignments/dir-assignment-1 --user-input "2 5" "10 20"
+./pacers.py test-assignments/dir --user-input "2 5" "10 20"
 ```
 - CMake project
 ```
-./pacers.py test-assignments/cmake-assignment-1
+./pacers.py test-assignments/cmake
 ```
 - Make project
 ```
-./pacers.py test-assignments/make-assignment-1
+./pacers.py test-assignments/make
 ```
 - Visual C++ project (Windows only)
 ```
-./pacers.py test-assignments/vcxproj-assignment-1
+./pacers.py test-assignments/vcxproj
 ```
 - Visual C++ GUI project (Windows only)
 ```
-./pacers.py test-assignments/vcxproj-GUI-assignment-1 --timeout 0 --exclude-patterns SDL2-2.0.4/*
+./pacers.py test-assignments/vcxproj-GUI --timeout 0 --exclude-patterns SDL2-2.0.4/*
 ```
 You can run all test-assignments at once by the run-test-assignments script.
 - On Windows: ```run-test-assignments.bat```
@@ -133,24 +133,24 @@ If you checked all the test-assignments are working correctly in your PC, please
 
 ## Note for Interpreted Languages
 PACERs runs a default interpreter command based on the source file extension.  
-For example, the following command would execute `python test-assignments/python3-assignment-1/<a python file>.py` for each .py file in the assignment directory:
+For example, the following command would execute `python test-assignments/python3/<a python file>.py` for each .py file in the assignment directory:
 ```
-./pacers.py test-assignments/python2-assignment-1
+./pacers.py test-assignments/python2
 ```
 For some cases, you may need to run other interpreter commands rather than default one.  
 For example, if you want to use Python 3 on a system with both Python 2 and Python 3 installed, you can use:
 - On Windows:
 ```
-py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3-assignment-1
+py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3
 ```
 - On Linux:
 ```
-python2 pacers.py --interpreter-cmd "python3" test-assignments/python3-assignment-1
+python2 pacers.py --interpreter-cmd "python3" test-assignments/python3
 ```
 If you need to run some shell command before running the target script, you can use `--pre-shell-cmd` argument.  
 For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can use:
 ```
-./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2-assignment-1
+./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2
 ```
 
 ## Usage
@@ -170,7 +170,7 @@ Please try test-assignments for encodings:
 ```pacers-cmd.py``` is a PACERs script for capturing shell command output for each submission as a text file.  
 Please try:
 ```
-./pacers-cmd.py test-assignments/zip-assignment-1 --cmds "ls" "ls -al"
+./pacers-cmd.py test-assignments/zip --cmds "ls" "ls -al"
 ```
 Please read [help-pacers-cmd.txt] for detailed usage.
 
