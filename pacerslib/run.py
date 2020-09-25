@@ -133,12 +133,23 @@ def runcmd_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     execName = projName
 
-    try:
-        grepStr = subprocess.check_output("make -p --just-print | grep 'DEFAULT_GOAL'", cwd=srcRootDir, stderr=subprocess.STDOUT, shell=True)
-    except subprocess.CalledProcessError as e:
+    ## This code assumes that the default target name is identical to the executable file name, so reports errors when
+    ## 1) default target name != executable name
+    ## 2) no executable file name is specified in the commands
+    ## 3) additionally, there are some warning messages from 'make -p' which results in incorrect default target name extraction
+    # try:
+        # grepStr = subprocess.check_output("make -p --just-print | grep 'DEFAULT_GOAL'", cwd=srcRootDir, stderr=subprocess.STDOUT, shell=True)
+    # except subprocess.CalledProcessError as e:
+        # execName = 'Failed to find the executable name in Makefile'
+    # else: 
+        # execName = grepStr.split()[2]
+
+    ## To find the executable name, now we use os.access(filename, os.X_OK)
+    execNames = [fname for fname in os.listdir(buildDir) if os.access(opjoin(buildDir, fname), os.X_OK) and os.path.isfile(opjoin(buildDir, fname))]
+    if len(execNames)==0:
         execName = 'Failed to find the executable name in Makefile'
-    else: 
-        execName = grepStr.split()[2]
+    else:
+        execName = execNames[0]
 
     return os.path.abspath(opjoin(buildDir, execName))
 

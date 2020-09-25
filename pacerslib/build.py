@@ -108,6 +108,7 @@ def build_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     try:
         # copy all copied files in output/assigndir to output/assigndir/pacers-assigndir
+        # because there is no way to set the output destination for a Makefile, unlike CMake.
         shutil.copytree(srcRootDir, buildDir)
     except Exception as e:
         return -1, toUnicode(str(e)), 'make-version'

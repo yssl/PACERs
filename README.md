@@ -153,19 +153,6 @@ For example, if you want to specify the Python virtual environment (using [virtu
 ./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2-assignment-1
 ```
 
-## Note for MAKE_PROJECT
-PACERs finds the final executable name from the target names in the Makefile.  
-So the generated executable name must match the target name like:
-```
-test: test.c
-     gcc -o test test.c
-```
-If they do not match (like the following case), PACERs will report an error complaining that the executable could not be found.
-```
-test: test.c
-     gcc -o test_executable test.c
-```
-
 ## Usage
 Please read [help-pacers.txt] for detailed usage.
 
