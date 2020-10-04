@@ -23,7 +23,7 @@ from submission import *
 
 ############################################
 # main functions
-def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude_patterns=[], user_input=[], destDir=None, deco2unicoMap=None, user_dict=None):
+def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude_patterns=[], std_input=[], destDir=None, deco2unicoMap=None, user_dict=None):
     allProjInfos = []
 
     # process each submission
@@ -146,13 +146,13 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
             projInfo['submissionDir'] = submissionDir
             projInfo['filesInProj'] = projSrcFileNames[i]
 
-            # set userInputs
+            # set stdInputs
             if user_dict!=None:
-                userInputs = getUserInputsFromUserDict(user_dict, projNames[i])
-                projInfo['userInputs'] = userInputs
+                stdInputs = getStdInputsFromUserDict(user_dict, projNames[i])
+                projInfo['stdInputs'] = stdInputs
             else:
-                userInputs = user_input
-                projInfo['userInputs'] = userInputs
+                stdInputs = std_input
+                projInfo['stdInputs'] = stdInputs
 
             allProjInfos.append(projInfo)
 
@@ -165,7 +165,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
     buildLogs = []
     exitTypeLists = []
     stdoutStrLists = []
-    userInputLists = []
+    stdInputLists = []
     submissionTypes = []
     buildVersionSet = set()
 
@@ -178,7 +178,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
 
         buildRetCode, buildLog, buildVersion = buildResults[i]
 
-        exitTypeList, stdoutStrList, userInputList = runResults[i]
+        exitTypeList, stdoutStrList, stdInputList = runResults[i]
 
         # add report data
         submittedFileNames.append(submissionTitle)
@@ -204,11 +204,11 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
         buildLogs.append(buildLog)
         exitTypeLists.append(exitTypeList)
         stdoutStrLists.append(stdoutStrList)
-        userInputLists.append(userInputList)
+        stdInputLists.append(stdInputList)
         submissionTypes.append(submissionType)
         buildVersionSet.add(buildVersion)
 
-    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet
+    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, submissionTypes, buildVersionSet
 
 ############################################
 # project type detection
@@ -249,16 +249,16 @@ def decodeDestSubmissionDirPathRecursive(destDir, submissionTitle, deco2unicoMap
             except:
                 pass
 
-def getUserInputsFromUserDict(userDict, projName):
-    userInputs = None
+def getStdInputsFromUserDict(userDict, projName):
+    stdInputs = None
     for key in userDict:
         if projName.endswith(key):
-            userInputs = userDict[key] 
+            stdInputs = userDict[key] 
             break
-    if userInputs == None:
-        userInputs = []
+    if stdInputs == None:
+        stdInputs = []
         for key in userDict:
-            userInputs.extend(userDict[key])
-    return userInputs
+            stdInputs.extend(userDict[key])
+    return stdInputs
 
 

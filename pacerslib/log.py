@@ -43,7 +43,7 @@ def printBuildResult(processedCount, numAllProjs, projInfo, buildRetCode, buildL
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
-    userInputs = projInfo['userInputs']
+    stdInputs = projInfo['stdInputs']
 
     logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
 
@@ -64,7 +64,7 @@ def printBuildStart(processedCount, numAllProjs, projInfo):
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
-    userInputs = projInfo['userInputs']
+    stdInputs = projInfo['stdInputs']
 
     logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
 
@@ -80,7 +80,7 @@ def printRunResult(processedCount, numAllProjs, projInfo, exitTypeList, stdoutSt
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
-    userInputs = projInfo['userInputs']
+    stdInputs = projInfo['stdInputs']
 
     logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
 
@@ -103,7 +103,7 @@ def printRunStart(processedCount, numAllProjs, projInfo):
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
-    userInputs = projInfo['userInputs']
+    stdInputs = projInfo['stdInputs']
 
     logPrefix = getProjLogPrefix(processedCount, numAllProjs, submissionIndex, submissionTitle, submissionType, projIndex, projName, numProjInSubmission)
 

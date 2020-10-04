@@ -51,12 +51,12 @@ def worker_build(params):
 def worker_run(params):
     buildRetCode, numAllProjs, i, projInfo, timeOut, interpreterCmd, preShellCmd, q = params
     if buildRetCode==0:
-        exitTypeList, stdoutStrList, userInputList = runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd)
+        exitTypeList, stdoutStrList, stdInputList = runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd)
     else:
         exitTypeList = [-1]
         stdoutStrList = ['Due to the build error.']
-        userInputList = ['']
-    q.put([i, exitTypeList, stdoutStrList, userInputList])
+        stdInputList = ['']
+    q.put([i, exitTypeList, stdoutStrList, stdInputList])
     printRunResult(q.qsize(), numAllProjs, projInfo, exitTypeList, stdoutStrList)
 
 
@@ -93,28 +93,42 @@ The type of each submission is auto-detected by PACERs.
 
 Each submission can have only one source file, or a zip file
 or a directory including many files.''')
-    parser.add_argument('--user-input', nargs='+', default=[''],
-                        help='''Specify USER_INPUT to be sent to the stdin of target
+    parser.add_argument('--std-input', nargs='+', default=[''],
+                        help='''Specify STD_INPUT to be sent to the stdin of target
 programs. This option should be located after
 assignment_dir if no other optional arguments are
-given. Two types of user input are available.
+given. Two types of STD_INPUT are available.
 default is an empty string.
 
-| Type     | Example                  | Example's meaning                             |
-|----------|--------------------------|-----------------------------------------------|
-| Single   | --user-input 15          | Run each program with argument 15             |
-| value    | --user-input "hello"     | Run each program with argument "hello"        |
-|          | --user-input "1 2"       | Run each program with argument "1 2"          |
-|----------|--------------------------|-----------------------------------------------|
-| Multiple | --user-input 1 2 3       | Run each program 3 times: with 1, 2, 3        |
-| values   | --user-input "1 2" "3 4" | Run each program 2 times: with "1 2", "3 4"   |
+| Type     | Example                 | Meaning                                      |
+|----------|-------------------------|----------------------------------------------|
+| Single   | --std-input 15          | Run each program with input "15"             |
+| value    | --std-input hello       | Run each program with input "hello"          |
+|          | --std-input "1 2"       | Run each program with input "1 2"            |
+|----------|-------------------------|----------------------------------------------|
+| Multiple | --std-input 1 2 3       | Run each program 3 times: with "1", "2", "3" |
+| values   | --std-input "1 2" "3 4" | Run each program 2 times: with "1 2", "3 4"  |
 
 ''')
-    # parser.add_argument('--file-layout', default=0, type=int,
-                        # help='''indicates file layout in the assignment_dir. \ndefault: 0
-    # 0 - one source file runs one program. 
-    # each submission might have only one source file or a 
-    # zip file or a directory including multiple source files.''')
+    parser.add_argument('--cmd-args', nargs='+', default=[''],
+                        help='''Specify CMD_ARGS to be used as the command line arguments
+of target programs. This option should be located after
+assignment_dir if no other optional arguments are
+given. Two types of CMD_ARGS are available.
+default is an empty string.
+
+| Type     | Example                    | Meaning                                        |
+|----------|----------------------------|------------------------------------------------|
+| Single   | --cmd-args 15              | Run each program with argv[1]:"15"             |
+| value    | --cmd-args hello           | Run each program with argv[1]:"hello"          |
+|          | --cmd-args "1 2"           | Run each program with argv[1]:"1", argv[2]:"2" |
+|          | --cmd-args "1 2 \\"ab cd\\"" | Run each program with argv[1]:"1", argv[2]:"2",|
+|          |                            | argv[3]:"ab cd" -                              |
+|----------|----------------------------|------------------------------------------------|
+| Multiple | --cmd-args 1 2 3           | Run each program 3 times: with "1", "2", "3"   |
+| values   | --cmd-args "1 2" "3 4"     | Run each program 2 times: with "1 2", "3 4"    |
+
+''')
     parser.add_argument('--timeout', default=2., type=float,
                         help='''Each target program is killed when TIMEOUT(seconds)
 is reached. Useful for infinite loop cases.
@@ -123,7 +137,7 @@ for each target program, which can be useful for GUI applications.
 default: 2.0''')
     parser.add_argument('--run-only', action='store_true',
                     help='''When specified, run each target program without build.
-You may use it when you want change USER_INPUT without
+You may use it when you want change STD_INPUT without
 build. if the programming language of source files 
 does not require build process, PACERs 
 automatically skips the build process without 
@@ -178,7 +192,7 @@ default: \'\' ''')
 # is 'suffix' that should match with the last parts of 
 # each source file name. 'value' is user input for 
 # those matched source files.
-# If both --user-input and --user-dict are specified,
+# If both --std-input and --user-dict are specified,
 # only --user-dict is used.
 
 # Example:
@@ -197,7 +211,6 @@ default: \'\' ''')
         gArgs.run_serial = True
 
     # print gArgs
-    # print gArgs.exclude_patterns
     # exit()
 
     if not gArgs.assignment_alias:
@@ -259,7 +272,7 @@ default: \'\' ''')
             pass
 
     # collect all project info
-    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, gArgs.exclude_patterns, gArgs.user_input, destDir, deco2unicoMap)
+    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, gArgs.exclude_patterns, gArgs.std_input, destDir, deco2unicoMap)
 
     printLogPrefixDescription()
 
@@ -300,8 +313,8 @@ default: \'\' ''')
             q = mp.Manager().Queue()
             p.map(worker_run, [(buildResults[i][0], len(allProjInfos), i, allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd, q) for i in range(len(allProjInfos))])
             while not q.empty():
-                i, exitTypeList, stdoutStrList, userInputList = q.get()
-                runResults[i] = [exitTypeList, stdoutStrList, userInputList]
+                i, exitTypeList, stdoutStrList, stdInputList = q.get()
+                runResults[i] = [exitTypeList, stdoutStrList, stdInputList]
         else:
             print 
             print '%sRunning projects in serial...'%gLogPrefix
@@ -309,19 +322,19 @@ default: \'\' ''')
             for i in range(len(allProjInfos)):
                 printRunStart(i+1, len(allProjInfos), allProjInfos[i])
                 if buildResults[i][0]==0:
-                    exitTypeList, stdoutStrList, userInputList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd)
+                    exitTypeList, stdoutStrList, stdInputList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd)
                 else:
                     exitTypeList = [-1]
                     stdoutStrList = ['Due to build error.']
-                    userInputList = ['']
-                runResults[i] = [exitTypeList, stdoutStrList, userInputList]
+                    stdInputList = ['']
+                runResults[i] = [exitTypeList, stdoutStrList, stdInputList]
                 printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
     else:
         for i in range(len(allProjInfos)):
             runResults[i] = [[-1], [''], ['']]
 
     # generate report data
-    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, userInputLists, submissionTypes, buildVersionSet = \
+    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, submissionTypes, buildVersionSet = \
             generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDir, gArgs, deco2unicoMap)
 
     print
@@ -329,7 +342,7 @@ default: \'\' ''')
     if not gArgs.no_report:
         print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
         generateReport(gArgs, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists,
-                userInputLists, submissionTypes, buildVersionSet)
+                stdInputLists, submissionTypes, buildVersionSet)
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix

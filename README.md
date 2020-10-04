@@ -20,8 +20,8 @@ For example:
 ![example-source]
 
 **2. Run PACERs.**  
-- On Windows: ```pacers.py test-assignments\c-2 --user-input "1 2" "3 4"```
-- On Linux: ```./pacers.py test-assignments/c-2 --user-input "1 2" "3 4"```
+- On Windows: ```pacers.py test-assignments\c-2 --std-input "1 2" "3 4"```
+- On Linux: ```./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"```
 
 **3. Open the generated HTML report**  
 
@@ -83,7 +83,7 @@ The tested environments for each submission type are shown in the table.
 - C source file
 ```
 ./pacers.py test-assignments/c-1
-./pacers.py test-assignments/c-2 --user-input "1 2" "3 4"
+./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"
 ```
 - Python source file
 ```
@@ -100,12 +100,12 @@ The tested environments for each submission type are shown in the table.
 ```
 - Zip file
 ```
-./pacers.py test-assignments/zip --user-input "2 5" "10 20"
-./pacers.py test-assignments/zip-assignment-2 --user-input "2 5" "10 20"
+./pacers.py test-assignments/zip --std-input "2 5" "10 20"
+./pacers.py test-assignments/zip-assignment-2 --std-input "2 5" "10 20"
 ```
 - Directory
 ```
-./pacers.py test-assignments/dir --user-input "2 5" "10 20"
+./pacers.py test-assignments/dir --std-input "2 5" "10 20"
 ```
 - CMake project
 ```

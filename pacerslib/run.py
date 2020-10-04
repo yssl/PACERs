@@ -25,14 +25,14 @@ def runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd):
     projName = projInfo['projName']
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
-    userInputs = projInfo['userInputs']
+    stdInputs = projInfo['stdInputs']
 
     exitTypeList = []
     stdoutStrList = []
-    userInputList = userInputs
-    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, userInputs, timeOut, interpreterCmd, preShellCmd)
+    stdInputList = stdInputs
+    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, stdInputs, timeOut, interpreterCmd, preShellCmd)
 
-    return exitTypeList, stdoutStrList, userInputList
+    return exitTypeList, stdoutStrList, stdInputList
 
 ############################################
 # run functions
@@ -43,20 +43,20 @@ def runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 
-def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInputs, timeOut, interpreterCmd, preShellCmd):
+def runProj(submissionType, submissionDir, projName, projSrcFileNames, stdInputs, timeOut, interpreterCmd, preShellCmd):
     exitTypeList = []
     stdoutStrList = []
 
-    for userInput in userInputs:
+    for stdInput in stdInputs:
 
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], userInput, timeOut, interpreterCmd, preShellCmd)
+            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], stdInput, timeOut, interpreterCmd, preShellCmd)
         elif submissionType==CMAKE_PROJECT:
-            exitType, stdoutStr = run_cmake(submissionDir, projName, userInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_cmake(submissionDir, projName, stdInput, timeOut, preShellCmd)
         elif submissionType==MAKE_PROJECT:
-            exitType, stdoutStr = run_make(submissionDir, projName, userInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_make(submissionDir, projName, stdInput, timeOut, preShellCmd)
         elif submissionType==VISUAL_CPP_PROJECT:
-            exitType, stdoutStr = run_vcxproj(submissionDir, projName, userInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_vcxproj(submissionDir, projName, stdInput, timeOut, preShellCmd)
 
         exitTypeList.append(exitType)
         stdoutStrList.append(stdoutStr)
@@ -65,7 +65,7 @@ def runProj(submissionType, submissionDir, projName, projSrcFileNames, userInput
 
 ####
 # run_single functions
-def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOut, interpreterCmd, preShellCmd):
+def run_single_source(srcRootDir, projName, singleSrcFileName, stdInput, timeOut, interpreterCmd, preShellCmd):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
         runcmd = eval(gSourceExt[extension]['runcmd-single-source-func'])(srcRootDir, projName)
@@ -77,7 +77,7 @@ def run_single_source(srcRootDir, projName, singleSrcFileName, userInput, timeOu
             else:
                 pass    # c & c++
         runcwd = eval(gSourceExt[extension]['runcwd-single-source-func'])(srcRootDir, projName)
-        return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
+        return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
     else:
         return run_single_else(extension)
 
@@ -106,10 +106,10 @@ def run_single_else(extension):
 
 ####
 # run_cmake functions
-def run_cmake(srcRootDir, projName, userInput, timeOut, preShellCmd):
+def run_cmake(srcRootDir, projName, stdInput, timeOut, preShellCmd):
     runcmd = runcmd_cmake(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
 
 def runcmd_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -124,10 +124,10 @@ def runcmd_cmake(srcRootDir, projName):
 
 ####
 # run_make functions
-def run_make(srcRootDir, projName, userInput, timeOut, preShellCmd):
+def run_make(srcRootDir, projName, stdInput, timeOut, preShellCmd):
     runcmd = runcmd_make(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
 
 def runcmd_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -155,10 +155,10 @@ def runcmd_make(srcRootDir, projName):
 
 ####
 # run_vcxproj functions
-def run_vcxproj(srcRootDir, projName, userInput, timeOut, preShellCmd):
+def run_vcxproj(srcRootDir, projName, stdInput, timeOut, preShellCmd):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, userInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
 
 def runcmd_vcxproj(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -167,16 +167,16 @@ def runcmd_vcxproj(srcRootDir, projName):
     execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
     return os.path.abspath(opjoin(buildDir, execName))
 
-def __run(runcmd, runcwd, userInput, timeOut, preShellCmd):
+def __run(runcmd, runcwd, stdInput, timeOut, preShellCmd):
     # append newline to finish stdin user input and flush input buffer
-    realInput = userInput+'\n'
+    realInput = stdInput+'\n'
 
-    # # insert newline character after each single character in userInput 
+    # # insert newline character after each single character in stdInput 
     # # for example, for a user input for scanf("%c", ...);
     # # TODO: make this as cmd argument
     # realInput = ''
-    # for i in range(len(userInput)):
-        # realInput += userInput[i]+'\n'
+    # for i in range(len(stdInput)):
+        # realInput += stdInput[i]+'\n'
 
     try:
         if preShellCmd!='':
