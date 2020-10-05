@@ -1,7 +1,7 @@
-usage: pacers.py [-h] [--user-input USER_INPUT [USER_INPUT ...]]
-                 [--timeout TIMEOUT] [--run-only] [--build-only]
-                 [--run-serial] [--build-serial] [--run-only-serial]
-                 [--num-cores NUM_CORES] [--no-report]
+usage: pacers.py [-h] [--std-input STD_INPUT [STD_INPUT ...]]
+                 [--cmd-args CMD_ARGS [CMD_ARGS ...]] [--timeout TIMEOUT]
+                 [--run-only] [--build-only] [--run-serial] [--build-serial]
+                 [--run-only-serial] [--num-cores NUM_CORES] [--no-report]
                  [--exclude-patterns EXCLUDE_PATTERNS [EXCLUDE_PATTERNS ...]]
                  [--assignment-alias ASSIGNMENT_ALIAS]
                  [--output-dir OUTPUT_DIR] [--interpreter-cmd INTERPRETER_CMD]
@@ -14,7 +14,7 @@ PACERs
 positional arguments:
   assignment_dir        A direcory that has submissions.
                         The type of each submission is auto-detected by PACERs.
-
+                        
                         | Submission types   | Meaning                                               |
                         |--------------------|-------------------------------------------------------|
                         | SINGLE_SOURCE_FILE | Each submission has a single source or resource file  |
@@ -32,44 +32,90 @@ positional arguments:
                         |--------------------|-------------------------------------------------------|
                         | MAKE_PROJECT       | Each submission has Makefile and constitutes          |
                         |                    | a single project (program).                           |
-
+                        
                         Each submission can have only one source file, or a zip file
                         or a directory including many files.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --user-input USER_INPUT [USER_INPUT ...]
-                        Specify USER_INPUT to be sent to the stdin of target
+  --std-input STD_INPUT [STD_INPUT ...]
+                        Specify STD_INPUT to be sent to the stdin of target
                         programs. This option should be located after
                         assignment_dir if no other optional arguments are
-                        given. Two types of user input are available.
+                        given. Two types of STD_INPUT are available.
                         default is an empty string.
-
-                        | Type     | Example                  | Example's meaning                             |
-                        |----------|--------------------------|-----------------------------------------------|
-                        | Single   | --user-input 15          | Run each program with argument 15             |
-                        | value    | --user-input "hello"     | Run each program with argument "hello"        |
-                        |          | --user-input "1 2"       | Run each program with argument "1 2"          |
-                        |----------|--------------------------|-----------------------------------------------|
-                        | Multiple | --user-input 1 2 3       | Run each program 3 times: with 1, 2, 3        |
-                        | values   | --user-input "1 2" "3 4" | Run each program 2 times: with "1 2", "3 4"   |
-
+                        
+                        | Type     | Example                 | Meaning                                     |
+                        |----------|-------------------------|---------------------------------------------|
+                        | Single   | --std-input 15          | Run each program with input                 |
+                        | value    |                         |   "15" (STD_INPUT[0])                       |
+                        |          | --std-input hello       | Run each program with input                 |
+                        |          |                         |   "hello" (STD_INPUT[0])                    |
+                        |          | --std-input "1 2"       | Run each program with input                 |
+                        |          |                         |   "1 2" (STD_INPUT[0])                      |
+                        |----------|-------------------------|---------------------------------------------|
+                        | Multiple | --std-input 1 2 3       | Run each program 3 times: with              |
+                        | values   |                         |   "1" (STD_INPUT[0]), "2" (STD_INPUT[1]),   |
+                        |          |                         |   "3" (STD_INPUT[2])                        |
+                        |          | --std-input "1 2" "3 4" | Run each program 2 times: with              |
+                        |          |                         |   "1 2" (STD_INPUT[0]), "3 4" (STD_INPUT[1])|
+                        
+  --cmd-args CMD_ARGS [CMD_ARGS ...]
+                        Specify CMD_ARGS to be used as the command line arguments
+                        of target programs. This option should be located after
+                        assignment_dir if no other optional arguments are
+                        given. Two types of CMD_ARGS are available.
+                        default is an empty string.
+                        
+                        | Type     | Example                    | Meaning                                     |
+                        |----------|----------------------------|---------------------------------------------|
+                        | Single   | --cmd-args 15              | Run each program with                       |
+                        | value    |                            |   argv[1]:"15" (CMD_ARGS[0])                |
+                        |          | --cmd-args hello           | Run each program with                       |
+                        |          |                            |   argv[1]:"hello" (CMD_ARGS[0])             |
+                        |          | --cmd-args "1 2"           | Run each program with                       |
+                        |          |                            |   argv[1]:"1", argv[2]:"2" (CMD_ARGS[0])    |
+                        |          | --cmd-args "1 2 \"ab cd\"" | Run each program with                       |
+                        |          |                            |   argv[1]:"1", argv[2]:"2", argv[3]:"ab cd" |
+                        |          |                            |   (CMD_ARGS[0])                             |
+                        |----------|----------------------------|---------------------------------------------|
+                        | Multiple | --cmd-args 1 2 3           | Run each program 3 times: with              |
+                        | values   |                            |   argv[1]:"1" (CMD_ARGS[0]),                |
+                        |          |                            |   argv[1]:"2" (CMD_ARGS[1]),                |
+                        |          |                            |   argv[1]:"3" (CMD_ARGS[2])                 |
+                        |          | --cmd-args "1 2" "3 4"     | Run each program 2 times: with              |
+                        |          |                            |   argv[1]:"1", argv[2]:"2" (CMD_ARGS[0]),   |
+                        |          |                            |   argv[1]:"3", argv[2]:"4" (CMD_ARGS[1])    |
+                        
+                        If both STD_INPUT and CMD_ARGS are specified, both elements 
+                        at the same index (STD_INPUT[i] and CMD_ARGS[i]) are used 
+                        together. If the number of elements in STD_INPUT and 
+                        CMD_ARGS is different, the last element in the shorter side 
+                        is used along with the remaining elements in the longer side.
+                        For example,
+                        --std-input 1 2 3 --cmd-args a b c
+                          : Run each program 3 times: (1, a), (2, b), (3, c)
+                        --std-input 1 2 3 --cmd-args a b 
+                          : Run each program 3 times: (1, a), (2, b), (3, b)
+                        --std-input 1 --cmd-args a b c
+                          : Run each program 3 times: (1, a), (1, b), (1, c)
+                        
   --timeout TIMEOUT     Each target program is killed when TIMEOUT(seconds)
                         is reached. Useful for infinite loop cases.
                         Setting zero seconds(--timeout 0) means unlimited execution time
                         for each target program, which can be useful for GUI applications.
                         default: 2.0
   --run-only            When specified, run each target program without build.
-                        You may use it when you want change USER_INPUT without
-                        build. if the programming language of source files
-                        does not require build process, PACERs
-                        automatically skips the build process without
+                        You may use it when you want change STD_INPUT without
+                        build. if the programming language of source files 
+                        does not require build process, PACERs 
+                        automatically skips the build process without 
                         specifying this option.
   --build-only          When specified, build each target program without running.
   --run-serial          When specified, run each target program in serial.
-                        PACERs runs programs in parallel by default.
+                        PACERs runs programs in parallel by default. 
   --build-serial        When specified, build each target program in serial.
-                        PACERs builds programs in parallel by default.
+                        PACERs builds programs in parallel by default. 
   --run-only-serial     Shortcut for --run-only --run-serial.
   --num-cores NUM_CORES
                         Specify number of cpu cores used in building and running process.
@@ -83,14 +129,14 @@ optional arguments:
                         to exclude all txt files and all files in foo directory
                         in each submission directory from the final report.
   --assignment-alias ASSIGNMENT_ALIAS
-                        Specify ASSIGNMENT_ALIAS for each assignment_dir.
-                        ASSIGNMENT_ALIAS is used when making a sub-directory
-                        in OUTPUT_DIR and the final report file.
-                        default: "basename" of assignment_dir (bar if
+                        Specify ASSIGNMENT_ALIAS for each assignment_dir. 
+                        ASSIGNMENT_ALIAS is used when making a sub-directory 
+                        in OUTPUT_DIR and the final report file. 
+                        default: "basename" of assignment_dir (bar if 
                         assignment_dir is /foo/bar/).
   --output-dir OUTPUT_DIR
-                        Specify OUTPUT_DIR in which the final report file
-                        and build output files to be generated.
+                        Specify OUTPUT_DIR in which the final report file 
+                        and build output files to be generated. 
                         Avoid including hangul characters in its full path.
                         default: ./output
   --interpreter-cmd INTERPRETER_CMD
@@ -100,4 +146,4 @@ optional arguments:
   --pre-shell-cmd PRE_SHELL_CMD
                         Specify PRE_SHELL_CMD that is executed before
                         INTERPRETER_CMD or a target executable in the same shell.
-                        default: ''
+                        default: '' 

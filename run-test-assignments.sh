@@ -1,6 +1,11 @@
 ./pacers.py test-assignments/c-1
 ./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"
-./pacers.py test-assignments/c-3 --std-input "1 2" --cmd-args "1 2 \"ab cd\""
+
+./pacers.py test-assignments/stdin-cmdarg-1 --std-input "2 1" --cmd-args "a b \"cd ef\""
+./pacers.py test-assignments/stdin-cmdarg-2 --std-input "2 1" "2 2" "2 3" --cmd-args "a b" "c d" "e f"
+./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"
+./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"
+./pacers.py test-assignments/stdin-cmdarg-5 --std-input "2 1" "2 2" "2 3"
 
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2
 ./pacers.py --interpreter-cmd "python3" test-assignments/python3

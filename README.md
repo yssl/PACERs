@@ -23,6 +23,11 @@ For example:
 - On Windows: ```pacers.py test-assignments\c-2 --std-input "1 2" "3 4"```
 - On Linux: ```./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"```
 
+You can also provide command line arguments instead of standard input, or both standard input and command line arguments as program input.
+
+```./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"```
+```./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"```
+
 **3. Open the generated HTML report**  
 
 Open the generated report ```<CWD>/output/c-assignment-2/report-c-assignment-2.html``` with your favorite browser.  

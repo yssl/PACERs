@@ -51,12 +51,13 @@ def worker_build(params):
 def worker_run(params):
     buildRetCode, numAllProjs, i, projInfo, timeOut, interpreterCmd, preShellCmd, q = params
     if buildRetCode==0:
-        exitTypeList, stdoutStrList, stdInputList = runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd)
+        exitTypeList, stdoutStrList, stdInputList, cmdArgsList = runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd)
     else:
         exitTypeList = [-1]
         stdoutStrList = ['Due to the build error.']
         stdInputList = ['']
-    q.put([i, exitTypeList, stdoutStrList, stdInputList])
+        cmdArgsList = ['']
+    q.put([i, exitTypeList, stdoutStrList, stdInputList, cmdArgsList])
     printRunResult(q.qsize(), numAllProjs, projInfo, exitTypeList, stdoutStrList)
 
 
@@ -300,7 +301,7 @@ default: \'\' ''')
             pass
 
     # collect all project info
-    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, gArgs.exclude_patterns, gArgs.std_input, destDir, deco2unicoMap)
+    allProjInfos = collectAllProjInfosInAllSubmissions(submissionTitles, gArgs.assignment_dir, gArgs.exclude_patterns, gArgs.std_input, gArgs.cmd_args, destDir, deco2unicoMap)
 
     printLogPrefixDescription()
 
@@ -341,8 +342,8 @@ default: \'\' ''')
             q = mp.Manager().Queue()
             p.map(worker_run, [(buildResults[i][0], len(allProjInfos), i, allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd, q) for i in range(len(allProjInfos))])
             while not q.empty():
-                i, exitTypeList, stdoutStrList, stdInputList = q.get()
-                runResults[i] = [exitTypeList, stdoutStrList, stdInputList]
+                i, exitTypeList, stdoutStrList, stdInputList, cmdArgsList = q.get()
+                runResults[i] = [exitTypeList, stdoutStrList, stdInputList, cmdArgsList]
         else:
             print 
             print '%sRunning projects in serial...'%gLogPrefix
@@ -350,19 +351,20 @@ default: \'\' ''')
             for i in range(len(allProjInfos)):
                 printRunStart(i+1, len(allProjInfos), allProjInfos[i])
                 if buildResults[i][0]==0:
-                    exitTypeList, stdoutStrList, stdInputList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd)
+                    exitTypeList, stdoutStrList, stdInputList, cmdArgsList = runOneProj(allProjInfos[i], gArgs.timeout, gArgs.interpreter_cmd, gArgs.pre_shell_cmd)
                 else:
                     exitTypeList = [-1]
                     stdoutStrList = ['Due to build error.']
                     stdInputList = ['']
-                runResults[i] = [exitTypeList, stdoutStrList, stdInputList]
+                    cmdArgsList = ['']
+                runResults[i] = [exitTypeList, stdoutStrList, stdInputList, cmdArgsList]
                 printRunResult(i+1, len(allProjInfos), allProjInfos[i], exitTypeList, stdoutStrList)
     else:
         for i in range(len(allProjInfos)):
-            runResults[i] = [[-1], [''], ['']]
+            runResults[i] = [[-1], [''], [''], ['']]
 
     # generate report data
-    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, submissionTypes, buildVersionSet = \
+    submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, cmdArgsLists, submissionTypes, buildVersionSet = \
             generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDir, gArgs, deco2unicoMap)
 
     print
@@ -370,7 +372,7 @@ default: \'\' ''')
     if not gArgs.no_report:
         print '%sGenerating Report for %s...'%(gLogPrefix, gArgs.assignment_alias)
         generateReport(gArgs, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists,
-                stdInputLists, submissionTypes, buildVersionSet)
+                stdInputLists, cmdArgsLists, submissionTypes, buildVersionSet)
 
     removeUnzipDirsInAssignDir(gArgs.assignment_dir, unzipDirNames)
     print '%sDone.'%gLogPrefix

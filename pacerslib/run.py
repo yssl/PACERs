@@ -26,13 +26,11 @@ def runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd):
     submissionDir = projInfo['submissionDir']
     filesInProj = projInfo['filesInProj']
     stdInputs = projInfo['stdInputs']
+    cmdArgss = projInfo['cmdArgss']
 
-    exitTypeList = []
-    stdoutStrList = []
-    stdInputList = stdInputs
-    exitTypeList, stdoutStrList = runProj(submissionType, submissionDir, projName, filesInProj, stdInputs, timeOut, interpreterCmd, preShellCmd)
+    exitTypeList, stdoutStrList, stdInputList, cmdArgsList = runProj(submissionType, submissionDir, projName, filesInProj, stdInputs, cmdArgss, timeOut, interpreterCmd, preShellCmd)
 
-    return exitTypeList, stdoutStrList, stdInputList
+    return exitTypeList, stdoutStrList, stdInputList, cmdArgsList
 
 ############################################
 # run functions
@@ -43,29 +41,40 @@ def runOneProj(projInfo, timeOut, interpreterCmd, preShellCmd):
 #   0 - normal exit
 #   1 - forced kill due to timeout
 
-def runProj(submissionType, submissionDir, projName, projSrcFileNames, stdInputs, timeOut, interpreterCmd, preShellCmd):
+def runProj(submissionType, submissionDir, projName, projSrcFileNames, stdInputs, cmdArgss, timeOut, interpreterCmd, preShellCmd):
     exitTypeList = []
     stdoutStrList = []
+    stdInputList = []
+    cmdArgsList = []
 
-    for stdInput in stdInputs:
+    len_std = len(stdInputs)
+    len_cmd = len(cmdArgss)
+    len_longer = len_std if len_std > len_cmd else len_cmd
+    for i in range(len_longer):
+        i_std = i if i < len_std else len_std-1
+        i_cmd = i if i < len_cmd else len_cmd-1
+        stdInput = stdInputs[i_std]
+        cmdArg = cmdArgss[i_cmd]
 
         if submissionType==SINGLE_SOURCE_FILE or submissionType==SOURCE_FILES:
-            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], stdInput, timeOut, interpreterCmd, preShellCmd)
+            exitType, stdoutStr = run_single_source(submissionDir, projName, projSrcFileNames[0], stdInput, cmdArg, timeOut, interpreterCmd, preShellCmd)
         elif submissionType==CMAKE_PROJECT:
-            exitType, stdoutStr = run_cmake(submissionDir, projName, stdInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_cmake(submissionDir, projName, stdInput, cmdArg, timeOut, preShellCmd)
         elif submissionType==MAKE_PROJECT:
-            exitType, stdoutStr = run_make(submissionDir, projName, stdInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_make(submissionDir, projName, stdInput, cmdArg, timeOut, preShellCmd)
         elif submissionType==VISUAL_CPP_PROJECT:
-            exitType, stdoutStr = run_vcxproj(submissionDir, projName, stdInput, timeOut, preShellCmd)
+            exitType, stdoutStr = run_vcxproj(submissionDir, projName, stdInput, cmdArg, timeOut, preShellCmd)
 
         exitTypeList.append(exitType)
         stdoutStrList.append(stdoutStr)
+        stdInputList.append(stdInput)
+        cmdArgsList.append(cmdArg)
 
-    return exitTypeList, stdoutStrList
+    return exitTypeList, stdoutStrList, stdInputList, cmdArgsList
 
 ####
 # run_single functions
-def run_single_source(srcRootDir, projName, singleSrcFileName, stdInput, timeOut, interpreterCmd, preShellCmd):
+def run_single_source(srcRootDir, projName, singleSrcFileName, stdInput, cmdArg, timeOut, interpreterCmd, preShellCmd):
     extension = os.path.splitext(singleSrcFileName)[1].lower()
     if extension in gSourceExt:
         runcmd = eval(gSourceExt[extension]['runcmd-single-source-func'])(srcRootDir, projName)
@@ -77,7 +86,7 @@ def run_single_source(srcRootDir, projName, singleSrcFileName, stdInput, timeOut
             else:
                 pass    # c & c++
         runcwd = eval(gSourceExt[extension]['runcwd-single-source-func'])(srcRootDir, projName)
-        return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
+        return __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd)
     else:
         return run_single_else(extension)
 
@@ -106,10 +115,10 @@ def run_single_else(extension):
 
 ####
 # run_cmake functions
-def run_cmake(srcRootDir, projName, stdInput, timeOut, preShellCmd):
+def run_cmake(srcRootDir, projName, stdInput, cmdArg, timeOut, preShellCmd):
     runcmd = runcmd_cmake(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd)
 
 def runcmd_cmake(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -124,10 +133,10 @@ def runcmd_cmake(srcRootDir, projName):
 
 ####
 # run_make functions
-def run_make(srcRootDir, projName, stdInput, timeOut, preShellCmd):
+def run_make(srcRootDir, projName, stdInput, cmdArg, timeOut, preShellCmd):
     runcmd = runcmd_make(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd)
 
 def runcmd_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -155,10 +164,10 @@ def runcmd_make(srcRootDir, projName):
 
 ####
 # run_vcxproj functions
-def run_vcxproj(srcRootDir, projName, stdInput, timeOut, preShellCmd):
+def run_vcxproj(srcRootDir, projName, stdInput, cmdArg, timeOut, preShellCmd):
     runcmd = runcmd_vcxproj(srcRootDir, projName)
     runcwd = srcRootDir
-    return __run(runcmd, runcwd, stdInput, timeOut, preShellCmd)
+    return __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd)
 
 def runcmd_vcxproj(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
@@ -167,16 +176,16 @@ def runcmd_vcxproj(srcRootDir, projName):
     execName = os.path.splitext(os.path.basename(vcxprojNames[0]))[0]
     return os.path.abspath(opjoin(buildDir, execName))
 
-def __run(runcmd, runcwd, stdInput, timeOut, preShellCmd):
+def __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd):
     # append newline to finish stdin user input and flush input buffer
-    realInput = stdInput+'\n'
+    realStdInput = stdInput+'\n'
 
     # # insert newline character after each single character in stdInput 
     # # for example, for a user input for scanf("%c", ...);
     # # TODO: make this as cmd argument
-    # realInput = ''
+    # realStdInput = ''
     # for i in range(len(stdInput)):
-        # realInput += stdInput[i]+'\n'
+        # realStdInput += stdInput[i]+'\n'
 
     try:
         if preShellCmd!='':
@@ -188,7 +197,7 @@ def __run(runcmd, runcwd, stdInput, timeOut, preShellCmd):
                 connector = '&'
             runcmd = '%s %s %s %s'%(shell, preShellCmd, connector, runcmd)
 
-        proc = subprocess.Popen(shlex.split(toString(runcmd), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        proc = subprocess.Popen(shlex.split(toString(runcmd)+' '+toString(cmdArg), posix=os.name=='posix'), cwd=toString(runcwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     except OSError:
         return -1, 'Cannot execute \'%s\' \n(Maybe an executable file has not been created (compiled languages) or \n--interpreter-cmd should have been specified (interpreted languages))'%runcmd
 
@@ -199,7 +208,7 @@ def __run(runcmd, runcwd, stdInput, timeOut, preShellCmd):
 
         # block until proc is finished
         try:
-            stdoutStr, stderrStr = proc.communicate(realInput)
+            stdoutStr, stderrStr = proc.communicate(realStdInput)
         except Exception as e:
             return -1, toUnicode(str(type(e)) + ' ' + str(e))
 
@@ -213,7 +222,7 @@ def __run(runcmd, runcwd, stdInput, timeOut, preShellCmd):
             return 1, toUnicode(stdoutStr) # 1 means 'forced kill due to timeout'
     else:
         # block until proc is finished
-        stdoutStr, stderrStr = proc.communicate(realInput)
+        stdoutStr, stderrStr = proc.communicate(realStdInput)
         if proc.returncode==0:
             return 0, toUnicode(stdoutStr)
         else:

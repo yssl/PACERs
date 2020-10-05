@@ -26,7 +26,7 @@ from global_const import *
 
 ############################################
 # report functions
-def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, submissionTypes, buildVersionSet):
+def generateReport(args, submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, cmdArgsLists, submissionTypes, buildVersionSet):
 
     cssCode = HtmlFormatter().get_style_defs()
 
@@ -143,14 +143,15 @@ table.type04 td {
     <tbody>
     <tr><th>Assignment directory</th> <td>%s</td></tr>
     <tr><th>Output directory</th> <td>%s</td></tr>
-    <tr><th>User input</th> <td>%s</td></tr>
+    <tr><th>Standard input</th> <td>%s</td></tr>
+    <tr><th>Command line arguments</th> <td>%s</td></tr>
     <!--<tr><th>User dict</th> <td>%s</td></tr>-->
     <tr><th>Timeout</th> <td>%f</td></tr>
     <tr><th>Run only</th> <td>%s</td></tr>
     <tr><th>Build only</th> <td>%s</td></tr>
     </tbody>
     </table>'''%(os.path.abspath(args.assignment_dir), opjoin(os.path.abspath(args.output_dir), unidecode(args.assignment_alias)), 
-        args.std_input, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
+        args.std_input, args.cmd_args, args.user_dict, args.timeout, 'true' if args.run_only else 'false', 'true' if args.build_only else 'false')
 
     # main table
     htmlCode += '''
@@ -172,7 +173,7 @@ table.type04 td {
         htmlCode += '<tr>\n'
         htmlCode += '<th>%s<br>(%s)</th>\n'%(submittedFileNames[i], gSubmissionTypeName[submissionTypes[i]])
         htmlCode += '<td>%s</td>\n'%getSourcesTable(srcFileLists[i], args.assignment_dir, args.output_dir, args.assignment_alias)
-        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], stdInputLists[i], exitTypeLists[i], stdoutStrLists[i])
+        htmlCode += '<td>%s</td>\n'%getOutput(buildRetCodes[i], buildLogs[i], stdInputLists[i], cmdArgsLists[i], exitTypeLists[i], stdoutStrLists[i])
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '<td>%s</td>\n'%''
         htmlCode += '</tr>\n'
@@ -255,24 +256,28 @@ def getRenderedSource(srcPath, output_dir, assignment_alias):
             # else:
                 # return False, '<p></p>'+'<pre>'+unistr+'</pre>'
 
-def getOutput(buildRetCode, buildLog, stdInputList, exitTypeList, stdoutStrList):
+def getOutput(buildRetCode, buildLog, stdInputList, cmdArgsList, exitTypeList, stdoutStrList):
     s = '<pre>\n'
     if buildRetCode!=0: # build error
         s += buildLog
     else:
+        assert(len(stdInputList)==len(cmdArgsList))
         for i in range(len(stdInputList)):
             stdInput = stdInputList[i]
+            cmdArgs = cmdArgsList[i]
             exitType = exitTypeList[i]
             stdoutStr = stdoutStrList[i]
             if exitType == 0:
-                s += '(standard input: %s)\n'%stdInput
+                s += '(STD_INPUT: %s)\n'%stdInput
+                s += '(CMD_ARGS: %s)\n'%cmdArgs
                 # success, unistr = getUnicodeStr(stdoutStr)
                 # s += highlight(unistr, TextLexer(), HtmlFormatter())
                 s += highlight(stdoutStr, TextLexer(), HtmlFormatter())
             elif exitType == -1:
                 s += highlight(stdoutStr, TextLexer(), HtmlFormatter())
             elif exitType == 1:   # time out
-                s += '(standard input: %s)\n'%stdInput
+                s += '(STD_INPUT: %s)\n'%stdInput
+                s += '(CMD_ARGS: %s)\n'%cmdArgs
                 s += 'Timeout'
             s += '\n'
     return s

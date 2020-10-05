@@ -23,7 +23,7 @@ from submission import *
 
 ############################################
 # main functions
-def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude_patterns=[], std_input=[], destDir=None, deco2unicoMap=None, user_dict=None):
+def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude_patterns=[], std_input=[], cmd_args=[], destDir=None, deco2unicoMap=None, user_dict=None):
     allProjInfos = []
 
     # process each submission
@@ -154,6 +154,8 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
                 stdInputs = std_input
                 projInfo['stdInputs'] = stdInputs
 
+            projInfo['cmdArgss'] = cmd_args
+
             allProjInfos.append(projInfo)
 
     return allProjInfos
@@ -166,6 +168,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
     exitTypeLists = []
     stdoutStrLists = []
     stdInputLists = []
+    cmdArgsLists = []
     submissionTypes = []
     buildVersionSet = set()
 
@@ -178,7 +181,7 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
 
         buildRetCode, buildLog, buildVersion = buildResults[i]
 
-        exitTypeList, stdoutStrList, stdInputList = runResults[i]
+        exitTypeList, stdoutStrList, stdInputList, cmdArgsList = runResults[i]
 
         # add report data
         submittedFileNames.append(submissionTitle)
@@ -205,10 +208,11 @@ def generateReportDataForAllProjs(allProjInfos, buildResults, runResults, destDi
         exitTypeLists.append(exitTypeList)
         stdoutStrLists.append(stdoutStrList)
         stdInputLists.append(stdInputList)
+        cmdArgsLists.append(cmdArgsList)
         submissionTypes.append(submissionType)
         buildVersionSet.add(buildVersion)
 
-    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, submissionTypes, buildVersionSet
+    return submittedFileNames, srcFileLists, buildRetCodes, buildLogs, exitTypeLists, stdoutStrLists, stdInputLists, cmdArgsLists, submissionTypes, buildVersionSet
 
 ############################################
 # project type detection
