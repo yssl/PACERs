@@ -325,6 +325,10 @@ default: \'\' ''')
             for i in range(len(allProjInfos)):
                 printBuildStart(i+1, len(allProjInfos), allProjInfos[i])
                 buildRetCode, buildLog, buildVersion = buildOneProj(allProjInfos[i])
+
+                # # for debugging
+                # print buildLog
+
                 buildResults[i] = [buildRetCode, buildLog, buildVersion]
                 printBuildResult(i+1, len(allProjInfos), allProjInfos[i], buildRetCode, buildLog)
     else:

@@ -60,17 +60,16 @@ gVersionDescription['python-version']      = 'Python'
 
 ############################################
 # gSourceExt - used only for build & run single source
-gSourceExt = {'.c':{}, '.cpp':{}, '.py':{}}
+gSourceExt = {'.c':{}, '.cpp':{}, '.cc':{}, '.cxx':{}, '.c++':{}, '.py':{}}
 
 gSourceExt['.c']['build-single-source-func'] = 'build_single_c_cpp'
 gSourceExt['.c']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
 gSourceExt['.c']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
 gSourceExt['.c']['default-interpreter-cmd'] = ''
-
-gSourceExt['.cpp']['build-single-source-func'] = 'build_single_c_cpp'
-gSourceExt['.cpp']['runcmd-single-source-func'] = 'runcmd_single_c_cpp'
-gSourceExt['.cpp']['runcwd-single-source-func'] = 'runcwd_single_c_cpp'
-gSourceExt['.cpp']['default-interpreter-cmd'] = ''
+gSourceExt['.cpp'] = gSourceExt['.c']
+gSourceExt['.cc'] = gSourceExt['.c']
+gSourceExt['.cxx'] = gSourceExt['.c']
+gSourceExt['.c++'] = gSourceExt['.c']
 
 gSourceExt['.py']['build-single-source-func'] = 'build_single_py'
 gSourceExt['.py']['runcmd-single-source-func'] = 'runcmd_single_py'
@@ -83,6 +82,9 @@ gOSEnv = {'nt':{}, 'posix':{}}
 
 gOSEnv['nt']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'vcvars32.bat && cmake %s -G "NMake Makefiles" && nmake'%cmakeLocationFromBuildDir
 gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make'%cmakeLocationFromBuildDir
+
+# # for debugging
+# gOSEnv['posix']['cmake-cmd'] = lambda cmakeLocationFromBuildDir: 'cmake %s && make VERBOSE=1'%cmakeLocationFromBuildDir
 
 gOSEnv['nt']['cmake-version'] = 'getCMakeVersionWindows'
 gOSEnv['posix']['cmake-version'] = 'getCMakeVersionPosix'

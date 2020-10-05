@@ -89,6 +89,10 @@ The tested environments for each submission type are shown in the table.
 ```
 ./pacers.py test-assignments/c --std-input "1 2" "3 4"
 ```
+- C++ source file
+```
+./pacers.py test-assignments/cpp --std-input "1 2" "3 4"
+```
 - Python source file
 ```
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2

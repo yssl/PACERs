@@ -53,8 +53,13 @@ def getCMakeVersionPosix(temp1, temp2):
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
-    # cl
+    # gcc
     try: versionStr = toUnicode(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
+
+    # g++
+    try: versionStr = toUnicode(subprocess.check_output('g++ --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
@@ -67,8 +72,13 @@ def getMakeVersionPosix(temp1, temp2):
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 
-    # cl
+    # gcc
     try: versionStr = toUnicode(subprocess.check_output('gcc --version', stderr=subprocess.STDOUT, shell=True))
+    except subprocess.CalledProcessError as e: versionStrs.append(e.output)
+    else: versionStrs.append(versionStr.split(os.linesep)[0])
+
+    # g++
+    try: versionStr = toUnicode(subprocess.check_output('g++ --version', stderr=subprocess.STDOUT, shell=True))
     except subprocess.CalledProcessError as e: versionStrs.append(e.output)
     else: versionStrs.append(versionStr.split(os.linesep)[0])
 

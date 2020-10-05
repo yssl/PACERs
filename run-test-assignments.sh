@@ -1,6 +1,8 @@
 # Programming languages
 ./pacers.py test-assignments/c --std-input "1 2" "3 4"
 
+./pacers.py test-assignments/cpp --std-input "1 2" "3 4"
+
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2
 ./pacers.py --interpreter-cmd "python3" test-assignments/python3
 
