@@ -12,7 +12,7 @@ or Releases > Latest release > Download source code, extract it, and ```cd``` to
 
 For example:
 ```
-<CWD>/test-assignments/c-2/
+<CWD>/test-assignments/c/
     |-student 01.c
     |-student 02.c
     |-student 03.c
@@ -20,17 +20,17 @@ For example:
 ![example-source]
 
 **2. Run PACERs.**  
-- On Windows: ```pacers.py test-assignments\c-2 --std-input "1 2" "3 4"```
-- On Linux: ```./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"```
+- On Windows: ```pacers.py test-assignments\c --std-input "1 2" "3 4"```
+- On Linux: ```./pacers.py test-assignments/c --std-input "1 2" "3 4"```
 
 You can also provide command line arguments instead of standard input, or both standard input and command line arguments as program input.
 
-```./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"```
 ```./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"```
+```./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"```
 
 **3. Open the generated HTML report**  
 
-Open the generated report ```<CWD>/output/c-assignment-2/report-c-assignment-2.html``` with your favorite browser.  
+Open the generated report ```<CWD>/output/c/report-c.html``` with your favorite browser.  
 The generated html file is written in unicode (utf-8), so if your browser shows broken characters, please change the browser text encoding option to unicode or utf-8.
 
 ![example-result]
@@ -87,36 +87,26 @@ The tested environments for each submission type are shown in the table.
 ## Try other test-assignments
 - C source file
 ```
-./pacers.py test-assignments/c-1
-./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"
+./pacers.py test-assignments/c --std-input "1 2" "3 4"
 ```
 - Python source file
 ```
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2
 ./pacers.py --interpreter-cmd "python3" test-assignments/python3
 ```
-- Text file
+- Standard input and/or command line arguments
 ```
-./pacers.py test-assignments/txt
-```
-- Image file
-```
-./pacers.py test-assignments/img
-```
-- Zip file
-```
-./pacers.py test-assignments/zip --std-input "2 5" "10 20"
-./pacers.py test-assignments/zip-assignment-2 --std-input "2 5" "10 20"
-```
-- Directory
-```
-./pacers.py test-assignments/dir --std-input "2 5" "10 20"
+./pacers.py test-assignments/stdin-cmdarg-1 --std-input "2 1" --cmd-args "a b \"cd ef\""
+./pacers.py test-assignments/stdin-cmdarg-2 --std-input "2 1" "2 2" "2 3" --cmd-args "a b" "c d" "e f"
+./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"
+./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"
+./pacers.py test-assignments/stdin-cmdarg-5 --std-input "2 1" "2 2" "2 3"
 ```
 - CMake project
 ```
 ./pacers.py test-assignments/cmake
 ```
-- Make project
+- Make project (Linux/Unix only)
 ```
 ./pacers.py test-assignments/make
 ```
@@ -127,6 +117,21 @@ The tested environments for each submission type are shown in the table.
 - Visual C++ GUI project (Windows only)
 ```
 ./pacers.py test-assignments/vcxproj-GUI --timeout 0 --exclude-patterns SDL2-2.0.4/*
+```
+- Error cases
+```
+./pacers.py test-assignments/error-cases
+```
+- Text and image file
+```
+./pacers.py test-assignments/txt
+./pacers.py test-assignments/img
+```
+- SOURCE_FILES submission type
+```
+./pacers.py test-assignments/source_files-zip-1 --std-input "2 5" "10 20"
+./pacers.py test-assignments/source_files-zip-2 --std-input "2 5" "10 20"
+./pacers.py test-assignments/source_files-dir --std-input "2 5" "10 20"
 ```
 You can run all test-assignments at once by the run-test-assignments script.
 - On Windows: ```run-test-assignments.bat```
