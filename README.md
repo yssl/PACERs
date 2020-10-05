@@ -23,10 +23,12 @@ For example:
 - On Windows: ```pacers.py test-assignments\c --std-input "1 2" "3 4"```
 - On Linux: ```./pacers.py test-assignments/c --std-input "1 2" "3 4"```
 
-You can also provide command line arguments instead of standard input, or both standard input and command line arguments as program input.
+You can also provide command line arguments instead of standard input, or both standard input and command line arguments as program input:
 
-```./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"```
-```./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"```
+```
+./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"
+./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"
+```
 
 **3. Open the generated HTML report**  
 
@@ -85,20 +87,20 @@ The tested environments for each submission type are shown in the table.
 | MAKE_PROJECT | C & C++                     | gcc 7.4.0 - Ubuntu 18.04 (Eng) |    
 
 ## Try other test-assignments
-- C source file
+- C source file tests
 ```
 ./pacers.py test-assignments/c --std-input "1 2" "3 4"
 ```
-- C++ source file
+- C++ source file tests
 ```
 ./pacers.py test-assignments/cpp --std-input "1 2" "3 4"
 ```
-- Python source file
+- Python source file tests
 ```
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2
 ./pacers.py --interpreter-cmd "python3" test-assignments/python3
 ```
-- Standard input and/or command line arguments
+- Standard input and/or command line arguments tests
 ```
 ./pacers.py test-assignments/stdin-cmdarg-1 --std-input "2 1" --cmd-args "a b \"cd ef\""
 ./pacers.py test-assignments/stdin-cmdarg-2 --std-input "2 1" "2 2" "2 3" --cmd-args "a b" "c d" "e f"
@@ -106,32 +108,32 @@ The tested environments for each submission type are shown in the table.
 ./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"
 ./pacers.py test-assignments/stdin-cmdarg-5 --std-input "2 1" "2 2" "2 3"
 ```
-- CMake project
+- CMake project tests
 ```
 ./pacers.py test-assignments/cmake
 ```
-- Make project (Linux/Unix only)
+- Make project tests (Linux/Unix only)
 ```
 ./pacers.py test-assignments/make
 ```
-- Visual C++ project (Windows only)
+- Visual C++ project tests (Windows only)
 ```
 ./pacers.py test-assignments/vcxproj
 ```
-- Visual C++ GUI project (Windows only)
+- Visual C++ GUI project tests (Windows only)
 ```
 ./pacers.py test-assignments/vcxproj-GUI --timeout 0 --exclude-patterns SDL2-2.0.4/*
 ```
-- Error cases
+- Error cases tests
 ```
 ./pacers.py test-assignments/error-cases
 ```
-- Text and image file
+- Text and image file tests
 ```
 ./pacers.py test-assignments/txt
 ./pacers.py test-assignments/img
 ```
-- SOURCE_FILES submission type
+- SOURCE_FILES submission type tests
 ```
 ./pacers.py test-assignments/source_files-zip-1 --std-input "2 5" "10 20"
 ./pacers.py test-assignments/source_files-zip-2 --std-input "2 5" "10 20"
