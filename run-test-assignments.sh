@@ -1,5 +1,6 @@
 ./pacers.py test-assignments/c-1
 ./pacers.py test-assignments/c-2 --std-input "1 2" "3 4"
+./pacers.py test-assignments/c-3 --std-input "1 2" --cmd-args "1 2 \"ab cd\""
 
 ./pacers.py --interpreter-cmd "python2" test-assignments/python2
 ./pacers.py --interpreter-cmd "python3" test-assignments/python3

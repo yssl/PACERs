@@ -100,14 +100,20 @@ assignment_dir if no other optional arguments are
 given. Two types of STD_INPUT are available.
 default is an empty string.
 
-| Type     | Example                 | Meaning                                      |
-|----------|-------------------------|----------------------------------------------|
-| Single   | --std-input 15          | Run each program with input "15"             |
-| value    | --std-input hello       | Run each program with input "hello"          |
-|          | --std-input "1 2"       | Run each program with input "1 2"            |
-|----------|-------------------------|----------------------------------------------|
-| Multiple | --std-input 1 2 3       | Run each program 3 times: with "1", "2", "3" |
-| values   | --std-input "1 2" "3 4" | Run each program 2 times: with "1 2", "3 4"  |
+| Type     | Example                 | Meaning                                     |
+|----------|-------------------------|---------------------------------------------|
+| Single   | --std-input 15          | Run each program with input                 |
+| value    |                         |   "15" (STD_INPUT[0])                       |
+|          | --std-input hello       | Run each program with input                 |
+|          |                         |   "hello" (STD_INPUT[0])                    |
+|          | --std-input "1 2"       | Run each program with input                 |
+|          |                         |   "1 2" (STD_INPUT[0])                      |
+|----------|-------------------------|---------------------------------------------|
+| Multiple | --std-input 1 2 3       | Run each program 3 times: with              |
+| values   |                         |   "1" (STD_INPUT[0]), "2" (STD_INPUT[1]),   |
+|          |                         |   "3" (STD_INPUT[2])                        |
+|          | --std-input "1 2" "3 4" | Run each program 2 times: with              |
+|          |                         |   "1 2" (STD_INPUT[0]), "3 4" (STD_INPUT[1])|
 
 ''')
     parser.add_argument('--cmd-args', nargs='+', default=[''],
@@ -117,16 +123,38 @@ assignment_dir if no other optional arguments are
 given. Two types of CMD_ARGS are available.
 default is an empty string.
 
-| Type     | Example                    | Meaning                                        |
-|----------|----------------------------|------------------------------------------------|
-| Single   | --cmd-args 15              | Run each program with argv[1]:"15"             |
-| value    | --cmd-args hello           | Run each program with argv[1]:"hello"          |
-|          | --cmd-args "1 2"           | Run each program with argv[1]:"1", argv[2]:"2" |
-|          | --cmd-args "1 2 \\"ab cd\\"" | Run each program with argv[1]:"1", argv[2]:"2",|
-|          |                            | argv[3]:"ab cd" -                              |
-|----------|----------------------------|------------------------------------------------|
-| Multiple | --cmd-args 1 2 3           | Run each program 3 times: with "1", "2", "3"   |
-| values   | --cmd-args "1 2" "3 4"     | Run each program 2 times: with "1 2", "3 4"    |
+| Type     | Example                    | Meaning                                     |
+|----------|----------------------------|---------------------------------------------|
+| Single   | --cmd-args 15              | Run each program with                       |
+| value    |                            |   argv[1]:"15" (CMD_ARGS[0])                |
+|          | --cmd-args hello           | Run each program with                       |
+|          |                            |   argv[1]:"hello" (CMD_ARGS[0])             |
+|          | --cmd-args "1 2"           | Run each program with                       |
+|          |                            |   argv[1]:"1", argv[2]:"2" (CMD_ARGS[0])    |
+|          | --cmd-args "1 2 \\"ab cd\\"" | Run each program with                       |
+|          |                            |   argv[1]:"1", argv[2]:"2", argv[3]:"ab cd" |
+|          |                            |   (CMD_ARGS[0])                             |
+|----------|----------------------------|---------------------------------------------|
+| Multiple | --cmd-args 1 2 3           | Run each program 3 times: with              |
+| values   |                            |   argv[1]:"1" (CMD_ARGS[0]),                |
+|          |                            |   argv[1]:"2" (CMD_ARGS[1]),                |
+|          |                            |   argv[1]:"3" (CMD_ARGS[2])                 |
+|          | --cmd-args "1 2" "3 4"     | Run each program 2 times: with              |
+|          |                            |   argv[1]:"1", argv[2]:"2" (CMD_ARGS[0]),   |
+|          |                            |   argv[1]:"3", argv[2]:"4" (CMD_ARGS[1])    |
+
+If both STD_INPUT and CMD_ARGS are specified, both elements 
+at the same index (STD_INPUT[i] and CMD_ARGS[i]) are used 
+together. If the number of elements in STD_INPUT and 
+CMD_ARGS is different, the last element in the shorter side 
+is used along with the remaining elements in the longer side.
+For example,
+--std-input 1 2 3 --cmd-args a b c
+  : Run each program 3 times: (1, a), (2, b), (3, c)
+--std-input 1 2 3 --cmd-args a b 
+  : Run each program 3 times: (1, a), (2, b), (3, b)
+--std-input 1 --cmd-args a b c
+  : Run each program 3 times: (1, a), (1, b), (1, c)
 
 ''')
     parser.add_argument('--timeout', default=2., type=float,
