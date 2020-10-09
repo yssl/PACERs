@@ -1,0 +1,1 @@
+/usr/bin/cc   -rdynamic CMakeFiles/myproj.dir/student02.c.o CMakeFiles/myproj.dir/utility/utility.c.o  -o myproj 

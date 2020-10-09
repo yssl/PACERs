@@ -52,6 +52,13 @@ gSubmissionPatterns[VISUAL_CPP_PROJECT]    = ['*.vcxproj', '*.vcproj']
 gSubmissionPatterns[SOURCE_FILES]          = ['*']
 gSubmissionPatterns[SINGLE_SOURCE_FILE]    = ['*']
 
+gExcludePatterns                           = {}
+gExcludePatterns[CMAKE_PROJECT]            = ['Makefile', 'CMakeCache.txt', 'cmake_install.cmake', 'CMakeFiles/*']
+gExcludePatterns[MAKE_PROJECT]             = []
+gExcludePatterns[VISUAL_CPP_PROJECT]       = []
+gExcludePatterns[SOURCE_FILES]             = []
+gExcludePatterns[SINGLE_SOURCE_FILE]       = []
+
 gVersionDescription                        = {}
 gVersionDescription['cmake-version']       = 'CMake & C/C++ compiler'
 gVersionDescription['make-version']        = 'Make & C/C++ compiler'

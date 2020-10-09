@@ -84,6 +84,21 @@ def build_single_else(srcRootDir, projName, singleSrcFileName):
 ####
 # build_cmake functions
 def build_cmake(srcRootDir, projName):
+    #############
+    # delete CMake intermediate output files if submitted
+    file_CMakeCache = opjoin(srcRootDir, 'CMakeCache.txt')
+    file_cmake_install = opjoin(srcRootDir, 'cmake_install.cmake')
+    file_Makefile = opjoin(srcRootDir, 'Makefile')
+    intermediate_files = [file_CMakeCache, file_cmake_install, file_Makefile]
+    for fpath in intermediate_files:
+        if os.path.isfile(fpath):
+            os.remove(fpath)
+
+    dir_CMakeFiles = opjoin(srcRootDir, 'CMakeFiles')
+    if os.path.isdir(dir_CMakeFiles):
+        shutil.rmtree(dir_CMakeFiles)
+    #############
+
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     try:
         os.makedirs(buildDir)

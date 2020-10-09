@@ -61,21 +61,21 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
                 # [[u'prob1.c'], [u'prob2.c']]
                 projSrcFileNames = []
 
-                # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                 if os.name=='posix':
+                    # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                     tempSubDir = toString(submissionDir)
                 else:
                     tempSubDir = submissionDir
                 for root, dirs, files in os.walk(tempSubDir):
                     if gBuildDirPrefix not in root:
                         for name in files:
-                            # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                             if os.name=='posix':
+                                # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                                 root = toUnicode(root)
                                 name = toUnicode(name)
                             fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
                             isSrcFile = True
-                            for pattern in exclude_patterns:
+                            for pattern in exclude_patterns+gExcludePatterns[submissionType]:
                                 if fnmatch.fnmatch(fileName, pattern):
                                     isSrcFile = False
                                     break
@@ -108,21 +108,21 @@ def collectAllProjInfosInAllSubmissions(submissionTitles, assignmentDir, exclude
             # [[u'CMakeLists.txt', u'student01.c', u'utility.c', u'utility.h']]
             projSrcFileNames = [[]]
             
-            # Convert paths for os.walk to byte string only for posix os (due to python bug?)
             if os.name=='posix':
+                # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                 tempSubDir = toString(submissionDir)
             else:
                 tempSubDir = submissionDir
             for root, dirs, files in os.walk(tempSubDir):
                 if gBuildDirPrefix not in root:
                     for name in files:
-                        # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                         if os.name=='posix':
+                            # Convert paths for os.walk to byte string only for posix os (due to python bug?)
                             root = toUnicode(root)
                             name = toUnicode(name)
                         fileName = opjoin(root, name).replace(submissionDir+os.sep, '')
                         isSrcFile = True
-                        for pattern in exclude_patterns:
+                        for pattern in exclude_patterns+gExcludePatterns[submissionType]:
                             if fnmatch.fnmatch(fileName, pattern):
                                 isSrcFile = False
                                 break
