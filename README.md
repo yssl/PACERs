@@ -149,22 +149,17 @@ If you checked all the test-assignments are working correctly in your PC, please
 
 ## Note for Interpreted Languages
 PACERs runs a default interpreter command based on the source file extension.  
-For example, the following command would execute `python test-assignments/python3/<a python file>.py` for each .py file in the assignment directory:
+For example, the following command would execute `python test-assignments/python2/<a python file>.py` for each .py file in `./test-assignments/python2/`:
 ```
 ./pacers.py test-assignments/python2
 ```
-For some cases, you may need to run other interpreter commands rather than default one.  
-For example, if you want to use Python 3 on a system with both Python 2 and Python 3 installed, you can use:
-- On Windows:
-```
-py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3
-```
-- On Linux:
-```
-python2 pacers.py --interpreter-cmd "python3" test-assignments/python3
-```
+If you need to run other interpreter commands rather than default one, you can use `--interpreter-cmd` argument.  
+For example, if you want to use Python 3 on a system with both Python 2 and Python 3 installed, you can do it like:
+- On Windows: `py -2 pacers.py --interpreter-cmd "py -3" test-assignments/python3`
+- On Linux: `python2 pacers.py --interpreter-cmd "python3" test-assignments/python3`
+
 If you need to run some shell command before running the target script, you can use `--pre-shell-cmd` argument.  
-For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can use:
+For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can do it like:
 ```
 ./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2
 ```
@@ -175,7 +170,7 @@ Please read [help-pacers.txt] for detailed usage.
 ## Support for encodings
 
 PACERs supports various encodings for file name, directory name, and source file contents with ```chardet``` and ```unidecode``` modules.  
-Please try test-assignments for encodings:
+You can try the test-assignments for encodings:
 ```
 ./pacers.py test-assignments/test-encoding
 ./pacers.py test-assignments/test-한글-cp949
