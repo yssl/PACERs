@@ -167,7 +167,7 @@ For example, if you want to specify the Python virtual environment (using [virtu
 
 ## Escape characters in `--std-input` or `cmd-args`
 
-How to insert new lines (\n) or other escape characters as standard input or command line arguments depends on the shell you are using, because the shell parses all commands.
+How to insert new lines (\n) or other escape characters to standard input or command line arguments depends on the shell you are using, because the shell parses all commands.
 
 ### Linux
 
