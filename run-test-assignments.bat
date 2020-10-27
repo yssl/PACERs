@@ -12,6 +12,7 @@ pacers.py test-assignments\stdin-cmdarg-2 --std-input "2 1" "2 2" "2 3" --cmd-ar
 pacers.py test-assignments\stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"
 pacers.py test-assignments\stdin-cmdarg-4 --cmd-args "a b" "c d"
 pacers.py test-assignments\stdin-cmdarg-5 --std-input "2 1" "2 2" "2 3"
+pacers.py test-assignments/escape-arguments --std-input "ab`ncd`nef"
 
 REM Projects
 pacers.py test-assignments\cmake

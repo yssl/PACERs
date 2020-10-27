@@ -180,13 +180,6 @@ def __run(runcmd, runcwd, stdInput, cmdArg, timeOut, preShellCmd):
     # append newline to finish stdin user input and flush input buffer
     realStdInput = stdInput+'\n'
 
-    # # insert newline character after each single character in stdInput 
-    # # for example, for a user input for scanf("%c", ...);
-    # # TODO: make this as cmd argument
-    # realStdInput = ''
-    # for i in range(len(stdInput)):
-        # realStdInput += stdInput[i]+'\n'
-
     try:
         if preShellCmd!='':
             if os.name=='posix':

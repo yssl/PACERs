@@ -107,6 +107,7 @@ The tested environments for each submission type are shown in the table.
 ./pacers.py test-assignments/stdin-cmdarg-3 --std-input "2 1" "2 2" "2 3" --cmd-args "a b"
 ./pacers.py test-assignments/stdin-cmdarg-4 --cmd-args "a b" "c d"
 ./pacers.py test-assignments/stdin-cmdarg-5 --std-input "2 1" "2 2" "2 3"
+./pacers.py test-assignments/escape-arguments --std-input $'ab\ncd\nef'
 ```
 - CMake project tests
 ```
@@ -147,7 +148,7 @@ You can run all test-assignments at once by the run-test-assignments script.
 If you checked all the test-assignments are working correctly in your PC, please let me know your tested language, compiler, and OS by submitting an issues on this project so that I could update the "Tested language, compiler(or interpreter), OS" section in this page :).
 -->
 
-## Note for Interpreted Languages
+## Note for interpreted languages
 PACERs runs a default interpreter command based on the source file extension.  
 For example, the following command would execute `python test-assignments/python2/<a python file>.py` for each .py file in `./test-assignments/python2/`:
 ```
@@ -162,6 +163,30 @@ If you need to run some shell command before running the target script, you can 
 For example, if you want to specify the Python virtual environment (using [virtualenvwrapper]) for .py files different from the environment where PACERs runs, you can do it like:
 ```
 ./pacers.py --pre-shell-cmd "workon <environment name>" test-assignments/python2
+```
+
+## Escape characters in `--std-input` or `cmd-args`
+
+How to insert new lines (\n) or other escape characters as standard input or command line arguments depends on the shell you are using, because the shell parses all commands.
+
+### Linux
+
+* Bash: Use `$'...'`. See http://mywiki.wooledge.org/Quotes#Types_of_Quoting_--_The_Verbose_Version for more information.
+```
+$ echo $'ab\ncd'
+ab
+cd
+$ ./pacers.py test-assignments/escape-arguments --std-input $'ab\ncd\nef'
+```
+
+### Windows
+
+* PowerShell: Use backtick(`). See https://ss64.com/ps/syntax-esc.html for more information.
+```
+PS> echo "ab`ncd"
+ab
+cd
+PS> pacers.py test-assignments/escape-arguments --std-input "ab`ncd`nef"
 ```
 
 ## Usage
