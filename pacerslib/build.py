@@ -122,7 +122,7 @@ def __build_cmake(buildDir, cmakeLocationFromBuildDir):
 def build_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     try:
-        # copy all copied files in output/assigndir to output/assigndir/pacers-assigndir
+        # copy all copied files in output source dir(output/assigndir) to output build dir(output/assigndir/pacers-assigndir)
         # because there is no way to set the output destination for a Makefile, unlike CMake.
         shutil.copytree(srcRootDir, buildDir)
     except Exception as e:

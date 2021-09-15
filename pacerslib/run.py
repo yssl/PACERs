@@ -142,6 +142,8 @@ def runcmd_make(srcRootDir, projName):
     buildDir = opjoin(srcRootDir, gBuildDirPrefix+projName)
     execName = projName
 
+    ################
+    # NOT USED NOW becuase this approach cannot deal with cases where default target name != executable name.
     ## This code assumes that the default target name is identical to the executable file name, so reports errors when
     ## 1) default target name != executable name
     ## 2) no executable file name is specified in the commands
@@ -152,14 +154,40 @@ def runcmd_make(srcRootDir, projName):
         # execName = 'Failed to find the executable name in Makefile'
     # else: 
         # execName = grepStr.split()[2]
+    ################
 
+    ################
+    # NOT USED NOW becuase this approach cannot deal with cases where source files also have the exeutable permission (e.g. uploaded from Windows)
     ## To find the executable name, now we use os.access(filename, os.X_OK)
-    execNames = [fname for fname in os.listdir(buildDir) if os.access(opjoin(buildDir, fname), os.X_OK) and os.path.isfile(opjoin(buildDir, fname))]
-    if len(execNames)==0:
-        execName = 'Failed to find the executable name in Makefile'
-    else:
-        execName = execNames[0]
+    # execNames = [fname for fname in os.listdir(buildDir) if os.access(opjoin(buildDir, fname), os.X_OK) and os.path.isfile(opjoin(buildDir, fname))]
+    # if len(execNames)==0:
+        # execName = 'Failed to find the executable name in the output directory %s'%buildDir
+    # else:
+        # execName = execNames[0]
+    ################
 
+    ################
+    # IN USE NOW
+    # the executable file is a file (in the build dir) that
+    # 1) has an executable permission
+    # 2) has DYN or EXEC as Type: in the readelf -h output.
+    execCandiNames = [fname for fname in os.listdir(buildDir) if os.access(opjoin(buildDir, fname), os.X_OK) and os.path.isfile(opjoin(buildDir, fname))]
+    if len(execCandiNames)==0:
+        execName = 'Failed to find any file that has an executable permission in the output directory %s'%buildDir
+    else:
+        execName = 'Failed to find any ELF executable file in the output directory %s'%buildDir
+        for execCandiName in execCandiNames:
+            try:
+                grepStr = subprocess.check_output("readelf -h %s | grep 'Type:'"%execCandiName, cwd=buildDir, stderr=subprocess.STDOUT, shell=True)
+            except subprocess.CalledProcessError as e:
+                # print e
+                # print 'Failed to execute readelf to find executable file'
+                pass
+            else: 
+                if grepStr.split()[1]=='DYN' or grepStr.spilt()[1]=='EXEC':
+                    execName = execCandiName
+    ################
+            
     return os.path.abspath(opjoin(buildDir, execName))
 
 ####

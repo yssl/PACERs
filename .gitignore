@@ -1,4 +1,5 @@
-output*/
+output/
+test-assignments/temp/
 *.pyc
 *r.py
 *.bat
